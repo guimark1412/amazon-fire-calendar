@@ -64,7 +64,13 @@ export function HarmonizationLab({
             <h2 className="panel-title">
               {isPt ? 'Distorção Bruta vs. Série Calibrada' : 'Raw Distortion vs. Calibrated Series'}
             </h2>
-            <span className="lab-eyebrow">{isPt ? 'Comparativo 20 Anos' : '20-Year Scale'}</span>
+            <span className="lab-eyebrow-group">
+              <span className="lab-eyebrow">{isPt ? 'Comparativo 20 Anos' : '20-Year Scale'}</span>
+              <InfoTooltip
+                title={isPt ? 'Comparativo 20 Anos' : '20-Year Scale'}
+                text={t.tips.labScale}
+              />
+            </span>
           </div>
 
           <div className="lab-compare-split">

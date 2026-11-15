@@ -1827,6 +1827,12 @@ body {
   gap: 10px;
 }
 
+.lab-eyebrow-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .lab-eyebrow {
   font-size: 0.7rem;
   font-weight: 600;

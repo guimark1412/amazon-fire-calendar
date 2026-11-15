@@ -226,6 +226,8 @@ export const I18N = {
       frp: 'Fire Radiative Power (MW): mede a potência térmica liberada pelo fogo em Megawatts (intensidade da queima), não só a quantidade de focos.',
       heatmap:
         'A altura da barra indica o volume do Índice Harmonizado no período e a cor indica o desvio frente à média MODIS.',
+      labScale:
+        'Mostra o acumulado deste ano convertido para a régua histórica de 20 anos do MODIS. No modo Semanal, os números mudam porque a coincidência MODIS×VIIRS é verificada em janelas de 7 dias em vez de 1 mês.',
       labRaw:
         'Somar MODIS + VIIRS brutos conta múltiplos pixels de 375 m sobre o mesmo fogo, gerando picos artificiais.',
       labHarm:
@@ -529,6 +531,8 @@ export const I18N = {
       frp: 'Fire Radiative Power (MW): measures thermal heat energy released in Megawatts (fire intensity), beyond raw hotspot count.',
       heatmap:
         'Bar height represents Harmonized Index volume; color encodes percentage deviation vs. MODIS average.',
+      labScale:
+        'Shows this year’s cumulative detections converted onto the 20-year MODIS historical scale. In Weekly mode, values shift slightly because MODIS×VIIRS coincidence is matched within 7-day windows instead of full months.',
       labRaw:
         'Adding raw MODIS + VIIRS counts double-counts fragmented 375 m pixels as if they were 1 km MODIS events.',
       labHarm:
