@@ -49,21 +49,21 @@ export function MobileDesktopNotice({ lang, appReady, onToggleLang }: MobileDesk
     return () => window.clearTimeout(timer);
   }, [phase, appReady]);
 
-  // Step 2 -> Step 3: show phone (~1.5s) -> morph to monitor -> brief pause -> dissolve
+  // Step 2 -> Step 3: show phone (~1.5s) -> morph to monitor (~2.75s) -> start dissolving promptly
   useEffect(() => {
     if (phase !== 'playing') return;
     const timer = window.setTimeout(() => {
       startFadeOut();
-    }, 4200);
+    }, 3200);
     return () => window.clearTimeout(timer);
   }, [phase, startFadeOut]);
 
-  // Step 3 -> Step 4: unmount cleanly after slow transparent dissolve finishes
+  // Step 3 -> Step 4: unmount cleanly after smooth transparent dissolve finishes
   useEffect(() => {
     if (phase !== 'fading') return;
     const timer = window.setTimeout(() => {
       setPhase('done');
-    }, 1300);
+    }, 950);
     return () => window.clearTimeout(timer);
   }, [phase]);
 
