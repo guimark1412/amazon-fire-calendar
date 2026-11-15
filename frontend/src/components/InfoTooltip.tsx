@@ -18,6 +18,7 @@ interface TooltipPos {
 }
 
 const HOVER_DELAY_MS = 500;
+const TOUCH_GUARD_MS = 700;
 
 export function InfoTooltip({
   text,
@@ -28,7 +29,10 @@ export function InfoTooltip({
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState<TooltipPos | null>(null);
   const triggerRef = useRef<HTMLSpanElement | null>(null);
+  const portalRef = useRef<HTMLDivElement | null>(null);
   const hoverTimerRef = useRef<number | null>(null);
+  const lastTouchTimeRef = useRef<number>(0);
+  const openedAtRef = useRef<number>(0);
 
   const clearHoverTimer = useCallback(() => {
     if (hoverTimerRef.current !== null) {
@@ -37,6 +41,8 @@ export function InfoTooltip({
     }
   }, []);
 
+  const isRecentTouch = () => Date.now() - lastTouchTimeRef.current < TOUCH_GUARD_MS;
+
   const computePos = useCallback((): TooltipPos | null => {
     const el = triggerRef.current;
     if (!el || typeof window === 'undefined') return null;
@@ -44,23 +50,29 @@ export function InfoTooltip({
     const width = Math.min(272, window.innerWidth - 24);
     const centerX = rect.left + rect.width / 2;
     const left = Math.max(12, Math.min(window.innerWidth - width - 12, centerX - width / 2));
-    const arrowLeft = Math.max(12, Math.min(width - 12, centerX - left));
-    const placement: 'top' | 'bottom' = rect.top < 120 ? 'bottom' : 'top';
+    const arrowLeft = Math.max(14, Math.min(width - 14, centerX - left));
+    const spaceAbove = rect.top;
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const placement: 'top' | 'bottom' =
+      spaceAbove < 145 && spaceBelow > spaceAbove ? 'bottom' : 'top';
     const top = placement === 'top' ? rect.top - 9 : rect.bottom + 9;
     return { left, top, width, placement, arrowLeft };
   }, []);
 
   const show = useCallback(() => {
     clearHoverTimer();
+    openedAtRef.current = Date.now();
     const next = computePos();
     if (next) setPos(next);
     setOpen(true);
   }, [clearHoverTimer, computePos]);
 
   const scheduleShow = useCallback(() => {
+    if (isRecentTouch()) return;
     clearHoverTimer();
     hoverTimerRef.current = window.setTimeout(() => {
       hoverTimerRef.current = null;
+      openedAtRef.current = Date.now();
       const next = computePos();
       if (next) setPos(next);
       setOpen(true);
@@ -82,48 +94,92 @@ export function InfoTooltip({
 
   useEffect(() => {
     if (!open) return;
-    const handleScrollOrResize = () => setOpen(false);
-    const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setOpen(false);
+    let lastWidth = typeof window !== 'undefined' ? window.innerWidth : 0;
+
+    const handleScroll = () => {
+      // Ignore tiny touch-tap micro-scrolls fired immediately on open
+      if (Date.now() - openedAtRef.current < 220) return;
+      setOpen(false);
     };
-    const handleOutside = (e: MouseEvent) => {
-      if (triggerRef.current && !triggerRef.current.contains(e.target as Node)) {
+    const handleResize = () => {
+      if (typeof window === 'undefined') return;
+      // Ignore mobile URL-bar height jitters unless horizontal width changed
+      if (window.innerWidth !== lastWidth) {
+        lastWidth = window.innerWidth;
         setOpen(false);
       }
     };
-    window.addEventListener('scroll', handleScrollOrResize, true);
-    window.addEventListener('resize', handleScrollOrResize);
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+    const handleOutside = (e: PointerEvent) => {
+      const target = e.target as Node | null;
+      if (!target) return;
+      if (triggerRef.current?.contains(target) || portalRef.current?.contains(target)) {
+        return;
+      }
+      setOpen(false);
+    };
+
+    window.addEventListener('scroll', handleScroll, true);
+    window.addEventListener('resize', handleResize);
     window.addEventListener('keydown', handleEsc);
-    window.addEventListener('mousedown', handleOutside);
+    window.addEventListener('pointerdown', handleOutside, true);
     return () => {
-      window.removeEventListener('scroll', handleScrollOrResize, true);
-      window.removeEventListener('resize', handleScrollOrResize);
+      window.removeEventListener('scroll', handleScroll, true);
+      window.removeEventListener('resize', handleResize);
       window.removeEventListener('keydown', handleEsc);
-      window.removeEventListener('mousedown', handleOutside);
+      window.removeEventListener('pointerdown', handleOutside, true);
     };
   }, [open]);
 
   return (
     <span
       ref={triggerRef}
-      className="info-tip-anchor"
+      className={`info-tip-anchor ${open ? 'info-tip-anchor--open' : ''}`}
+      onTouchStart={() => {
+        lastTouchTimeRef.current = Date.now();
+      }}
+      onPointerDown={(e) => {
+        if (e.pointerType !== 'mouse') {
+          lastTouchTimeRef.current = Date.now();
+        }
+      }}
       onMouseEnter={scheduleShow}
-      onMouseLeave={hide}
-      onFocus={insideButton ? undefined : show}
-      onBlur={insideButton ? undefined : hide}
-      onClick={
+      onMouseLeave={() => {
+        if (isRecentTouch()) return;
+        hide();
+      }}
+      onFocus={
         insideButton
           ? undefined
-          : (e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              if (open) {
-                hide();
-              } else {
-                show();
-              }
+          : () => {
+              if (isRecentTouch()) return;
+              show();
             }
       }
+      onBlur={
+        insideButton
+          ? undefined
+          : () => {
+              if (isRecentTouch()) return;
+              hide();
+            }
+      }
+      onClick={(e) => {
+        const touchTap = isRecentTouch();
+        if (insideButton && !touchTap) {
+          // On desktop mouse click, let the parent button perform its primary action
+          return;
+        }
+        e.preventDefault();
+        e.stopPropagation();
+        if (open) {
+          hide();
+        } else {
+          show();
+        }
+      }}
       onKeyDown={
         insideButton
           ? undefined
@@ -138,6 +194,7 @@ export function InfoTooltip({
       role={insideButton ? undefined : 'button'}
       tabIndex={insideButton ? undefined : 0}
       aria-label={title ? `${title}: ${text}` : text}
+      aria-expanded={!insideButton ? open : undefined}
     >
       <span
         className={`info-tip-badge ${variant === 'warning' ? 'info-tip-badge--warning' : ''}`}
@@ -151,6 +208,7 @@ export function InfoTooltip({
         typeof document !== 'undefined' &&
         createPortal(
           <div
+            ref={portalRef}
             role="tooltip"
             className={`info-tip-portal info-tip-portal--${pos.placement} ${
               variant === 'warning' ? 'info-tip-portal--warning' : ''
@@ -159,6 +217,10 @@ export function InfoTooltip({
               left: `${pos.left}px`,
               top: `${pos.top}px`,
               width: `${pos.width}px`,
+            }}
+            onClick={(e) => {
+              e.stopPropagation();
+              hide();
             }}
           >
             <span className="info-tip-arrow" style={{ left: `${pos.arrowLeft}px` }} />

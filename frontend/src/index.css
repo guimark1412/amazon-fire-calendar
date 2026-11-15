@@ -1854,7 +1854,8 @@ body {
 }
 
 .info-tip-anchor:hover .info-tip-badge,
-.info-tip-anchor:focus-visible .info-tip-badge {
+.info-tip-anchor:focus-visible .info-tip-badge,
+.info-tip-anchor--open .info-tip-badge {
   opacity: 1;
   border-color: rgba(56, 189, 248, 0.78);
   color: #38bdf8;
@@ -1872,10 +1873,39 @@ body {
 }
 
 .info-tip-anchor:hover .info-tip-badge--warning,
-.info-tip-anchor:focus-visible .info-tip-badge--warning {
+.info-tip-anchor:focus-visible .info-tip-badge--warning,
+.info-tip-anchor--open .info-tip-badge--warning {
   opacity: 1;
   color: #fbbf24;
   background: rgba(245, 158, 11, 0.22);
+}
+
+@media (hover: none), (pointer: coarse) {
+  .info-tip-anchor {
+    padding: 5px;
+    margin: -5px -2px;
+  }
+
+  .toggle-btn .info-tip-anchor {
+    padding: 4px;
+    margin: -4px -2px -4px 1px;
+  }
+
+  .info-tip-badge {
+    width: 14px;
+    height: 14px;
+    font-size: 9px;
+    opacity: 0.88;
+  }
+
+  .info-tip-badge--warning {
+    width: 18px;
+    height: 18px;
+  }
+
+  .info-tip-portal {
+    pointer-events: auto;
+  }
 }
 
 .info-tip-portal--warning {
