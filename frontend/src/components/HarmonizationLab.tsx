@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { AlertOctagon, CheckCircle2, Scan, Sliders } from 'lucide-react';
+import { AlertOctagon, ArrowRight, CheckCircle2, Scan, Sliders } from 'lucide-react';
 import { I18N, type Language } from '../i18n';
 import type { HarmonizationDiagnostics, TimelineSummary } from '../types';
 import { InfoTooltip } from './InfoTooltip';
@@ -21,16 +21,23 @@ export function HarmonizationLab({
   onChangeViirsWeight,
   lang,
 }: HarmonizationLabProps) {
-  const [scanAngle, setScanAngle] = useState<number>(32);
+  const [scanAngle, setScanAngle] = useState<number>(30);
 
   const rawModis = diagnostics?.total_modis ?? 271;
   const rawViirs = diagnostics?.total_viirs ?? 1064;
   const rawCombined = rawModis + rawViirs;
   const histBase = summary?.ytd_historical ?? 240;
-  const rawFalseSpikePct = histBase > 0 ? Math.round(((rawCombined - histBase) / histBase) * 100) : 390;
+  const rawFalseSpikePct =
+    histBase > 0 ? Math.round(((rawCombined - histBase) / histBase) * 100) : 390;
 
   const harmTotal = summary?.ytd_harmonized ?? 271.4;
   const harmDevPct = summary?.ytd_deviation_pct ?? 13.1;
+
+  const coincidentViirs = diagnostics?.coincident_viirs ?? 934;
+  const viirsOnlySmall = diagnostics?.viirs_only_small_fires ?? 130;
+  const effectiveViirs = coincidentViirs + viirsOnlySmall * viirsOnlyWeight;
+  const normalizedViirs = effectiveViirs * calibrationFactor;
+  const liveHarmIndex = (rawModis + normalizedViirs) / 2;
 
   // Compute physical MODIS vs VIIRS pixel stretch as a function of satellite scan angle (0 to 55 deg)
   const rad = (scanAngle * Math.PI) / 180;
@@ -46,76 +53,77 @@ export function HarmonizationLab({
 
   const isPt = lang === 'pt';
   const t = I18N[lang];
+  const locale = isPt ? 'pt-BR' : 'en-US';
 
   return (
     <section className="harm-lab-section" data-tour="harm-lab">
       <div className="harm-lab-grid">
-        {/* Card 1: Before vs After Harmonization (Why Raw Data Fails) */}
-        <div className="panel harm-compare-panel">
-          <div className="panel-header" style={{ marginBottom: '10px' }}>
-            <div>
-              <h2 className="panel-title">
-                {isPt
-                  ? 'Por que Harmonizar? Distorção Bruta vs. Série Calibrada'
-                  : 'Why Harmonize? Raw Distortion vs. Calibrated Baseline'}
-              </h2>
-            </div>
+        {/* Card 1: Calibration Comparison Workbench */}
+        <div className="panel lab-card">
+          <div className="lab-card-header">
+            <h2 className="panel-title">
+              {isPt ? 'Distorção Bruta vs. Série Calibrada' : 'Raw Distortion vs. Calibrated Series'}
+            </h2>
+            <span className="lab-eyebrow">{isPt ? 'Comparativo 20 Anos' : '20-Year Scale'}</span>
           </div>
 
-          <div className="before-after-cards">
-            <div className="ba-card ba-raw">
-              <div className="ba-header">
-                <span className="ba-header-title">
-                  <AlertOctagon size={15} color="#f87171" />
-                  <span>
-                    {isPt ? 'SEM HARMONIZAÇÃO (Contagem Bruta)' : 'UNHARMONIZED (Raw Sensor Sum)'}
-                  </span>
+          <div className="lab-compare-split">
+            <div className="lab-compare-col lab-compare-col--raw">
+              <div className="lab-col-head">
+                <span className="lab-col-tag lab-col-tag--raw">
+                  <AlertOctagon size={13} />
+                  {isPt ? 'Sem Harmonização' : 'Unharmonized'}
                 </span>
                 <InfoTooltip text={t.tips.labRaw} />
               </div>
-              <div className="ba-big-num">
-                {rawCombined.toLocaleString(lang === 'pt' ? 'pt-BR' : 'en-US')}{' '}
-                {lang === 'pt' ? 'focos' : 'hotspots'}
+              <div className="lab-big-metric">
+                {rawCombined.toLocaleString(locale)}{' '}
+                <span>{isPt ? 'focos' : 'hotspots'}</span>
               </div>
-              <div className="ba-Formula">
-                {rawModis} MODIS (1km) + {rawViirs} VIIRS (375m)
+              <div className="lab-sub-formula">
+                {rawModis.toLocaleString(locale)} MODIS + {rawViirs.toLocaleString(locale)} VIIRS
               </div>
-              <div className="ba-badge ba-badge-danger">
-                +{rawFalseSpikePct}% vs. Média MODIS ({isPt ? 'Falso Alarme Estatístico' : 'False Statistical Spike'})
-              </div>
+              <span className="lab-delta-pill lab-delta-pill--danger">
+                +{rawFalseSpikePct}% vs. MODIS · {isPt ? 'Falso Alarme' : 'False Spike'}
+              </span>
             </div>
 
-            <div className="ba-card ba-harm">
-              <div className="ba-header">
-                <span className="ba-header-title">
-                  <CheckCircle2 size={15} color="#34d399" />
-                  <span>
-                    {isPt ? 'COM HARMONIZAÇÃO (Escala Unificada)' : 'HARMONIZED (Unified MODIS Scale)'}
-                  </span>
+            <div className="lab-split-arrow" aria-hidden="true">
+              <ArrowRight size={16} />
+            </div>
+
+            <div className="lab-compare-col lab-compare-col--harm">
+              <div className="lab-col-head">
+                <span className="lab-col-tag lab-col-tag--harm">
+                  <CheckCircle2 size={13} />
+                  {isPt ? 'Harmonizado' : 'Harmonized'}
                 </span>
                 <InfoTooltip text={t.tips.labHarm} />
               </div>
-              <div className="ba-big-num">{harmTotal.toFixed(1)} eq. MODIS</div>
-              <div className="ba-Formula">
-                {isPt ? 'Fator' : 'Factor'} ×{calibrationFactor} · {diagnostics?.coincident_viirs ?? 934}{' '}
-                {isPt ? 'coincidentes' : 'coincident'} + {diagnostics?.viirs_only_small_fires ?? 130}{' '}
+              <div className="lab-big-metric">
+                {harmTotal.toFixed(1)} <span>eq. MODIS</span>
+              </div>
+              <div className="lab-sub-formula">
+                ×{calibrationFactor} · {coincidentViirs} {isPt ? 'coinc.' : 'coinc.'} + {viirsOnlySmall}{' '}
                 VIIRS-only
               </div>
-              <div className="ba-badge ba-badge-ok">
+              <span className="lab-delta-pill lab-delta-pill--ok">
                 {harmDevPct >= 0 ? '+' : ''}
-                {harmDevPct.toFixed(1)}% vs. Média MODIS ({isPt ? 'Anomalia Real Calibrada' : 'True Calibrated Anomaly'})
-              </div>
+                {harmDevPct.toFixed(1)}% vs. MODIS · {isPt ? 'Anomalia Real' : 'True Anomaly'}
+              </span>
             </div>
           </div>
 
-          <div className="interactive-weight-box">
-            <div className="weight-box-top">
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontWeight: 600 }}>
+          <div className="lab-slider-dock">
+            <div className="lab-slider-top">
+              <span className="lab-slider-label">
                 <Sliders size={14} color="#f97316" />
                 {t.viirsWeightLabel}
                 <InfoTooltip title="VIIRS-Only" text={t.tips.viirsWeight} />
               </span>
-              <strong style={{ color: '#fdba74' }}>{Math.round(viirsOnlyWeight * 100)}%</strong>
+              <strong className="lab-slider-val" style={{ color: '#fdba74' }}>
+                {Math.round(viirsOnlyWeight * 100)}%
+              </strong>
             </div>
             <input
               type="range"
@@ -125,87 +133,119 @@ export function HarmonizationLab({
               value={viirsOnlyWeight}
               onChange={(e) => onChangeViirsWeight(parseFloat(e.target.value))}
               className="sim-slider"
+              aria-label={t.viirsWeightLabel}
             />
-            <div className="slider-labels">
-              <span>0% ({isPt ? 'Apenas Fogo Coincidente MODIS' : 'Coincident Fires Only'})</span>
-              <span>85% ({isPt ? 'Equilíbrio Recomendado NASA' : 'Recommended NASA Balance'})</span>
-              <span>100% ({isPt ? 'Peso Total p/ Pequenos Focos' : 'Full Weight for Small Burns'})</span>
+            <div className="lab-slider-ticks">
+              <span>{isPt ? '0% Coincidente' : '0% Coincident'}</span>
+              <span>85% NASA</span>
+              <span>{isPt ? '100% Integral' : '100% Full Weight'}</span>
             </div>
           </div>
         </div>
 
-        {/* Card 2: Interactive Scan-Angle Swath Distortion Simulator */}
-        <div className="panel swath-sim-panel">
-          <div className="panel-header" style={{ marginBottom: '8px' }}>
-            <div>
-              <h2 className="panel-title" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <Scan size={17} color="#f97316" />
-                {isPt
-                  ? 'Simulador de Distorção de Varredura (Scan × Track)'
-                  : 'Off-Nadir Scan-Angle Pixel Distortion Simulator'}
-              </h2>
+        {/* Card 2: Scan-Track Orbital Geometry Simulator */}
+        <div className="panel lab-card">
+          <div className="lab-card-header">
+            <h2 className="panel-title" style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
+              <Scan size={17} color="#f97316" />
+              {isPt ? 'Geometria Orbital (Scan × Track)' : 'Orbital Geometry (Scan × Track)'}
+            </h2>
+            <span className="lab-eyebrow">{scanAngle === 0 ? 'Nadir' : `${scanAngle}° Off-Nadir`}</span>
+          </div>
+
+          <div className="swath-stage">
+            <span className="swath-modis-label">
+              MODIS {modisScanKm} × {modisTrackKm} km vs. VIIRS {viirsScanKm} × {viirsTrackKm} km
+            </span>
+            <div
+              className="swath-modis-box"
+              style={{
+                width: `${Math.min(256, Math.round(modisScanKm * 52))}px`,
+                height: `${Math.min(84, Math.round(modisTrackKm * 36))}px`,
+              }}
+            >
+              <div className="swath-viirs-cluster">
+                {Array.from({ length: Math.min(12, Math.max(4, Math.round(ratio / 1.5))) }).map((_, i) => (
+                  <span key={i} className="swath-viirs-dot" title="VIIRS 375m pixel" />
+                ))}
+              </div>
             </div>
           </div>
 
-          <div className="swath-visualizer">
-            <div className="swath-stage">
-              <span className="swath-modis-label">
-                MODIS: {modisScanKm} × {modisTrackKm} km ({modisAreaKm2} km²)
+          <div className="swath-telemetry">
+            <div className="swath-tele-item">
+              <span>{isPt ? 'Área MODIS' : 'MODIS Area'}</span>
+              <strong style={{ color: '#fbbf24' }}>{modisAreaKm2} km²</strong>
+            </div>
+            <div className="swath-tele-item">
+              <span>{isPt ? 'Área VIIRS' : 'VIIRS Area'}</span>
+              <strong style={{ color: '#f87171' }}>{viirsAreaKm2} km²</strong>
+            </div>
+            <div className="swath-tele-item">
+              <span>{isPt ? 'Razão de Área' : 'Area Ratio'}</span>
+              <strong style={{ color: '#38bdf8' }}>{ratio}×</strong>
+            </div>
+          </div>
+
+          <div className="lab-slider-dock">
+            <div className="lab-slider-top">
+              <span className="lab-slider-label">
+                {isPt ? 'Ângulo de Visada (Off-Nadir)' : 'Scan Angle (Off-Nadir)'}
+                <InfoTooltip title="Off-Nadir" text={t.tips.scanAngle} />
               </span>
-              <div
-                className="swath-modis-box"
-                style={{
-                  width: `${Math.min(240, Math.round(modisScanKm * 52))}px`,
-                  height: `${Math.min(86, Math.round(modisTrackKm * 38))}px`,
-                }}
-              >
-                <div className="swath-viirs-cluster">
-                  {Array.from({ length: Math.min(12, Math.max(4, Math.round(ratio / 1.5))) }).map((_, i) => (
-                    <span key={i} className="swath-viirs-dot" title="VIIRS 375m pixel" />
-                  ))}
-                </div>
-              </div>
+              <strong className="lab-slider-val" style={{ color: '#38bdf8' }}>
+                {scanAngle}°
+              </strong>
             </div>
-
-            <div className="swath-metrics-row">
-              <div className="swath-stat">
-                <span>{isPt ? 'Área Efetiva MODIS' : 'MODIS Pixel Area'}</span>
-                <strong style={{ color: '#fbbf24' }}>{modisAreaKm2} km²</strong>
-              </div>
-              <div className="swath-stat">
-                <span>{isPt ? 'Área Efetiva VIIRS' : 'VIIRS Pixel Area'}</span>
-                <strong style={{ color: '#f87171' }}>{viirsAreaKm2} km²</strong>
-              </div>
-              <div className="swath-stat">
-                <span>{isPt ? 'Razão de Área Real' : 'True Area Ratio'}</span>
-                <strong style={{ color: '#38bdf8' }}>{ratio}×</strong>
-              </div>
-            </div>
-
-            <div className="interactive-weight-box" style={{ marginTop: '8px' }}>
-              <div className="weight-box-top">
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontWeight: 600 }}>
-                  {isPt ? 'Ângulo de Visada (Off-Nadir)' : 'Scan Angle (Off-Nadir)'}
-                  <InfoTooltip title="Off-Nadir" text={t.tips.scanAngle} />
-                </span>
-                <strong style={{ color: '#38bdf8' }}>{scanAngle}°</strong>
-              </div>
-              <input
-                type="range"
-                min="0"
-                max="55"
-                step="1"
-                value={scanAngle}
-                onChange={(e) => setScanAngle(parseInt(e.target.value, 10))}
-                className="sim-slider"
-              />
-              <div className="slider-labels">
-                <span>{lang === 'pt' ? '0° (Nadir · 1,0 km²)' : '0° (Nadir · 1.0 km²)'}</span>
-                <span>{lang === 'pt' ? '30° (Intermediário · ~1,6 km²)' : '30° (Mid-Swath · ~1.6 km²)'}</span>
-                <span>{lang === 'pt' ? '55° (Borda do Swath · ~8,2 km²)' : '55° (Swath Edge · ~8.2 km²)'}</span>
-              </div>
+            <input
+              type="range"
+              min="0"
+              max="55"
+              step="1"
+              value={scanAngle}
+              onChange={(e) => setScanAngle(parseInt(e.target.value, 10))}
+              className="sim-slider"
+              aria-label={isPt ? 'Ângulo de Visada' : 'Scan Angle'}
+            />
+            <div className="lab-slider-ticks">
+              <span>0° Nadir (1.0 km²)</span>
+              <span>30° Mid (~1.6 km²)</span>
+              <span>{isPt ? '55° Borda (~8.2 km²)' : '55° Edge (~8.2 km²)'}</span>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Live 3-Step Calibration Pipeline Ribbon */}
+      <div className="panel pipeline-ribbon" aria-label={t.modalFormulaTitle}>
+        <div className="pipeline-step">
+          <span className="pipeline-step-kicker">01 · VIIRS_effective</span>
+          <code className="pipeline-step-eq">
+            {coincidentViirs} + ({viirsOnlySmall} × {viirsOnlyWeight.toFixed(2)})
+          </code>
+          <strong className="pipeline-step-out">{effectiveViirs.toFixed(1)}</strong>
+        </div>
+
+        <span className="pipeline-connector" aria-hidden="true">→</span>
+
+        <div className="pipeline-step">
+          <span className="pipeline-step-kicker">02 · VIIRS_normalized</span>
+          <code className="pipeline-step-eq">
+            {effectiveViirs.toFixed(1)} × {calibrationFactor}
+          </code>
+          <strong className="pipeline-step-out">{normalizedViirs.toFixed(1)}</strong>
+        </div>
+
+        <span className="pipeline-connector" aria-hidden="true">→</span>
+
+        <div className="pipeline-step">
+          <span className="pipeline-step-kicker">03 · Harmonized_Index</span>
+          <code className="pipeline-step-eq">
+            ({rawModis} + {normalizedViirs.toFixed(1)}) / 2
+          </code>
+          <strong className="pipeline-step-out pipeline-step-out--final">
+            {liveHarmIndex.toFixed(1)} eq. MODIS
+          </strong>
         </div>
       </div>
     </section>

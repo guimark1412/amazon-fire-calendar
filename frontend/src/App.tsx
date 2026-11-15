@@ -1194,30 +1194,14 @@ export function App() {
             </button>
 
             {scienceDetailsOpen && (
-              <div className="science-panel-grid">
-                <div className="formula-box">
-                  <strong>{t.modalFormulaTitle}</strong>
-                  <code>
-                    VIIRS_effective = Coincident_VIIRS + (VIIRS_only_small × {viirsOnlyWeight})
-                  </code>
-                  <code>VIIRS_normalized = VIIRS_effective × {calibrationFactor}</code>
-                  <code>Harmonized_Index = (MODIS_raw + VIIRS_normalized) / 2</code>
-                  <p style={{ margin: '6px 0 0', fontSize: '0.84rem', color: '#9ca3af', lineHeight: 1.55 }}>
-                    {t.modalFormulaNote(calibrationFactor)}
-                  </p>
-                </div>
-
-                <div className="science-arch-block">
-                  <h3 className="science-arch-title">{t.modalPillarsTitle}</h3>
-                  <div className="pillars-grid">
-                    {t.modalPillars.map((pillar) => (
-                      <div key={pillar.title} className="pillar-card">
-                        <strong>{pillar.title}</strong>
-                        <p>{pillar.desc}</p>
-                      </div>
-                    ))}
+              <div className="editorial-pillars-grid">
+                {t.modalPillars.map((pillar, idx) => (
+                  <div key={pillar.title} className="editorial-pillar">
+                    <span className="editorial-pillar-num">0{idx + 1}</span>
+                    <strong>{pillar.title.replace(/^\d+\.\s*/, '')}</strong>
+                    <p>{pillar.desc}</p>
                   </div>
-                </div>
+                ))}
               </div>
             )}
           </section>
