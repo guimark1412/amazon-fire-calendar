@@ -1,6 +1,6 @@
 # Amazon Fire Calendar — NASA Space Apps 2026 (Harmonização MODIS ↔ VIIRS)
 
-Painel web interativo, bilíngue (padrão em **Inglês `EN`**, com alternância em 1 clique para **Português `PT`**) e responsivo desenvolvido pela equipe **`Printf("Nasarentos");`** para o desafio **"Harmonization of MODIS and VIIRS Hot Spots"** do **NASA Space Apps Challenge**. A plataforma **harmoniza os sensores MODIS (`1 km`) e VIIRS (`375 m`)** da **NASA FIRMS** em um **Calendário Unificado de Atividade de Queima** para a Amazônia e Áreas de Interesse Customizadas (`AOI`).
+Painel web interativo, bilíngue (detecção automática de **Português `PT`** / **Inglês `EN`** pelo navegador, com alternância em 1 clique salva localmente) e responsivo desenvolvido pela equipe **`Printf("Nasarentos");`** para o desafio **"Harmonization of MODIS and VIIRS Hot Spots"** do **NASA Space Apps Challenge**. A plataforma **harmoniza os sensores MODIS (`1 km`) e VIIRS (`375 m`)** da **NASA FIRMS** em um **Calendário Unificado de Atividade de Queima** para a Amazônia e Áreas de Interesse Customizadas (`AOI`).
 
 - **Aplicação Web Ao Vivo:** https://amazon-fire-web.onrender.com
 - **API & Documentação Swagger:** https://amazon-fire-api.onrender.com/docs
@@ -34,14 +34,14 @@ Painel web interativo, bilíngue (padrão em **Inglês `EN`**, com alternância 
    - **Matriz do Calendário (`CalendarMatrix`):** alterna entre **Índice Harmonizado** e **FRP (MW)**, filtra por status (`Todos`, `Crítico`, `Elevado`, `Normal`) e agrupa semanas por trimestres recolhíveis na visão semanal (`YYYY-Www`).
 3. **`3. MODIS×VIIRS Lab` (`Lab MODIS×VIIRS`)**
    - **Comparativo Antes vs. Depois:** evidencia o falso alarme da soma bruta contra a curva calibrada na régua histórica MODIS.
-   - **Controles Interativos:** ajuste do **Peso `VIIRS-Only`** (`0,50×`, `0,85×`, `1,00×`) e **Simulador Orbital `Scan × Track`** (`0°` a `55°`) calculando o estiramento físico dos pixels.
+   - **Controles Interativos & Pipeline ao Vivo:** ajuste do **Peso `VIIRS-Only`** (`0,50×`, `0,85×`, `1,00×`), **Simulador Orbital `Scan × Track`** (`0°` a `55°`) e faixa visual em **3 etapas** (`01 Ponderação VIIRS-Only` → `02 Conversão à Escala MODIS` → `03 Índice Harmonizado`).
    - **Arquitetura Científica inline:** seção expansível detalhando os **4 Pilares de Harmonização** e as equações do pipeline.
 
 ### 2. Experiência de Uso, Exportação, Modo Pitch & Mobile
-- **Controles Polidos:** grupos de botões segmentados com pílula deslizante animada (`SlidingToggleGroup`) e tooltips informativos `(i)` / `!` com delay de `500 ms` ao passar o ponteiro.
+- **Controles Polidos:** grupos de botões segmentados com pílula deslizante animada (`SlidingToggleGroup`) e tooltips informativos `(i)` / `!` com delay de `500 ms` no desktop e suporte dedicado ao toque no mobile (inclusive dentro de botões de seleção).
 - **Exportação:** **CSV** do calendário harmonizado (14 colunas: índice harmonizado, contagens brutas/coincidentes/`VIIRS-Only`, `anomaly_zscore`, `FRP` e alerta) e **GeoJSON** (`FeatureCollection` com focos e polígonos do grid espacial).
 - **Modo Pitch (Tour em 6 Passos):** apresentação guiada passo a passo (`topbar`, mapa, gráfico, matriz, laboratório e resumo executivo), com destaque prévio na barra de abas antes da transição de aba e ações interativas ao vivo.
-- **Interface Responsiva Mobile:** barra de navegação inferior fixa com 4 acessos rápidos (**Overview/Painel**, **Matrix/Matriz**, **NASA Lab/Lab NASA** e **Pitch**).
+- **Interface Responsiva Mobile (`max-width: 768px`):** abertura em tela cheia que aguarda o carregamento inicial (`/api/fires`, `/api/timeline`, `/api/grid`), exibe animação minimalista de celular para monitor recomendando visualização no computador e dissolve revelando o painel; cabeçalho enxuto com faixa de KPIs em 1 linha, controles globais/exportação/idioma recolhidos em menu lateral (`☰`), controles de 4 opções em grade `2×2` e barra inferior fixa (**Painel**, **Matriz**, **Lab NASA** e **Pitch**).
 
 ---
 
