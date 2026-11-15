@@ -160,6 +160,10 @@ export function PitchModeModal({
 
     const startTargetFocus = () => {
       activeSelector = target;
+      const elImmediate = document.querySelector(`[data-tour="${target}"]`) as HTMLElement | null;
+      if (elImmediate && elImmediate.offsetWidth > 0 && elImmediate.offsetHeight > 0) {
+        measureElement(elImmediate);
+      }
       setTabHandoff(false);
       let waitStart = performance.now();
 
@@ -207,10 +211,11 @@ export function PitchModeModal({
       window.scrollTo({ top: 0, behavior: 'smooth' });
       measureElement(viewTabsEl);
 
+      // Phase 1 (0-460ms): highlight the tab bar first; Phase 2 (460-1020ms): switch tab, then show card.
       const handoffStart = performance.now();
       const tickTabs = (now: number) => {
         measureSelector('view-tabs');
-        if (now - handoffStart < 880) {
+        if (now - handoffStart < 980) {
           rafId = window.requestAnimationFrame(tickTabs);
         }
       };
@@ -219,12 +224,12 @@ export function PitchModeModal({
       switchTimer = window.setTimeout(() => {
         onSelectView(nextView);
         measureSelector('view-tabs');
-      }, 190);
+      }, 460);
 
       handoffEndTimer = window.setTimeout(() => {
         window.cancelAnimationFrame(rafId);
         startTargetFocus();
-      }, 940);
+      }, 1020);
     } else {
       setTabHandoff(false);
       onSelectView(nextView);
@@ -472,13 +477,6 @@ export function PitchModeModal({
     );
   }
 
-  const destinationTabLabel =
-    step.view === 'matrix'
-      ? t.tabMatrix
-      : step.view === 'science'
-        ? t.tabScience
-        : t.tabOverview;
-
   return (
     <>
       {rect && (
@@ -493,23 +491,7 @@ export function PitchModeModal({
         />
       )}
 
-      {tabHandoff ? (
-        <div
-          key="handoff"
-          className="tour-tooltip-card tour-tooltip-card--handoff"
-          style={getTooltipStyle()}
-          role="status"
-          aria-live="polite"
-        >
-          <div className="tour-tab-handoff-only">
-            <ChevronRight size={15} />
-            <span>
-              {lang === 'pt' ? 'Abrindo aba:' : 'Switching to tab:'}{' '}
-              <strong>{destinationTabLabel}</strong>
-            </span>
-          </div>
-        </div>
-      ) : (
+      {!tabHandoff && (
         <div
           key="step"
           className="tour-tooltip-card"
