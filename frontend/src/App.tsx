@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { getFires, getGrid, getRegions, getTimeline } from './api';
 import { DateRangePickerPopover } from './components/DateRangePickerPopover';
-import { currentYear, dryPeak, last7Days, yearToDate } from './dateUtils';
+import { currentYear } from './dateUtils';
 import { FireCalendarChart } from './components/FireCalendarChart';
 import { FireMap } from './components/FireMap';
 import { InfoTooltip } from './components/InfoTooltip';
@@ -1350,15 +1350,6 @@ export function App() {
                 setChartMode(action);
               } else if (action === 'grid' || action === 'points' || action === 'footprints') {
                 setMapMode(action);
-              } else if (action === 'preset_peak') {
-                const r = dryPeak();
-                handleApplyDateRange(r.start, r.end, 'month');
-              } else if (action === 'preset_7d') {
-                const r = last7Days();
-                handleApplyDateRange(r.start, r.end, 'week');
-              } else if (action === 'preset_all') {
-                const r = yearToDate();
-                handleApplyDateRange(r.start, r.end, 'month');
               } else if (action === 'focus_peak_month') {
                 const peak =
                   summary?.peak_period && summary.peak_period !== '—'

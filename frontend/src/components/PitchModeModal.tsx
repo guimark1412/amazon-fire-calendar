@@ -24,9 +24,6 @@ export type PitchDemoAction =
   | 'grid'
   | 'points'
   | 'footprints'
-  | 'preset_peak'
-  | 'preset_7d'
-  | 'preset_all'
   | 'focus_peak_month'
   | 'export_csv'
   | 'export_geojson';
@@ -517,37 +514,10 @@ export function PitchModeModal({
             <p>{step.description}</p>
 
           {stepIndex === 0 && (
-            <>
-              <div className="tour-live-note" style={{ marginTop: '10px' }}>
-                <strong>{regionName}:</strong> {totalFires.toLocaleString(lang === 'pt' ? 'pt-BR' : 'en-US')}{' '}
-                {t.tourRecentHotspots} • {t.tourCalibFactor} <code>× {calibrationFactor}</code>
-              </div>
-              <div className="pitch-action-row">
-                <button
-                  type="button"
-                  className="control-select action-btn"
-                  onClick={() => onTriggerDemoAction('preset_peak')}
-                >
-                  <Calendar size={14} />
-                  {t.tourDemoPeakAugSep}
-                </button>
-                <button
-                  type="button"
-                  className="control-select action-btn"
-                  onClick={() => onTriggerDemoAction('preset_7d')}
-                >
-                  <Calendar size={14} />
-                  {t.tourDemoLast7d}
-                </button>
-                <button
-                  type="button"
-                  className="control-select action-btn"
-                  onClick={() => onTriggerDemoAction('preset_all')}
-                >
-                  {t.tourDemoFullYear}
-                </button>
-              </div>
-            </>
+            <div className="tour-live-note" style={{ marginTop: '10px' }}>
+              <strong>{regionName}:</strong> {totalFires.toLocaleString(lang === 'pt' ? 'pt-BR' : 'en-US')}{' '}
+              {t.tourRecentHotspots} • {t.tourCalibFactor} <code>× {calibrationFactor}</code>
+            </div>
           )}
 
           {stepIndex === 1 && (

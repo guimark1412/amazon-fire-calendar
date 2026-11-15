@@ -46,7 +46,7 @@ export const I18N = {
     expandAllQuarters: 'Expandir todos',
     collapseQuarters: 'Compactar trimestres',
     pitchSummaryMetrics: {
-      hotspots: 'Focos Processados Ao Vivo',
+      hotspots: 'Focos Filtrados no Recorte',
       factor: 'Fator de Calibração MODIS↔VIIRS',
       deviation: 'Status & Desvio Acumulado',
     },
@@ -224,8 +224,8 @@ export const I18N = {
         desc: 'Permite filtrar níveis de confiança das detecções e harmoniza a energia térmica liberada (FRP em Megawatts) entre os dois sensores.',
       },
       {
-        title: '4. Calendário de Atividade de Queima & Anomalia (Z-Score)',
-        desc: 'Gera a matriz sazonal harmonizada com cálculo de desvio percentual, Z-Score padronizado e suporte a Área de Interesse Customizada (AOI) no mapa.',
+        title: '4. Calendário Sazonal & Desvio da Baseline',
+        desc: 'Gera a matriz sazonal harmonizada com cálculo de desvio percentual (e Z-Score exportável em CSV) e suporte a Área de Interesse Customizada (AOI) no mapa.',
       },
     ],
     modalFormulaTitle: 'Equações do Pipeline de Harmonização no Backend:',
@@ -258,9 +258,9 @@ export const I18N = {
         target: 'calendar-matrix',
         view: 'matrix',
         badge: 'Aba 2 · Passo 4 de 6 — Calendário & Matriz',
-        title: 'Espectro Sazonal, Matriz Z-Score/FRP e Alerta',
+        title: 'Espectro Sazonal, Matriz do Calendário e Alerta Precoce',
         description:
-          'Inspecione o espectro contínuo de queima e a matriz por período com Índice Harmonizado, FRP e Z-Score na paleta Semáforo ou Viridis.',
+          'Inspecione o espectro contínuo de queima, alterne a matriz entre Índice Harmonizado e energia FRP (MW), filtre períodos por alerta e abra o painel de Alerta Precoce.',
       },
       {
         target: 'harm-lab',
@@ -276,7 +276,7 @@ export const I18N = {
         badge: 'Conclusão · Passo 6 de 6 — Resumo Executivo',
         title: 'Plataforma Unificada NASA FIRMS · MODIS ↔ VIIRS',
         description:
-          'Os 4 pilares científicos operando em conjunto: geometria orbital, clusterização espaço-temporal, alerta Z-Score/FRP e exportação aberta para brigadistas.',
+          'Os 4 pilares científicos operando em conjunto: geometria orbital, clusterização espaço-temporal, alerta sazonal/FRP e exportação aberta em CSV/GeoJSON.',
       },
     ],
     tourPrev: 'Anterior',
@@ -284,9 +284,6 @@ export const I18N = {
     tourFinish: 'Finalizar Tour',
     tourViewPoints: 'Pontos',
     tourViewGrid: 'Grid Harmonizado',
-    tourDemoPeakAugSep: 'Pico Ago–Set',
-    tourDemoLast7d: 'Últimos 7 dias',
-    tourDemoFullYear: 'Ano 2026',
     tourDemoHighlightPeak: 'Focar Pico no Mapa',
     tourRecentHotspots: 'focos filtrados',
     tourCalibFactor: 'Fator de calibração',
@@ -310,7 +307,7 @@ export const I18N = {
     expandAllQuarters: 'Expand all',
     collapseQuarters: 'Collapse quarters',
     pitchSummaryMetrics: {
-      hotspots: 'Live Hotspots Processed',
+      hotspots: 'Filtered Hotspots in View',
       factor: 'MODIS↔VIIRS Calibration Factor',
       deviation: 'Status & Cumulative Deviation',
     },
@@ -488,8 +485,8 @@ export const I18N = {
         desc: 'Supports detection confidence filtering while harmonizing thermal energy output (FRP in Megawatts) across both sensors.',
       },
       {
-        title: '4. Burning Activity Calendar & Standardized Anomaly (Z-Score)',
-        desc: 'Produces the seasonal burning calendar matrix with percentage deviation, standardized Z-Score, and interactive Custom Area of Interest (AOI) map selection.',
+        title: '4. Seasonal Burning Calendar & Baseline Deviation',
+        desc: 'Produces the seasonal calendar matrix with percentage deviation (plus exportable Z-Score in CSV) and interactive Custom Area of Interest (AOI) map selection.',
       },
     ],
     modalFormulaTitle: 'Backend Harmonization Pipeline Equations:',
@@ -522,9 +519,9 @@ export const I18N = {
         target: 'calendar-matrix',
         view: 'matrix',
         badge: 'Tab 2 · Step 4 of 6 — Calendar & Matrix',
-        title: 'Seasonal Spectrum, Z-Score/FRP Matrix & Warning',
+        title: 'Seasonal Spectrum, Calendar Matrix & Early Warning',
         description:
-          'Inspect the continuous burning spectrum and period matrix across Harmonized Index, FRP, and Z-Score with Traffic Light or accessible Viridis colors.',
+          'Inspect the continuous burning spectrum, toggle the matrix between Harmonized Index and thermal FRP (MW), filter periods by alert status, and open the Early Warning brief.',
       },
       {
         target: 'harm-lab',
@@ -540,7 +537,7 @@ export const I18N = {
         badge: 'Summary · Step 6 of 6 — Executive Wrap-Up',
         title: 'Unified NASA FIRMS · MODIS ↔ VIIRS Platform',
         description:
-          'All 4 scientific pillars integrated end-to-end: orbital swath geometry, spatiotemporal clustering, Z-Score/FRP alerts, and open GIS exports.',
+          'All 4 scientific pillars integrated end-to-end: orbital swath geometry, spatiotemporal clustering, seasonal & FRP early warning, and open CSV/GeoJSON exports.',
       },
     ],
     tourPrev: 'Previous',
@@ -548,9 +545,6 @@ export const I18N = {
     tourFinish: 'Finish Tour',
     tourViewPoints: 'Points',
     tourViewGrid: 'Harmonized Grid',
-    tourDemoPeakAugSep: 'Aug–Sep Peak',
-    tourDemoLast7d: 'Last 7 days',
-    tourDemoFullYear: 'Full Year 2026',
     tourDemoHighlightPeak: 'Focus Peak on Map',
     tourRecentHotspots: 'filtered hotspots',
     tourCalibFactor: 'Calibration factor',
