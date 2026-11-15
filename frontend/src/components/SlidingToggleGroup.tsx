@@ -80,6 +80,7 @@ export function SlidingToggleGroup<T extends string>({
     <div
       ref={containerRef}
       className={`${groupClassName} ${indicator.width > 0 ? 'has-indicator' : ''}`}
+      data-count={options.length}
       role="group"
       aria-label={ariaLabel}
     >
