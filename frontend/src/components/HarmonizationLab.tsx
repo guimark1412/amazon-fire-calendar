@@ -225,33 +225,81 @@ export function HarmonizationLab({
       {/* Live 3-Step Calibration Pipeline Ribbon */}
       <div className="panel pipeline-ribbon" aria-label={t.modalFormulaTitle}>
         <div className="pipeline-step">
-          <span className="pipeline-step-kicker">01 · VIIRS_effective</span>
-          <code className="pipeline-step-eq">
-            {coincidentViirs} + ({viirsOnlySmall} × {viirsOnlyWeight.toFixed(2)})
-          </code>
-          <strong className="pipeline-step-out">{effectiveViirs.toFixed(1)}</strong>
+          <div className="pipeline-step-head">
+            <span className="pipeline-step-num">01</span>
+            <span className="pipeline-step-title">
+              {isPt ? 'Ponderação VIIRS-Only' : 'VIIRS-Only Weighting'}
+            </span>
+          </div>
+          <div className="pipeline-step-body">
+            <code className="pipeline-step-eq">
+              {coincidentViirs.toLocaleString(locale)} + ({viirsOnlySmall.toLocaleString(locale)} ×{' '}
+              {viirsOnlyWeight.toFixed(2)})
+            </code>
+            <div className="pipeline-step-result">
+              <strong className="pipeline-step-out">
+                {effectiveViirs.toLocaleString(locale, {
+                  minimumFractionDigits: 1,
+                  maximumFractionDigits: 1,
+                })}
+              </strong>
+              <span className="pipeline-step-unit">{isPt ? 'efetivos' : 'effective'}</span>
+            </div>
+          </div>
         </div>
 
-        <span className="pipeline-connector" aria-hidden="true">→</span>
+        <span className="pipeline-connector" aria-hidden="true">
+          <ArrowRight size={15} />
+        </span>
 
         <div className="pipeline-step">
-          <span className="pipeline-step-kicker">02 · VIIRS_normalized</span>
-          <code className="pipeline-step-eq">
-            {effectiveViirs.toFixed(1)} × {calibrationFactor}
-          </code>
-          <strong className="pipeline-step-out">{normalizedViirs.toFixed(1)}</strong>
+          <div className="pipeline-step-head">
+            <span className="pipeline-step-num">02</span>
+            <span className="pipeline-step-title">
+              {isPt ? 'Conversão à Escala MODIS' : 'MODIS Scale Conversion'}
+            </span>
+          </div>
+          <div className="pipeline-step-body">
+            <code className="pipeline-step-eq">
+              {effectiveViirs.toFixed(1)} × {calibrationFactor}
+            </code>
+            <div className="pipeline-step-result">
+              <strong className="pipeline-step-out">
+                {normalizedViirs.toLocaleString(locale, {
+                  minimumFractionDigits: 1,
+                  maximumFractionDigits: 1,
+                })}
+              </strong>
+              <span className="pipeline-step-unit">eq. MODIS</span>
+            </div>
+          </div>
         </div>
 
-        <span className="pipeline-connector" aria-hidden="true">→</span>
+        <span className="pipeline-connector" aria-hidden="true">
+          <ArrowRight size={15} />
+        </span>
 
-        <div className="pipeline-step">
-          <span className="pipeline-step-kicker">03 · Harmonized_Index</span>
-          <code className="pipeline-step-eq">
-            ({rawModis} + {normalizedViirs.toFixed(1)}) / 2
-          </code>
-          <strong className="pipeline-step-out pipeline-step-out--final">
-            {liveHarmIndex.toFixed(1)} eq. MODIS
-          </strong>
+        <div className="pipeline-step pipeline-step--final">
+          <div className="pipeline-step-head">
+            <span className="pipeline-step-num pipeline-step-num--final">03</span>
+            <span className="pipeline-step-title">
+              {isPt ? 'Índice Harmonizado' : 'Harmonized Index'}
+            </span>
+          </div>
+          <div className="pipeline-step-body">
+            <code className="pipeline-step-eq">
+              ({rawModis.toLocaleString(locale)} + {normalizedViirs.toFixed(1)}) ÷ 2
+            </code>
+            <div className="pipeline-step-result">
+              <strong className="pipeline-step-out pipeline-step-out--final">
+                {liveHarmIndex.toLocaleString(locale, {
+                  minimumFractionDigits: 1,
+                  maximumFractionDigits: 1,
+                })}
+              </strong>
+              <span className="pipeline-step-unit pipeline-step-unit--final">eq. MODIS</span>
+            </div>
+          </div>
         </div>
       </div>
     </section>
