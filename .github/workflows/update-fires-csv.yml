@@ -1,0 +1,39 @@
+name: Update Historical Fire CSV
+
+on:
+  schedule:
+    # Runs daily at 06:15 UTC (02:15 AM AMT) so yesterday_utc is complete in NASA FIRMS
+    - cron: '15 6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-fires-csv:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Fetch and append new calibrated NASA FIRMS detections
+        env:
+          FIRMS_MAP_KEY: ${{ secrets.FIRMS_MAP_KEY }}
+        run: python backend/scripts/update_historical_csv.py --days 5 --require-key
+
+      - name: Commit and push updated CSV if changed
+        run: |
+          if git diff --quiet backend/data/amazon_sample_fires.csv; then
+            echo "No new rows to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add backend/data/amazon_sample_fires.csv
+          git commit -m "chore(data): update historical fire CSV via NASA FIRMS"
+          git push
