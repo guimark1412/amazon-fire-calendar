@@ -10,6 +10,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
+import { formatPeriodDisplay } from '../dateUtils';
 import { I18N, type Language } from '../i18n';
 import type { ChartViewMode, SensorFilter, TimelinePoint } from '../types';
 
@@ -50,12 +51,21 @@ export function FireCalendarChart({
           }}
         >
           <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" />
-          <XAxis dataKey="period" stroke="#9ca3af" tick={{ fontSize: 12 }} />
+          <XAxis
+            dataKey="period"
+            stroke="#9ca3af"
+            tick={{ fontSize: 11 }}
+            minTickGap={16}
+            tickFormatter={(val: string) =>
+              val.includes('-W') ? val.split('-')[1] : formatPeriodDisplay(val, t.months, t.weekPrefix)
+            }
+          />
           <YAxis stroke="#9ca3af" tick={{ fontSize: 12 }} />
           {selectedPeriod && (
             <ReferenceLine x={selectedPeriod} stroke="#38bdf8" strokeWidth={2} strokeDasharray="4 4" />
           )}
           <Tooltip
+            labelFormatter={(label) => formatPeriodDisplay(String(label ?? ''), t.months, t.weekPrefix)}
             contentStyle={{
               backgroundColor: '#0f172a',
               border: '1px solid #334155',

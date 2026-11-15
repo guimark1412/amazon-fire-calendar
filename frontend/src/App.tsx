@@ -803,14 +803,6 @@ export function App() {
                       <SlidersHorizontal size={14} color="#f97316" />
                       {t.advFiltersBtn}
                     </span>
-                    <button
-                      type="button"
-                      className="aoi-popover-close"
-                      onClick={() => setSubfiltersOpen(false)}
-                      aria-label={lang === 'pt' ? 'Fechar filtros' : 'Close filters'}
-                    >
-                      <X size={14} />
-                    </button>
                   </div>
 
                   <div className="filters-field">

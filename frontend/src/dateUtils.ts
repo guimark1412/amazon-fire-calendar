@@ -55,7 +55,17 @@ export function isSameRange(start: string | null, end: string | null, r: DateRan
 export interface PeriodInfo {
   label: string;
   sublabel: string;
+  monthIdx: number;
   quarterIdx: number;
+}
+
+/** Resolve calendar year and 0-based month from an ISO week via its Thursday (matches Python %G-W%V-%u). */
+function isoWeekThursdayMonth(isoYear: number, weekNum: number): { year: number; monthIdx: number } {
+  const jan4 = new Date(Date.UTC(isoYear, 0, 4));
+  const jan4Day = jan4.getUTCDay() || 7; // Mon=1 .. Sun=7
+  const thursday = new Date(jan4);
+  thursday.setUTCDate(jan4.getUTCDate() + (4 - jan4Day) + (weekNum - 1) * 7);
+  return { year: thursday.getUTCFullYear(), monthIdx: thursday.getUTCMonth() };
 }
 
 export function parsePeriodInfo(
@@ -70,23 +80,25 @@ export function parsePeriodInfo(
     return {
       label: `${months[idx] ?? month}/${year.slice(2)}`,
       sublabel: '',
+      monthIdx: idx,
       quarterIdx: Math.min(3, Math.floor(idx / 3)),
     };
   }
 
   const weekMatch = /^(\d{4})-W(\d{2})$/.exec(period);
   if (weekMatch) {
-    const [, year, weekStr] = weekMatch;
+    const [, yearStr, weekStr] = weekMatch;
     const weekNum = parseInt(weekStr, 10);
-    const monthIdx = Math.min(11, Math.max(0, Math.floor((weekNum - 1) / 4.345)));
+    const { year, monthIdx } = isoWeekThursdayMonth(parseInt(yearStr, 10), weekNum);
     return {
       label: `${weekPrefix} ${String(weekNum).padStart(2, '0')}`,
-      sublabel: `${months[monthIdx]}/${year.slice(2)}`,
+      sublabel: `${months[monthIdx]}/${String(year).slice(2)}`,
+      monthIdx,
       quarterIdx: Math.min(3, Math.floor(monthIdx / 3)),
     };
   }
 
-  return { label: period, sublabel: '', quarterIdx: 0 };
+  return { label: period, sublabel: '', monthIdx: 0, quarterIdx: 0 };
 }
 
 export function formatPeriodDisplay(

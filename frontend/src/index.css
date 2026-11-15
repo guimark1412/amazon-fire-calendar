@@ -2114,6 +2114,27 @@ body {
   padding: 12px 14px;
 }
 
+.heatmap-header-right {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.heatmap-focus-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(56, 189, 248, 0.38);
+  color: #cbd5e1;
+  font-size: 0.72rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
 .heatmap-legend {
   display: flex;
   align-items: center;
@@ -2135,16 +2156,6 @@ body {
   align-items: end;
 }
 
-.heatmap-cells-row--weekly {
-  grid-auto-flow: column;
-  grid-auto-columns: minmax(42px, 1fr);
-  grid-template-columns: none;
-  overflow-x: auto;
-  padding-bottom: 5px;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(148, 163, 184, 0.35) transparent;
-}
-
 .heatmap-cell-col {
   display: flex;
   flex-direction: column;
@@ -2154,6 +2165,11 @@ body {
   border: 1px solid rgba(31, 41, 55, 0.8);
   border-radius: 7px;
   padding: 5px 4px;
+  transition: border-color 0.15s ease;
+}
+
+.heatmap-cell-col.has-active-week {
+  border-color: rgba(56, 189, 248, 0.45);
 }
 
 .heatmap-bar-well {
@@ -2164,6 +2180,35 @@ body {
   display: flex;
   align-items: flex-end;
   overflow: hidden;
+}
+
+.heatmap-week-well {
+  padding: 2px 3px 0;
+  gap: 2px;
+  align-items: flex-end;
+}
+
+.heatmap-week-bar {
+  flex: 1 1 0;
+  min-width: 4px;
+  border: none;
+  padding: 0;
+  border-radius: 3px 3px 1px 1px;
+  cursor: pointer;
+  transition: transform 0.14s ease, filter 0.14s ease, box-shadow 0.14s ease;
+}
+
+.heatmap-week-bar:hover,
+.heatmap-week-bar:focus-visible {
+  outline: none;
+  filter: brightness(1.25);
+  transform: scaleY(1.06);
+  transform-origin: bottom;
+}
+
+.heatmap-week-bar.is-selected {
+  box-shadow: 0 0 0 1.5px #38bdf8, 0 0 10px rgba(56, 189, 248, 0.45) !important;
+  filter: brightness(1.18);
 }
 
 .heatmap-bar-pillar {
