@@ -499,3 +499,30 @@ def test_all_regions_seasonal_calendar_coherence():
         assert viirs_by_period[peak_period]["coincident_viirs"] > 0
 
 
+def test_monthly_map_uses_calendar_scale_while_live_weekly_stays_unscaled():
+    tl_m = client.get("/api/timeline?region=amazonia_legal&granularity=month").json()
+    nov_pt = next(p for p in tl_m["series"] if p["period"] == "2026-11")
+    nov_expected_count = nov_pt["modis_raw"] + nov_pt["viirs_raw"]
+
+    fires_oct = client.get("/api/fires?region=amazonia_legal&period=2026-10").json()
+    fires_nov = client.get("/api/fires?region=amazonia_legal&period=2026-11").json()
+    grid_nov = client.get("/api/grid?region=amazonia_legal&period=2026-11").json()
+
+    assert fires_oct["live_unscaled"] is False
+    assert fires_nov["live_unscaled"] is False
+    assert grid_nov["live_unscaled"] is False
+    assert fires_nov["total_count"] == nov_expected_count
+    assert fires_nov["total_count"] <= fires_oct["total_count"]
+
+    fires_live = client.get("/api/fires?region=amazonia_legal").json()
+    assert fires_live["live_unscaled"] is ("live_nasa_firms" in fires_live["data_source"])
+
+    tl_w = client.get("/api/timeline?region=amazonia_legal&granularity=week").json()
+    latest_week = tl_w["series"][-1]["period"]
+    fires_week = client.get(f"/api/fires?region=amazonia_legal&period={latest_week}").json()
+    grid_week = client.get(f"/api/grid?region=amazonia_legal&period={latest_week}").json()
+    assert fires_week["live_unscaled"] is ("live_nasa_firms" in fires_week["data_source"])
+    assert grid_week["live_unscaled"] is ("live_nasa_firms" in grid_week["data_source"])
+
+
+

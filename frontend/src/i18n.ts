@@ -184,6 +184,9 @@ export const I18N = {
         'Área real aproximada de cada pixel (Scan × Track em km²), mostrando o alongamento nas bordas de varredura.',
       mapGrid:
         'Células agregadas coloridas pelo nível de alerta comparado à média histórica MODIS local.',
+      liveUnscaledTitle: 'Modo ao vivo (sem reescala)',
+      liveUnscaledTip:
+        'Nos modos em tempo real (Últimos 7 dias ou Semana atual), o mapa exibe todas as detecções brutas recebidas da NASA FIRMS (milhares de focos). Ao clicar em um mês no calendário, novembro é reescalado proporcionalmente para comparação justa com os demais meses.',
       chartHarm:
         'Unifica MODIS (1 km) e VIIRS normalizado na mesma régua de 20 anos para comparação justa com a média.',
       chartRaw:
@@ -445,6 +448,9 @@ export const I18N = {
         'Approximate ground pixel footprint (Scan × Track in km²), illustrating off-nadir stretching.',
       mapGrid:
         'Spatial grid cells colored by alert severity compared against the local MODIS historical mean.',
+      liveUnscaledTitle: 'Live mode (unscaled FIRMS)',
+      liveUnscaledTip:
+        'In real-time views (Last 7 days or current live week), the map displays all raw NASA FIRMS detections (thousands of hotspots). Selecting a month in the calendar proportionally scales November so it matches earlier months’ baseline.',
       chartHarm:
         'Unifies MODIS (1 km) and normalized VIIRS onto the 20-year baseline for apples-to-apples comparison.',
       chartRaw:

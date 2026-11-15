@@ -37,6 +37,7 @@ export interface FiresResponse {
   region: string;
   sensor: string;
   data_source: string;
+  live_unscaled?: boolean;
   total_count: number;
   returned_count: number;
   fires: FireHotspot[];
@@ -121,5 +122,6 @@ export interface GridResponse {
   calibration_factor: number;
   total_cells: number;
   data_source: string;
+  live_unscaled?: boolean;
   cells: GridCell[];
 }

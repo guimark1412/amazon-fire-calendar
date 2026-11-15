@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { AlertTriangle } from 'lucide-react';
 
 interface InfoTooltipProps {
   text: string;
   title?: string;
   insideButton?: boolean;
+  variant?: 'info' | 'warning';
 }
 
 interface TooltipPos {
@@ -17,7 +19,12 @@ interface TooltipPos {
 
 const HOVER_DELAY_MS = 500;
 
-export function InfoTooltip({ text, title, insideButton = false }: InfoTooltipProps) {
+export function InfoTooltip({
+  text,
+  title,
+  insideButton = false,
+  variant = 'info',
+}: InfoTooltipProps) {
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState<TooltipPos | null>(null);
   const triggerRef = useRef<HTMLSpanElement | null>(null);
@@ -132,8 +139,11 @@ export function InfoTooltip({ text, title, insideButton = false }: InfoTooltipPr
       tabIndex={insideButton ? undefined : 0}
       aria-label={title ? `${title}: ${text}` : text}
     >
-      <span className="info-tip-badge" aria-hidden="true">
-        i
+      <span
+        className={`info-tip-badge ${variant === 'warning' ? 'info-tip-badge--warning' : ''}`}
+        aria-hidden="true"
+      >
+        {variant === 'warning' ? <AlertTriangle size={12} strokeWidth={2.4} /> : 'i'}
       </span>
 
       {open &&
@@ -142,7 +152,9 @@ export function InfoTooltip({ text, title, insideButton = false }: InfoTooltipPr
         createPortal(
           <div
             role="tooltip"
-            className={`info-tip-portal info-tip-portal--${pos.placement}`}
+            className={`info-tip-portal info-tip-portal--${pos.placement} ${
+              variant === 'warning' ? 'info-tip-portal--warning' : ''
+            }`}
             style={{
               left: `${pos.left}px`,
               top: `${pos.top}px`,

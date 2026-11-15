@@ -1069,7 +1069,16 @@ export function App() {
             <section className="panel" data-tour="map-panel">
               <div className="panel-header">
                 <div>
-                  <h2 className="panel-title">{t.mapTitle(activeRegion.name)}</h2>
+                  <h2 className="panel-title panel-title-inline">
+                    <span>{t.mapTitle(activeRegion.name)}</span>
+                    {Boolean(mapMode === 'grid' ? gridData?.live_unscaled : firesData?.live_unscaled) && (
+                      <InfoTooltip
+                        variant="warning"
+                        title={t.tips.liveUnscaledTitle}
+                        text={t.tips.liveUnscaledTip}
+                      />
+                    )}
+                  </h2>
                   <p className="panel-subtitle">
                     {mapMode === 'grid'
                       ? t.mapSubGrid(gridData?.total_cells ?? 0)

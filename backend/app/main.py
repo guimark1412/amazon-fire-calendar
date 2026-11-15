@@ -105,6 +105,18 @@ def _sample_by_month(items: list, target: int) -> list:
     return sampled
 
 
+def _uses_monthly_calendar_scale(period: Optional[str]) -> bool:
+    """Monthly/annual calendar clicks share the calibrated timeline scale; live 7d & weekly clicks stay unscaled."""
+    if not period:
+        return False
+    p = period.strip()
+    if len(p) == 7 and p[4] == "-" and not p[5:].upper().startswith("W"):
+        return True
+    if len(p) == 4 and p.isdigit():
+        return True
+    return False
+
+
 @app.get("/api/fires")
 def get_fires(
     region: str = Query("amazonia_legal", description="Region ID from /api/regions or 'custom_aoi'"),
@@ -122,17 +134,31 @@ def get_fires(
     if custom_bbox is None and region not in REGIONS:
         raise HTTPException(status_code=404, detail=f"Unknown region '{region}'")
 
-    records, data_source = get_fire_records(
-        region_id=region,
-        sensor=sensor,
-        days=days,
-        custom_bbox=custom_bbox,
-        daynight=daynight,
-        min_confidence=min_confidence,
-        period=period,
-        start_date=start_date,
-        end_date=end_date,
-    )
+    use_scaled_calendar = _uses_monthly_calendar_scale(period)
+    if use_scaled_calendar:
+        records, data_source = get_timeline_records(
+            region_id=region,
+            days=days,
+            custom_bbox=custom_bbox,
+            daynight=daynight,
+            min_confidence=min_confidence,
+            sensor=sensor,
+            period=period,
+            start_date=start_date,
+            end_date=end_date,
+        )
+    else:
+        records, data_source = get_fire_records(
+            region_id=region,
+            sensor=sensor,
+            days=days,
+            custom_bbox=custom_bbox,
+            daynight=daynight,
+            min_confidence=min_confidence,
+            period=period,
+            start_date=start_date,
+            end_date=end_date,
+        )
     if sensor.lower() == "both" and len(records) > limit:
         half = limit // 2
         all_modis = [r for r in records if r["sensor"] == "MODIS"]
@@ -149,6 +175,7 @@ def get_fires(
         "start_date": start_date,
         "end_date": end_date,
         "data_source": data_source,
+        "live_unscaled": (not use_scaled_calendar) and ("live_nasa_firms" in data_source),
         "total_count": len(records),
         "returned_count": len(sliced),
         "fires": sliced,
@@ -229,17 +256,31 @@ def get_grid(
         raise HTTPException(status_code=404, detail=f"Unknown region '{region}'")
 
     region_cfg = with_dynamic_historical_baseline(resolve_region_config(region, custom_bbox))
-    all_records, data_source = get_fire_records(
-        region_id=region,
-        sensor="both",
-        days=days,
-        custom_bbox=custom_bbox,
-        daynight=daynight,
-        min_confidence=min_confidence,
-        period=period,
-        start_date=start_date,
-        end_date=end_date,
-    )
+    use_scaled_calendar = _uses_monthly_calendar_scale(period)
+    if use_scaled_calendar:
+        all_records, data_source = get_timeline_records(
+            region_id=region,
+            days=days,
+            custom_bbox=custom_bbox,
+            daynight=daynight,
+            min_confidence=min_confidence,
+            sensor="both",
+            period=period,
+            start_date=start_date,
+            end_date=end_date,
+        )
+    else:
+        all_records, data_source = get_fire_records(
+            region_id=region,
+            sensor="both",
+            days=days,
+            custom_bbox=custom_bbox,
+            daynight=daynight,
+            min_confidence=min_confidence,
+            period=period,
+            start_date=start_date,
+            end_date=end_date,
+        )
     if sensor.lower() in ("modis", "viirs"):
         target_sensor = sensor.upper()
         records = [r for r in all_records if r["sensor"] == target_sensor]
@@ -258,4 +299,5 @@ def get_grid(
     grid["start_date"] = start_date
     grid["end_date"] = end_date
     grid["data_source"] = data_source
+    grid["live_unscaled"] = (not use_scaled_calendar) and ("live_nasa_firms" in data_source)
     return grid
