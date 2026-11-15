@@ -4,7 +4,7 @@ from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 
 from .config import REGIONS, parse_custom_bbox, resolve_region_config
-from .firms_client import get_fire_records, get_timeline_records
+from .firms_client import get_fire_records, get_timeline_records, with_dynamic_historical_baseline
 from .harmonization import build_spatial_grid, build_timeline
 
 app = FastAPI(
@@ -177,7 +177,7 @@ def get_timeline(
     if custom_bbox is None and region not in REGIONS:
         raise HTTPException(status_code=404, detail=f"Unknown region '{region}'")
 
-    region_cfg = resolve_region_config(region, custom_bbox)
+    region_cfg = with_dynamic_historical_baseline(resolve_region_config(region, custom_bbox))
     records, data_source = get_timeline_records(
         region_id=region,
         days=7,
@@ -221,7 +221,7 @@ def get_grid(
     if custom_bbox is None and region not in REGIONS:
         raise HTTPException(status_code=404, detail=f"Unknown region '{region}'")
 
-    region_cfg = resolve_region_config(region, custom_bbox)
+    region_cfg = with_dynamic_historical_baseline(resolve_region_config(region, custom_bbox))
     records, data_source = get_fire_records(
         region_id=region,
         sensor=sensor,

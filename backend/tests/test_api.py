@@ -364,3 +364,20 @@ def test_live_cache_preserves_unclipped_bbox_across_regions(monkeypatch):
     assert br_recs[0]["longitude"] == -60.02
     assert len(sa_recs) == 2
     firms_client._LIVE_CACHE.clear()
+
+
+def test_dynamic_historical_baseline_matches_prior_years():
+    tl_am = client.get("/api/timeline?region=amazonas&granularity=month").json()
+    by_period_am = {pt["period"]: pt for pt in tl_am["series"]}
+    # September in Amazonas 2024-2025 CSV avg is 14.0 (previously overstated as hardcoded 20.0)
+    assert by_period_am["2026-09"]["historical_avg"] == 14.0
+    assert by_period_am["2026-08"]["historical_avg"] == 10.5
+    assert by_period_am["2026-11"]["historical_avg"] == 4.0
+
+    tl_pa = client.get("/api/timeline?region=para&granularity=month").json()
+    by_period_pa = {pt["period"]: pt for pt in tl_pa["series"]}
+    assert by_period_pa["2026-09"]["historical_avg"] == 9.0
+
+    # Tiny sparse custom AOI safely falls back without zero/division issues
+    tl_tiny = client.get("/api/timeline?bbox=-60.1,-3.2,-59.9,-3.0&granularity=month").json()
+    assert all(pt["historical_avg"] >= 0.5 for pt in tl_tiny["series"])

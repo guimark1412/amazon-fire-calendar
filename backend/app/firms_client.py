@@ -1,4 +1,5 @@
 import csv
+from dataclasses import replace
 from datetime import date, datetime, timedelta, timezone
 import io
 import logging
@@ -19,13 +20,15 @@ try:
 except ImportError:
     pass
 
-from .config import REGIONS, RegionConfig, in_region, resolve_region_config
+from .config import DEFAULT_VIIRS_TO_MODIS_FACTOR, REGIONS, RegionConfig, in_region, resolve_region_config
 
 logger = logging.getLogger(__name__)
 
 DATA_FILE = Path(__file__).resolve().parent.parent / "data" / "amazon_sample_fires.csv"
 FIRMS_BASE_URL = "https://firms.modaps.eosdis.nasa.gov/api/area/csv"
 _LIVE_CACHE: Dict[Tuple[str, int, str], Tuple[float, List[Dict[str, Any]]]] = {}
+_BASELINE_CACHE: Dict[Tuple[str, Tuple[float, float, float, float]], Tuple[float, ...]] = {}
+BASELINE_YEARS = ("2024", "2025")
 CACHE_TTL_SECONDS = 300.0
 VIIRS_PRIMARY_SOURCE = "VIIRS_NOAA20_NRT"
 VIIRS_FALLBACK_SOURCES = ("VIIRS_NOAA21_NRT", "VIIRS_SNPP_NRT")
@@ -463,6 +466,61 @@ def get_fire_records(
     return records, "local_csv_fallback"
 
 
+def compute_dynamic_historical_avg(region: RegionConfig) -> Tuple[float, ...]:
+    """Compute regional monthly MODIS baseline from prior historical years (2024-2025) in DATA_FILE."""
+    cache_key = (region.id, region.bbox)
+    cached = _BASELINE_CACHE.get(cache_key)
+    if cached is not None:
+        return cached
+
+    all_prior = [
+        r for r in _load_local_csv(region, include_prior_years=True) if r["acq_date"][:4] in BASELINE_YEARS
+    ]
+    # Small custom AOIs with very sparse local history fall back to the area-scaled regional baseline.
+    if len(all_prior) < 24:
+        return region.historical_monthly_avg
+
+    monthly_year_modis: Dict[Tuple[str, str], float] = {}
+    for yr in BASELINE_YEARS:
+        for m in range(1, 13):
+            monthly_year_modis[(yr, f"{m:02d}")] = 0.0
+
+    viirs_fallback_counts: Dict[Tuple[str, str], int] = {}
+    for rec in all_prior:
+        yr = rec["acq_date"][:4]
+        mm = rec["acq_date"][5:7]
+        ym_key = (yr, mm)
+        if ym_key not in monthly_year_modis:
+            continue
+        if rec["sensor"] == "MODIS":
+            monthly_year_modis[ym_key] += 1.0
+        else:
+            viirs_fallback_counts[ym_key] = viirs_fallback_counts.get(ym_key, 0) + 1
+
+    averages = []
+    for m in range(1, 13):
+        mm = f"{m:02d}"
+        year_vals = []
+        for yr in BASELINE_YEARS:
+            val = monthly_year_modis[(yr, mm)]
+            if val <= 0.0 and viirs_fallback_counts.get((yr, mm), 0) > 0:
+                val = viirs_fallback_counts[(yr, mm)] * DEFAULT_VIIRS_TO_MODIS_FACTOR
+            year_vals.append(val)
+        averages.append(round(max(0.5, sum(year_vals) / len(BASELINE_YEARS)), 2))
+
+    result = tuple(averages)
+    _BASELINE_CACHE[cache_key] = result
+    return result
+
+
+def with_dynamic_historical_baseline(region: RegionConfig) -> RegionConfig:
+    """Return a RegionConfig whose historical_monthly_avg is calibrated to that region's 2024-2025 baseline."""
+    dynamic_avg = compute_dynamic_historical_avg(region)
+    if dynamic_avg == region.historical_monthly_avg:
+        return region
+    return replace(region, historical_monthly_avg=dynamic_avg)
+
+
 def get_timeline_records(
     region_id: str = "amazonia_legal",
     days: int = 7,
@@ -475,7 +533,7 @@ def get_timeline_records(
     end_date: Optional[str] = None,
 ) -> Tuple[List[Dict[str, Any]], str]:
     """Combine multi-month local history with scaled live FIRMS NRT records for a coherent calendar."""
-    region = resolve_region_config(region_id, custom_bbox)
+    region = with_dynamic_historical_baseline(resolve_region_config(region_id, custom_bbox))
     include_prior_years = _requests_historical_year(period, start_date, end_date)
     raw_historical = _load_local_csv(region, include_prior_years=include_prior_years)
     historical = _apply_filters(
