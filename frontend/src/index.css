@@ -3476,7 +3476,7 @@ body {
   line-height: 1.35;
   letter-spacing: -0.01em;
   color: #f8fafc;
-  animation: noticeTextIn 0.65s cubic-bezier(0.16, 1, 0.3, 1) 1.45s both;
+  animation: noticeTextIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.12s both;
 }
 
 .mobile-notice-desc--hero {
@@ -3485,7 +3485,7 @@ body {
   font-weight: 400;
   line-height: 1.5;
   color: rgba(203, 213, 225, 0.76);
-  animation: noticeTextIn 0.65s cubic-bezier(0.16, 1, 0.3, 1) 1.65s both;
+  animation: noticeTextIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.26s both;
 }
 
 @keyframes mobileSplashSpin {
