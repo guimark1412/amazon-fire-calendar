@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { memo, useEffect, useMemo, useState } from 'react';
 import {
   CircleMarker,
   MapContainer,
@@ -106,6 +106,40 @@ const GRID_COLORS_VIRIDIS: Record<AlertLevel, { color: string; fillOpacity: numb
   normal: { color: '#440154', fillOpacity: 0.38 },
 };
 
+const MAP_CONTAINER_STYLE = { height: '100%', width: '100%' } as const;
+const POPUP_CONTENT_STYLE = { color: '#111827', fontSize: '12px', lineHeight: 1.45 } as const;
+const AOI_RECT_STYLE = {
+  color: '#38bdf8',
+  fillColor: '#38bdf8',
+  fillOpacity: 0.07,
+  weight: 2,
+  dashArray: '8 5',
+} as const;
+const FP_STYLE_MODIS = {
+  color: '#f59e0b',
+  fillColor: '#f59e0b',
+  fillOpacity: 0.38,
+  weight: 1.5,
+} as const;
+const FP_STYLE_VIIRS = {
+  color: '#ef4444',
+  fillColor: '#ef4444',
+  fillOpacity: 0.65,
+  weight: 1,
+} as const;
+const POINT_STYLE_MODIS = {
+  color: '#f59e0b',
+  fillColor: '#f59e0b',
+  fillOpacity: 0.55,
+  weight: 1,
+} as const;
+const POINT_STYLE_VIIRS = {
+  color: '#ef4444',
+  fillColor: '#ef4444',
+  fillOpacity: 0.72,
+  weight: 1,
+} as const;
+
 function MapViewportSync({ center, zoom }: { center: [number, number]; zoom: number }) {
   const map = useMap();
   useEffect(() => {
@@ -182,7 +216,7 @@ function AoiSelectorLayer({
   );
 }
 
-export function FireMap({
+export const FireMap = memo(function FireMap({
   fires,
   gridCells,
   viewMode,
@@ -207,7 +241,10 @@ export function FireMap({
   const t = I18N[lang];
   const palette = colorRamp === 'viridis' ? GRID_COLORS_VIRIDIS : GRID_COLORS_ALERT;
   const hasVisibleFeatures = viewMode === 'grid' ? gridCells.length > 0 : fires.length > 0;
-  const satelliteDate = resolveSatelliteDate(startDate, endDate, selectedPeriod, fires);
+  const satelliteDate = useMemo(
+    () => resolveSatelliteDate(startDate, endDate, selectedPeriod, fires),
+    [startDate, endDate, selectedPeriod, fires],
+  );
   const gibsLayer =
     sensor === 'VIIRS'
       ? 'VIIRS_NOAA20_CorrectedReflectance_TrueColor'
@@ -259,7 +296,7 @@ export function FireMap({
           {`NASA GIBS (${shortSatDate})`}
         </button>
       </div>
-      <MapContainer center={center} zoom={zoom} style={{ height: '100%', width: '100%' }}>
+      <MapContainer preferCanvas center={center} zoom={zoom} style={MAP_CONTAINER_STYLE}>
         <MapViewportSync center={center} zoom={zoom} />
         {basemap === 'dark' && (
           <TileLayer
@@ -320,13 +357,7 @@ export function FireMap({
               [customBbox[1], customBbox[0]],
               [customBbox[3], customBbox[2]],
             ]}
-            pathOptions={{
-              color: '#38bdf8',
-              fillColor: '#38bdf8',
-              fillOpacity: 0.07,
-              weight: 2,
-              dashArray: '8 5',
-            }}
+            pathOptions={AOI_RECT_STYLE}
           />
         )}
 
@@ -395,15 +426,10 @@ export function FireMap({
               <Rectangle
                 key={`fp-${fire.sensor}-${fire.latitude}-${fire.longitude}-${idx}`}
                 bounds={bounds}
-                pathOptions={{
-                  color: isModis ? '#f59e0b' : '#ef4444',
-                  fillColor: isModis ? '#f59e0b' : '#ef4444',
-                  fillOpacity: isModis ? 0.38 : 0.65,
-                  weight: isModis ? 1.5 : 1,
-                }}
+                pathOptions={isModis ? FP_STYLE_MODIS : FP_STYLE_VIIRS}
               >
                 <Popup>
-                  <div style={{ color: '#111827', fontSize: '12px', lineHeight: 1.45 }}>
+                  <div style={POPUP_CONTENT_STYLE}>
                     <strong>
                       {t.popupSensor}: {fire.sensor}
                     </strong>{' '}
@@ -436,15 +462,10 @@ export function FireMap({
                 key={`${fire.sensor}-${fire.latitude}-${fire.longitude}-${idx}`}
                 center={[fire.latitude, fire.longitude]}
                 radius={isModis ? 6 : 4}
-                pathOptions={{
-                  color: isModis ? '#f59e0b' : '#ef4444',
-                  fillColor: isModis ? '#f59e0b' : '#ef4444',
-                  fillOpacity: isModis ? 0.55 : 0.72,
-                  weight: 1,
-                }}
+                pathOptions={isModis ? POINT_STYLE_MODIS : POINT_STYLE_VIIRS}
               >
                 <Popup>
-                  <div style={{ color: '#111827', fontSize: '12px', lineHeight: 1.45 }}>
+                  <div style={POPUP_CONTENT_STYLE}>
                     <strong>
                       {t.popupSensor}: {fire.sensor}
                     </strong>{' '}
@@ -466,4 +487,4 @@ export function FireMap({
       </MapContainer>
     </div>
   );
-}
+});

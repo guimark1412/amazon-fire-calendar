@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type RefObject } from 'react';
+import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState, type RefObject } from 'react';
 import {
   AlertTriangle,
   Calendar,
@@ -19,28 +19,47 @@ import {
   X,
 } from 'lucide-react';
 import { getFires, getGrid, getRegions, getTimeline } from './api';
-import { BurningHeatmap } from './components/BurningHeatmap';
-import { CalendarMatrix } from './components/CalendarMatrix';
 import { DateRangePickerPopover } from './components/DateRangePickerPopover';
-import { EarlyWarningPopover } from './components/EarlyWarningPopover';
 import { currentYear, dryPeak, last7Days, yearToDate } from './dateUtils';
 import { FireCalendarChart } from './components/FireCalendarChart';
 import { FireMap } from './components/FireMap';
-import { HarmonizationLab } from './components/HarmonizationLab';
 import { InfoTooltip } from './components/InfoTooltip';
-import { PitchModeModal, type WorkspaceView } from './components/PitchModeModal';
+import type { WorkspaceView } from './components/PitchModeModal';
 import { I18N, type Language } from './i18n';
 import type {
   ChartViewMode,
   ConfidenceFilter,
+  FireHotspot,
   FiresResponse,
   Granularity,
+  GridCell,
   GridResponse,
   MapViewMode,
   RegionInfo,
   SensorFilter,
+  TimelinePoint,
   TimelineResponse,
 } from './types';
+
+const BurningHeatmap = lazy(() =>
+  import('./components/BurningHeatmap').then((m) => ({ default: m.BurningHeatmap })),
+);
+const CalendarMatrix = lazy(() =>
+  import('./components/CalendarMatrix').then((m) => ({ default: m.CalendarMatrix })),
+);
+const EarlyWarningPopover = lazy(() =>
+  import('./components/EarlyWarningPopover').then((m) => ({ default: m.EarlyWarningPopover })),
+);
+const HarmonizationLab = lazy(() =>
+  import('./components/HarmonizationLab').then((m) => ({ default: m.HarmonizationLab })),
+);
+const PitchModeModal = lazy(() =>
+  import('./components/PitchModeModal').then((m) => ({ default: m.PitchModeModal })),
+);
+
+const EMPTY_FIRES: FireHotspot[] = [];
+const EMPTY_GRID_CELLS: GridCell[] = [];
+const EMPTY_SERIES: TimelinePoint[] = [];
 
 /** Close a floating popover on outside pointer down or Escape key press. */
 function usePopoverDismiss(
@@ -76,6 +95,7 @@ export function App() {
   const [granularity, setGranularity] = useState<Granularity>('month');
   const [minConfidence, setMinConfidence] = useState<ConfidenceFilter>('all');
   const [viirsOnlyWeight, setViirsOnlyWeight] = useState<number>(0.85);
+  const [debouncedViirsWeight, setDebouncedViirsWeight] = useState<number>(0.85);
 
   const [subfiltersOpen, setSubfiltersOpen] = useState<boolean>(false);
   const [customBbox, setCustomBbox] = useState<[number, number, number, number] | null>(null);
@@ -124,6 +144,14 @@ export function App() {
   const loading = loadingFires || loadingTimeline || loadingGrid;
   const t = I18N[lang];
   const bboxParam = customBbox ? customBbox.join(',') : null;
+
+  useEffect(() => {
+    if (viirsOnlyWeight === debouncedViirsWeight) return;
+    const timer = window.setTimeout(() => {
+      setDebouncedViirsWeight(viirsOnlyWeight);
+    }, 180);
+    return () => window.clearTimeout(timer);
+  }, [viirsOnlyWeight, debouncedViirsWeight]);
 
   useEffect(() => {
     let cancelled = false;
@@ -182,7 +210,7 @@ export function App() {
     getTimeline(selectedRegion, granularity, {
       bbox: bboxParam,
       minConfidence,
-      viirsOnlyWeight,
+      viirsOnlyWeight: debouncedViirsWeight,
       sensor,
     })
       .then((timelineRes) => {
@@ -209,7 +237,7 @@ export function App() {
     granularity,
     bboxParam,
     minConfidence,
-    viirsOnlyWeight,
+    debouncedViirsWeight,
     sensor,
     retryNonce,
   ]);
@@ -226,7 +254,7 @@ export function App() {
     getGrid(selectedRegion, 7, cellSize, {
       bbox: bboxParam,
       minConfidence,
-      viirsOnlyWeight,
+      viirsOnlyWeight: debouncedViirsWeight,
       sensor,
       period: selectedPeriod,
       startDate: dateRange.start,
@@ -255,7 +283,7 @@ export function App() {
     selectedRegion,
     bboxParam,
     minConfidence,
-    viirsOnlyWeight,
+    debouncedViirsWeight,
     sensor,
     customBbox,
     selectedPeriod,
@@ -305,14 +333,14 @@ export function App() {
   const activeFilterCount = (minConfidence !== 'all' ? 1 : 0) + (viirsOnlyWeight !== 0.85 ? 1 : 0);
   const hasModifiedSubfilters = activeFilterCount > 0;
 
-  const handleSelectPeriodFromViz = (period: string | null) => {
+  const handleSelectPeriodFromViz = useCallback((period: string | null) => {
     setSelectedPeriod(period);
     if (period) {
       setDateRange({ start: null, end: null });
     }
-  };
+  }, []);
 
-  const handleSelectPeriodFromCalendar = (
+  const handleSelectPeriodFromCalendar = useCallback((
     period: string | null,
     nextGranularity?: Granularity,
   ) => {
@@ -321,9 +349,9 @@ export function App() {
     if (nextGranularity) {
       setGranularity(nextGranularity);
     }
-  };
+  }, []);
 
-  const handleApplyDateRange = (
+  const handleApplyDateRange = useCallback((
     start: string | null,
     end: string | null,
     nextGranularity?: Granularity,
@@ -333,7 +361,11 @@ export function App() {
     if (nextGranularity) {
       setGranularity(nextGranularity);
     }
-  };
+  }, []);
+
+  const handleClearPeriod = useCallback(() => {
+    setSelectedPeriod(null);
+  }, []);
 
   const handleApplyCoords = () => {
     const w = parseFloat(bboxInputs.west);
@@ -350,7 +382,7 @@ export function App() {
     }
   };
 
-  const handleMapSelectBbox = (bbox: [number, number, number, number]) => {
+  const handleMapSelectBbox = useCallback((bbox: [number, number, number, number]) => {
     setCustomBbox(bbox);
     setBboxInputs({
       west: String(bbox[0]),
@@ -359,7 +391,7 @@ export function App() {
       north: String(bbox[3]),
     });
     setIsDrawingAoi(false);
-  };
+  }, []);
 
   const handleExportCsv = () => {
     if (!timelineData?.series.length) return;
@@ -938,7 +970,7 @@ export function App() {
               lang={lang}
               onApplyRange={handleApplyDateRange}
               onSelectPeriod={handleSelectPeriodFromCalendar}
-              onClearPeriod={() => setSelectedPeriod(null)}
+              onClearPeriod={handleClearPeriod}
             />
 
             {isDrawingAoi && (
@@ -1019,8 +1051,8 @@ export function App() {
               </div>
 
               <FireMap
-                fires={firesData?.fires ?? []}
-                gridCells={gridData?.cells ?? []}
+                fires={firesData?.fires ?? EMPTY_FIRES}
+                gridCells={gridData?.cells ?? EMPTY_GRID_CELLS}
                 viewMode={mapMode}
                 sensor={sensor}
                 center={activeRegion.center}
@@ -1125,7 +1157,7 @@ export function App() {
               </div>
 
               <FireCalendarChart
-                series={timelineData?.series ?? []}
+                series={timelineData?.series ?? EMPTY_SERIES}
                 chartMode={chartMode}
                 sensor={sensor}
                 lang={lang}
@@ -1149,35 +1181,41 @@ export function App() {
               lang={lang}
               onApplyRange={handleApplyDateRange}
               onSelectPeriod={handleSelectPeriodFromCalendar}
-              onClearPeriod={() => setSelectedPeriod(null)}
+              onClearPeriod={handleClearPeriod}
             />
-            <EarlyWarningPopover summary={summary} regionName={activeRegion.name} lang={lang} />
+            <Suspense fallback={null}>
+              <EarlyWarningPopover summary={summary} regionName={activeRegion.name} lang={lang} />
+            </Suspense>
           </div>
-          <BurningHeatmap
-            series={timelineData?.series ?? []}
-            lang={lang}
-            selectedPeriod={selectedPeriod}
-            onSelectPeriod={handleSelectPeriodFromViz}
-          />
-          <CalendarMatrix
-            series={timelineData?.series ?? []}
-            lang={lang}
-            selectedPeriod={selectedPeriod}
-            onSelectPeriod={handleSelectPeriodFromViz}
-          />
+          <Suspense fallback={null}>
+            <BurningHeatmap
+              series={timelineData?.series ?? EMPTY_SERIES}
+              lang={lang}
+              selectedPeriod={selectedPeriod}
+              onSelectPeriod={handleSelectPeriodFromViz}
+            />
+            <CalendarMatrix
+              series={timelineData?.series ?? EMPTY_SERIES}
+              lang={lang}
+              selectedPeriod={selectedPeriod}
+              onSelectPeriod={handleSelectPeriodFromViz}
+            />
+          </Suspense>
         </div>
       )}
 
       {activeView === 'science' && (
         <div className="science-view-stack">
-          <HarmonizationLab
-            diagnostics={timelineData?.diagnostics}
-            summary={summary}
-            calibrationFactor={calibrationFactor}
-            viirsOnlyWeight={viirsOnlyWeight}
-            onChangeViirsWeight={setViirsOnlyWeight}
-            lang={lang}
-          />
+          <Suspense fallback={null}>
+            <HarmonizationLab
+              diagnostics={timelineData?.diagnostics}
+              summary={summary}
+              calibrationFactor={calibrationFactor}
+              viirsOnlyWeight={viirsOnlyWeight}
+              onChangeViirsWeight={setViirsOnlyWeight}
+              lang={lang}
+            />
+          </Suspense>
 
           <section className="panel science-section">
             <button
@@ -1208,44 +1246,48 @@ export function App() {
         </div>
       )}
 
-      <PitchModeModal
-        open={pitchOpen}
-        onClose={() => setPitchOpen(false)}
-        regionName={activeRegion.name}
-        totalFires={firesData?.total_count ?? 0}
-        calibrationFactor={calibrationFactor}
-        summary={summary}
-        mapMode={mapMode}
-        chartMode={chartMode}
-        lang={lang}
-        onSelectView={setActiveView}
-        onTriggerDemoAction={(action) => {
-          if (action === 'raw' || action === 'harmonized' || action === 'coincidence' || action === 'frp') {
-            setChartMode(action);
-          } else if (action === 'grid' || action === 'points' || action === 'footprints') {
-            setMapMode(action);
-          } else if (action === 'preset_peak') {
-            const r = dryPeak();
-            handleApplyDateRange(r.start, r.end, 'month');
-          } else if (action === 'preset_7d') {
-            const r = last7Days();
-            handleApplyDateRange(r.start, r.end, 'week');
-          } else if (action === 'preset_all') {
-            const r = yearToDate();
-            handleApplyDateRange(r.start, r.end, 'month');
-          } else if (action === 'focus_peak_month') {
-            const peak =
-              summary?.peak_period && summary.peak_period !== '—'
-                ? summary.peak_period
-                : `${currentYear()}-08`;
-            handleSelectPeriodFromCalendar(peak, peak.includes('-W') ? 'week' : 'month');
-          } else if (action === 'export_csv') {
-            handleExportCsv();
-          } else if (action === 'export_geojson') {
-            handleExportGeoJson();
-          }
-        }}
-      />
+      {pitchOpen && (
+        <Suspense fallback={null}>
+          <PitchModeModal
+            open={pitchOpen}
+            onClose={() => setPitchOpen(false)}
+            regionName={activeRegion.name}
+            totalFires={firesData?.total_count ?? 0}
+            calibrationFactor={calibrationFactor}
+            summary={summary}
+            mapMode={mapMode}
+            chartMode={chartMode}
+            lang={lang}
+            onSelectView={setActiveView}
+            onTriggerDemoAction={(action) => {
+              if (action === 'raw' || action === 'harmonized' || action === 'coincidence' || action === 'frp') {
+                setChartMode(action);
+              } else if (action === 'grid' || action === 'points' || action === 'footprints') {
+                setMapMode(action);
+              } else if (action === 'preset_peak') {
+                const r = dryPeak();
+                handleApplyDateRange(r.start, r.end, 'month');
+              } else if (action === 'preset_7d') {
+                const r = last7Days();
+                handleApplyDateRange(r.start, r.end, 'week');
+              } else if (action === 'preset_all') {
+                const r = yearToDate();
+                handleApplyDateRange(r.start, r.end, 'month');
+              } else if (action === 'focus_peak_month') {
+                const peak =
+                  summary?.peak_period && summary.peak_period !== '—'
+                    ? summary.peak_period
+                    : `${currentYear()}-08`;
+                handleSelectPeriodFromCalendar(peak, peak.includes('-W') ? 'week' : 'month');
+              } else if (action === 'export_csv') {
+                handleExportCsv();
+              } else if (action === 'export_geojson') {
+                handleExportGeoJson();
+              }
+            }}
+          />
+        </Suspense>
+      )}
 
       <nav className="mobile-bottom-nav" aria-label="Mobile navigation">
         <button
