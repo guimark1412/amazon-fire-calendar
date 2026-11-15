@@ -75,18 +75,17 @@ export function PitchModeModal({
   onSelectView,
   onTriggerDemoAction,
 }: PitchModeModalProps) {
-  const [stepIndex, setStepIndex] = useState<number>(0);
+  const [tourCursor, setTourCursor] = useState<{ index: number; fromView: WorkspaceView | null }>({
+    index: 0,
+    fromView: null,
+  });
   const [rect, setRect] = useState<SpotlightRect | null>(null);
+  const [tabHandoff, setTabHandoff] = useState<boolean>(false);
   const t = I18N[lang];
+  const stepIndex = tourCursor.index;
 
-  const measureTarget = useCallback((index: number) => {
-    const target = TOUR_TARGETS[index];
-    if (!target || target === 'pitch-summary') {
-      setRect(null);
-      return;
-    }
-    const el = document.querySelector(`[data-tour="${target}"]`) as HTMLElement | null;
-    if (!el) {
+  const measureElement = useCallback((el: HTMLElement | null) => {
+    if (!el || (el.offsetWidth === 0 && el.offsetHeight === 0)) {
       setRect(null);
       return;
     }
@@ -100,62 +99,150 @@ export function PitchModeModal({
     });
   }, []);
 
+  const measureSelector = useCallback(
+    (tourName: string) => {
+      if (!tourName || tourName === 'pitch-summary') {
+        setRect(null);
+        return;
+      }
+      const el = document.querySelector(`[data-tour="${tourName}"]`) as HTMLElement | null;
+      measureElement(el);
+    },
+    [measureElement],
+  );
+
+  const goToStep = useCallback(
+    (updater: number | ((prev: number) => number)) => {
+      setTourCursor((prev) => {
+        const rawNext = typeof updater === 'function' ? updater(prev.index) : updater;
+        const nextIdx = Math.max(0, Math.min(TOUR_TARGETS.length - 1, rawNext));
+        if (nextIdx === prev.index) return prev;
+        const prevView = t.tourSteps[prev.index]?.view as WorkspaceView | undefined;
+        return { index: nextIdx, fromView: prevView ?? null };
+      });
+    },
+    [t.tourSteps],
+  );
+
   const handleClose = useCallback(() => {
-    setStepIndex(0);
+    setTabHandoff(false);
+    setTourCursor({ index: 0, fromView: null });
     onClose();
   }, [onClose]);
 
   useEffect(() => {
     if (!open) return;
-    setStepIndex(0);
+    setTabHandoff(false);
+    setTourCursor({ index: 0, fromView: null });
   }, [open]);
 
   useEffect(() => {
     if (!open) return;
     const step = t.tourSteps[stepIndex];
-    onSelectView(step.view as WorkspaceView);
-
+    const nextView = step.view as WorkspaceView;
     const target = TOUR_TARGETS[stepIndex];
+
     if (target === 'pitch-summary') {
+      setTabHandoff(false);
+      onSelectView(nextView);
       setRect(null);
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
 
     let rafId = 0;
-    const handleReposition = () => measureTarget(stepIndex);
+    let initTimer = 0;
+    let switchTimer = 0;
+    let handoffEndTimer = 0;
+    let activeSelector = target as string;
 
-    const timerId = window.setTimeout(() => {
-      const el = document.querySelector(`[data-tour="${target}"]`) as HTMLElement | null;
-      if (el) {
+    const handleReposition = () => measureSelector(activeSelector);
+
+    const startTargetFocus = () => {
+      activeSelector = target;
+      setTabHandoff(false);
+      let waitStart = performance.now();
+
+      const trackTarget = () => {
+        const el = document.querySelector(`[data-tour="${target}"]`) as HTMLElement | null;
+        if (!el) {
+          if (performance.now() - waitStart < 1400) {
+            rafId = window.requestAnimationFrame(trackTarget);
+          } else {
+            setRect(null);
+          }
+          return;
+        }
         if (stepIndex === 0) {
           window.scrollTo({ top: 0, behavior: 'smooth' });
         } else {
           el.scrollIntoView({ behavior: 'smooth', block: target === 'harm-lab' ? 'start' : 'center' });
         }
-      }
-      measureTarget(stepIndex);
+        measureElement(el);
 
-      const startTime = performance.now();
-      const tick = (now: number) => {
-        measureTarget(stepIndex);
-        if (now - startTime < 900) {
-          rafId = window.requestAnimationFrame(tick);
+        const animStart = performance.now();
+        const tick = (now: number) => {
+          measureSelector(target);
+          if (now - animStart < 900) {
+            rafId = window.requestAnimationFrame(tick);
+          }
+        };
+        rafId = window.requestAnimationFrame(tick);
+      };
+
+      initTimer = window.setTimeout(trackTarget, 80);
+    };
+
+    const viewTabsEl = document.querySelector('[data-tour="view-tabs"]') as HTMLElement | null;
+    const canSpotlightTabs = Boolean(
+      viewTabsEl && viewTabsEl.offsetWidth > 0 && viewTabsEl.offsetHeight > 0,
+    );
+    const shouldShowTabHandoff = Boolean(
+      tourCursor.fromView && tourCursor.fromView !== nextView && canSpotlightTabs,
+    );
+
+    if (shouldShowTabHandoff) {
+      activeSelector = 'view-tabs';
+      setTabHandoff(true);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      measureElement(viewTabsEl);
+
+      const handoffStart = performance.now();
+      const tickTabs = (now: number) => {
+        measureSelector('view-tabs');
+        if (now - handoffStart < 880) {
+          rafId = window.requestAnimationFrame(tickTabs);
         }
       };
-      rafId = window.requestAnimationFrame(tick);
-    }, 80);
+      rafId = window.requestAnimationFrame(tickTabs);
+
+      switchTimer = window.setTimeout(() => {
+        onSelectView(nextView);
+        measureSelector('view-tabs');
+      }, 190);
+
+      handoffEndTimer = window.setTimeout(() => {
+        window.cancelAnimationFrame(rafId);
+        startTargetFocus();
+      }, 940);
+    } else {
+      setTabHandoff(false);
+      onSelectView(nextView);
+      startTargetFocus();
+    }
 
     window.addEventListener('resize', handleReposition);
     window.addEventListener('scroll', handleReposition, true);
 
     return () => {
-      window.clearTimeout(timerId);
+      window.clearTimeout(initTimer);
+      window.clearTimeout(switchTimer);
+      window.clearTimeout(handoffEndTimer);
       window.cancelAnimationFrame(rafId);
       window.removeEventListener('resize', handleReposition);
       window.removeEventListener('scroll', handleReposition, true);
     };
-  }, [open, stepIndex, t.tourSteps, onSelectView, measureTarget]);
+  }, [open, stepIndex, tourCursor.fromView, t.tourSteps, onSelectView, measureElement, measureSelector]);
 
   useEffect(() => {
     if (!open) return;
@@ -163,14 +250,14 @@ export function PitchModeModal({
       if (e.key === 'Escape') {
         handleClose();
       } else if (e.key === 'ArrowRight') {
-        setStepIndex((prev) => Math.min(TOUR_TARGETS.length - 1, prev + 1));
+        goToStep((prev) => prev + 1);
       } else if (e.key === 'ArrowLeft') {
-        setStepIndex((prev) => Math.max(0, prev - 1));
+        goToStep((prev) => prev - 1);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [open, handleClose]);
+  }, [open, handleClose, goToStep]);
 
   if (!open) return null;
 
@@ -188,8 +275,8 @@ export function PitchModeModal({
     if (typeof window === 'undefined') {
       return { top: '80px', left: '24px' };
     }
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
+    const vw = document.documentElement.clientWidth || window.innerWidth;
+    const vh = document.documentElement.clientHeight || window.innerHeight;
     const cardWidth = Math.min(460, vw - 32);
     const estHeight = 320;
 
@@ -205,7 +292,21 @@ export function PitchModeModal({
       return {
         top: spotlightInUpperHalf ? `${Math.max(16, vh - estHeight - 76)}px` : '12px',
         left: '12px',
-        width: 'calc(100vw - 24px)',
+        width: `${Math.max(260, vw - 24)}px`,
+      };
+    }
+
+    if (tabHandoff) {
+      const leftSpace = rect.left - cardWidth - 24;
+      if (leftSpace >= 16) {
+        return {
+          top: `${Math.max(16, Math.round(rect.top))}px`,
+          left: `${Math.round(leftSpace)}px`,
+        };
+      }
+      return {
+        top: `${Math.min(vh - estHeight - 16, Math.max(16, Math.round(boxBottom + 16)))}px`,
+        left: `${Math.max(16, Math.min(rect.left, vw - cardWidth - 16))}px`,
       };
     }
 
@@ -250,7 +351,7 @@ export function PitchModeModal({
       <button
         type="button"
         className="control-select action-btn"
-        onClick={() => setStepIndex((prev) => Math.max(0, prev - 1))}
+        onClick={() => goToStep((prev) => prev - 1)}
         disabled={stepIndex === 0}
       >
         <ChevronLeft size={15} />
@@ -263,7 +364,7 @@ export function PitchModeModal({
             key={idx}
             type="button"
             className={`pitch-dot ${idx === stepIndex ? 'active' : ''}`}
-            onClick={() => setStepIndex(idx)}
+            onClick={() => goToStep(idx)}
             aria-label={`Step ${idx + 1}`}
           />
         ))}
@@ -273,7 +374,7 @@ export function PitchModeModal({
         <button
           type="button"
           className="control-select action-btn pitch-btn"
-          onClick={() => setStepIndex((prev) => Math.min(TOUR_TARGETS.length - 1, prev + 1))}
+          onClick={() => goToStep((prev) => prev + 1)}
         >
           {t.tourNext}
           <ChevronRight size={15} />
@@ -372,11 +473,18 @@ export function PitchModeModal({
     );
   }
 
+  const destinationTabLabel =
+    step.view === 'matrix'
+      ? t.tabMatrix
+      : step.view === 'science'
+        ? t.tabScience
+        : t.tabOverview;
+
   return (
     <>
       {rect && (
         <div
-          className="tour-spotlight-box"
+          className={`tour-spotlight-box ${tabHandoff ? 'tour-spotlight-box--handoff' : ''}`}
           style={{
             top: `${boxTop}px`,
             left: `${boxLeft}px`,
@@ -406,6 +514,14 @@ export function PitchModeModal({
         </div>
 
         <div className="tour-tooltip-body" key={stepIndex}>
+          {tabHandoff && (
+            <div className="tour-tab-handoff-pill">
+              <ChevronRight size={13} />
+              <span>
+                {lang === 'pt' ? 'Abrindo aba:' : 'Switching to tab:'} <strong>{destinationTabLabel}</strong>
+              </span>
+            </div>
+          )}
           <h3 id="pitch-tour-title">{step.title}</h3>
           <p>{step.description}</p>
 

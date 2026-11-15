@@ -1,4 +1,4 @@
-import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState, type RefObject } from 'react';
+import { Suspense, lazy, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type RefObject } from 'react';
 import {
   AlertTriangle,
   Calendar,
@@ -123,6 +123,44 @@ export function App() {
   const exportMenuRef = useRef<HTMLDivElement | null>(null);
   const aoiPopoverRef = useRef<HTMLDivElement | null>(null);
   const filtersPopoverRef = useRef<HTMLDivElement | null>(null);
+  const viewTabsRef = useRef<HTMLElement | null>(null);
+  const tabBtnRefs = useRef<Record<WorkspaceView, HTMLButtonElement | null>>({
+    overview: null,
+    matrix: null,
+    science: null,
+  });
+  const [tabIndicator, setTabIndicator] = useState<{ left: number; width: number }>({
+    left: 0,
+    width: 0,
+  });
+
+  useLayoutEffect(() => {
+    const updateIndicator = () => {
+      const btn = tabBtnRefs.current[activeView];
+      if (!btn || btn.offsetWidth === 0) {
+        setTabIndicator((prev) => (prev.width === 0 ? prev : { left: 0, width: 0 }));
+        return;
+      }
+      const nextLeft = btn.offsetLeft;
+      const nextWidth = btn.offsetWidth;
+      setTabIndicator((prev) =>
+        prev.left === nextLeft && prev.width === nextWidth
+          ? prev
+          : { left: nextLeft, width: nextWidth },
+      );
+    };
+
+    updateIndicator();
+    window.addEventListener('resize', updateIndicator);
+    const navEl = viewTabsRef.current;
+    const ro = navEl && typeof ResizeObserver !== 'undefined' ? new ResizeObserver(updateIndicator) : null;
+    if (ro && navEl) ro.observe(navEl);
+
+    return () => {
+      window.removeEventListener('resize', updateIndicator);
+      ro?.disconnect();
+    };
+  }, [activeView, lang]);
   const [selectedPeriod, setSelectedPeriod] = useState<string | null>(null);
   const [dateRange, setDateRange] = useState<{ start: string | null; end: string | null }>({
     start: null,
@@ -526,8 +564,26 @@ export function App() {
             </div>
           </div>
 
-          <nav className="view-tabs" aria-label="Workspace views">
+          <nav
+            ref={viewTabsRef}
+            className={`view-tabs ${tabIndicator.width > 0 ? 'has-indicator' : ''}`}
+            data-tour="view-tabs"
+            aria-label="Workspace views"
+          >
+            {tabIndicator.width > 0 && (
+              <span
+                className="view-tab-indicator"
+                aria-hidden="true"
+                style={{
+                  transform: `translate3d(${tabIndicator.left}px, 0, 0)`,
+                  width: `${tabIndicator.width}px`,
+                }}
+              />
+            )}
             <button
+              ref={(el) => {
+                tabBtnRefs.current.overview = el;
+              }}
               type="button"
               className={`view-tab ${activeView === 'overview' ? 'active' : ''}`}
               onClick={() => setActiveView('overview')}
@@ -536,6 +592,9 @@ export function App() {
               {t.tabOverview}
             </button>
             <button
+              ref={(el) => {
+                tabBtnRefs.current.matrix = el;
+              }}
               type="button"
               className={`view-tab ${activeView === 'matrix' ? 'active' : ''}`}
               onClick={() => setActiveView('matrix')}
@@ -544,6 +603,9 @@ export function App() {
               {t.tabMatrix}
             </button>
             <button
+              ref={(el) => {
+                tabBtnRefs.current.science = el;
+              }}
               type="button"
               className={`view-tab ${activeView === 'science' ? 'active' : ''}`}
               onClick={() => setActiveView('science')}
