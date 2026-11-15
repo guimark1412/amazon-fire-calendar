@@ -89,7 +89,7 @@ export function CalendarMatrix({
         className={`month-card month-${item.alert_level}`}
         onClick={() => onSelectPeriod?.(isSelected ? null : item.period)}
         title={
-          item.coincident_viirs !== undefined
+          item.coincident_viirs !== undefined && (item.viirs_raw ?? 0) > 0
             ? `${t.coincShortLabel}: ${item.coincident_viirs ?? 0} / ${item.viirs_only_small ?? 0}`
             : undefined
         }
@@ -128,8 +128,15 @@ export function CalendarMatrix({
                 <strong className="month-val-num">{frpVal.toFixed(1)} MW</strong>
               </div>
               <div style={{ textAlign: 'right' }}>
-                <span className="month-val-label">MODIS FRP</span>
-                <span className="month-val-base">{(item.modis_frp ?? 0).toFixed(0)} MW</span>
+                <span className="month-val-label">
+                  {item.modis_raw === 0 && (item.viirs_raw ?? 0) > 0 ? 'VIIRS FRP' : 'MODIS FRP'}
+                </span>
+                <span className="month-val-base">
+                  {(item.modis_raw === 0 && (item.viirs_raw ?? 0) > 0
+                    ? (item.viirs_frp ?? 0)
+                    : (item.modis_frp ?? 0)
+                  ).toFixed(0)} MW
+                </span>
               </div>
             </>
           )}

@@ -438,3 +438,64 @@ def test_concurrent_live_fetches_single_flight(monkeypatch):
         assert "live_nasa_firms" in source
         assert any(r["acq_date"] == today_iso for r in records)
 
+
+def test_all_regions_seasonal_calendar_coherence():
+    from fastapi.testclient import TestClient
+    from app.config import REGIONS
+    from app.main import app
+
+    local_client = TestClient(app)
+
+    for reg in REGIONS:
+        res_both = local_client.get(
+            f"/api/timeline?year=2026&granularity=month&region={reg}&sensor=both"
+        )
+        assert res_both.status_code == 200
+        data_both = res_both.json()
+
+        res_week = local_client.get(
+            f"/api/timeline?year=2026&granularity=week&region={reg}&sensor=both"
+        )
+        assert res_week.status_code == 200
+        data_week = res_week.json()
+
+        res_modis = local_client.get(
+            f"/api/timeline?year=2026&granularity=month&region={reg}&sensor=MODIS"
+        )
+        res_viirs = local_client.get(
+            f"/api/timeline?year=2026&granularity=month&region={reg}&sensor=VIIRS"
+        )
+        assert res_modis.status_code == 200
+        assert res_viirs.status_code == 200
+        data_modis = res_modis.json()
+        data_viirs = res_viirs.json()
+
+        # Calibration factor must stay anchored to MODIS/VIIRS overlap regardless of sensor filter
+        assert abs(data_both["calibration_factor"] - data_modis["calibration_factor"]) <= 1e-4
+        assert abs(data_both["calibration_factor"] - data_viirs["calibration_factor"]) <= 1e-4
+
+        # Monthly and weekly YTD historical totals must agree
+        ytd_hist_m = data_both["summary"]["ytd_historical"]
+        ytd_hist_w = data_week["summary"]["ytd_historical"]
+        assert abs(ytd_hist_m - ytd_hist_w) <= 0.5, (
+            f"{reg}: ytd_historical month={ytd_hist_m} != week={ytd_hist_w}"
+        )
+
+        # Rainy season (Jan-Apr) stays normal; peak falls in Aug/Sep and is elevated/critical
+        by_period = {pt["period"]: pt for pt in data_both["series"]}
+        for rainy_period in ("2026-01", "2026-02", "2026-03", "2026-04"):
+            assert by_period[rainy_period]["alert_level"] == "normal", (
+                f"{reg} {rainy_period} got {by_period[rainy_period]['alert_level']}"
+            )
+
+        peak_period = data_both["summary"]["peak_period"]
+        assert peak_period in ("2026-08", "2026-09"), f"{reg}: unexpected peak={peak_period}"
+        peak_pt = by_period[peak_period]
+        assert peak_pt["deviation_pct"] > 20.0
+        assert peak_pt["alert_level"] in ("elevated", "critical")
+
+        # Single-sensor VIIRS mode must retain coincident classification from companion MODIS data
+        viirs_by_period = {pt["period"]: pt for pt in data_viirs["series"]}
+        assert viirs_by_period[peak_period]["coincident_viirs"] > 0
+
+

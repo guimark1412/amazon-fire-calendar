@@ -1,7 +1,7 @@
 from collections import defaultdict
 from datetime import datetime
 import math
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from .config import DEFAULT_VIIRS_TO_MODIS_FACTOR, RegionConfig
 
@@ -47,9 +47,10 @@ def _classify_alert(harmonized_value: float, historical_avg: float) -> str:
     if historical_avg <= 0:
         return "normal"
     ratio = harmonized_value / historical_avg
-    if ratio >= 1.35:
+    excess = harmonized_value - historical_avg
+    if ratio >= 1.35 and excess >= 1.2:
         return "critical"
-    if ratio >= 1.10:
+    if ratio >= 1.10 and excess >= 0.5:
         return "elevated"
     return "normal"
 
@@ -101,11 +102,24 @@ def _partition_coincident_vs_small_viirs(
     return coincident, viirs_only
 
 
+def _week_year_month(period: str) -> Tuple[int, int]:
+    """Return (calendar_year, 0-based month_idx) for an ISO week key YYYY-Www."""
+    try:
+        dt = datetime.strptime(f"{period}-4", "%G-W%V-%u")
+        return dt.year, dt.month - 1
+    except ValueError:
+        year = int(period.split("-W")[0])
+        month_idx = min(11, max(0, (int(period.split("-W")[1]) - 1) // 4))
+        return year, month_idx
+
+
 def build_timeline(
     records: List[Dict[str, Any]],
     region: RegionConfig,
     granularity: str = "month",
     viirs_only_weight: float = 0.85,
+    sensor: str = "both",
+    reference_records: Optional[List[Dict[str, Any]]] = None,
 ) -> Dict[str, Any]:
     """
     Aggregate MODIS and VIIRS hotspots over time and harmonize VIIRS to MODIS scale.
@@ -114,7 +128,8 @@ def build_timeline(
     2. Spatiotemporal coincidence vs. unmatched VIIRS-only small/cool fires
     3. Fire Radiative Power (FRP, MW) and Day/Night sensitivity split
     """
-    factor, factor_source = compute_calibration_factor(records)
+    calibration_source_records = reference_records if reference_records is not None else records
+    factor, factor_source = compute_calibration_factor(calibration_source_records)
 
     buckets: Dict[str, List[Dict[str, Any]]] = defaultdict(list)
     for rec in records:
@@ -126,6 +141,23 @@ def build_timeline(
         else:
             key = date_str[:7]  # YYYY-MM
         buckets[key].append(rec)
+
+    ref_buckets: Dict[str, List[Dict[str, Any]]] = defaultdict(list)
+    if sensor.lower() == "viirs" and reference_records is not None:
+        for rec in reference_records:
+            date_str = rec["acq_date"]
+            if granularity == "week":
+                dt = datetime.strptime(date_str, "%Y-%m-%d")
+                iso_year, iso_week, _ = dt.isocalendar()
+                key = f"{iso_year}-W{iso_week:02d}"
+            else:
+                key = date_str[:7]
+            ref_buckets[key].append(rec)
+
+    month_week_counts: Dict[Tuple[int, int], int] = defaultdict(int)
+    if granularity == "week":
+        for wk_key in buckets.keys():
+            month_week_counts[_week_year_month(wk_key)] += 1
 
     series: List[Dict[str, Any]] = []
     total_coincident = 0
@@ -144,7 +176,12 @@ def build_timeline(
         modis_raw = len(modis_recs)
         viirs_raw = len(viirs_recs)
 
-        coincident_viirs, viirs_only_small = _partition_coincident_vs_small_viirs(p_recs)
+        partition_recs = (
+            ref_buckets.get(period, p_recs)
+            if (sensor.lower() == "viirs" and reference_records is not None)
+            else p_recs
+        )
+        coincident_viirs, viirs_only_small = _partition_coincident_vs_small_viirs(partition_recs)
         total_coincident += coincident_viirs
         total_viirs_only += viirs_only_small
 
@@ -154,11 +191,9 @@ def build_timeline(
         viirs_normalized = round(effective_viirs * factor, 2)
 
         if granularity == "week":
-            try:
-                month_idx = datetime.strptime(f"{period}-4", "%G-W%V-%u").month - 1
-            except ValueError:
-                month_idx = min(11, max(0, (int(period.split("-W")[1]) - 1) // 4))
-            historical_avg = round(region.historical_monthly_avg[month_idx] / 4.0, 2)
+            wk_year, month_idx = _week_year_month(period)
+            divisor = month_week_counts[(wk_year, month_idx)] if len(buckets) > 1 else 4
+            historical_avg = round(region.historical_monthly_avg[month_idx] / max(1, divisor), 2)
         else:
             month_idx = int(period.split("-")[1]) - 1
             historical_avg = float(region.historical_monthly_avg[month_idx])
@@ -296,10 +331,21 @@ def build_spatial_grid(
     region: RegionConfig,
     cell_size: float = 1.25,
     viirs_only_weight: float = 0.85,
+    sensor: str = "both",
+    reference_records: Optional[List[Dict[str, Any]]] = None,
 ) -> Dict[str, Any]:
     """Aggregate hotspots into harmonized spatial grid cells over the region bounding box."""
-    factor, _ = compute_calibration_factor(records)
+    calibration_source_records = reference_records if reference_records is not None else records
+    factor, _ = compute_calibration_factor(calibration_source_records)
     west, south, east, north = region.bbox
+
+    ref_modis_cells = set()
+    if sensor.lower() == "viirs" and reference_records is not None:
+        for rec in reference_records:
+            if rec["sensor"] == "MODIS":
+                col = int((rec["longitude"] - west) // cell_size)
+                row = int((rec["latitude"] - south) // cell_size)
+                ref_modis_cells.add((row, col))
 
     buckets: Dict[Tuple[int, int], Dict[str, float]] = defaultdict(
         lambda: {
@@ -338,7 +384,8 @@ def build_spatial_grid(
         modis_raw = int(stats["modis_raw"])
         viirs_raw = int(stats["viirs_raw"])
         weight_clamped = max(0.0, min(1.0, viirs_only_weight))
-        effective_viirs = float(viirs_raw) if modis_raw > 0 else (viirs_raw * weight_clamped)
+        has_modis_overlap = modis_raw > 0 or ((row, col) in ref_modis_cells)
+        effective_viirs = float(viirs_raw) if has_modis_overlap else (viirs_raw * weight_clamped)
         viirs_normalized = round(effective_viirs * factor, 2)
 
         if modis_raw > 0 and viirs_raw > 0:

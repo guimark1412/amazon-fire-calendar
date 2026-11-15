@@ -178,22 +178,29 @@ def get_timeline(
         raise HTTPException(status_code=404, detail=f"Unknown region '{region}'")
 
     region_cfg = with_dynamic_historical_baseline(resolve_region_config(region, custom_bbox))
-    records, data_source = get_timeline_records(
+    all_records, data_source = get_timeline_records(
         region_id=region,
         days=7,
         custom_bbox=custom_bbox,
         daynight=daynight,
         min_confidence=min_confidence,
-        sensor=sensor,
+        sensor="both",
         period=period,
         start_date=start_date,
         end_date=end_date,
     )
+    if sensor.lower() in ("modis", "viirs"):
+        target_sensor = sensor.upper()
+        records = [r for r in all_records if r["sensor"] == target_sensor]
+    else:
+        records = all_records
     timeline = build_timeline(
         records,
         region_cfg,
         granularity=granularity,
         viirs_only_weight=viirs_only_weight,
+        sensor=sensor,
+        reference_records=all_records,
     )
     timeline["sensor"] = sensor
     timeline["period"] = period
@@ -222,9 +229,9 @@ def get_grid(
         raise HTTPException(status_code=404, detail=f"Unknown region '{region}'")
 
     region_cfg = with_dynamic_historical_baseline(resolve_region_config(region, custom_bbox))
-    records, data_source = get_fire_records(
+    all_records, data_source = get_fire_records(
         region_id=region,
-        sensor=sensor,
+        sensor="both",
         days=days,
         custom_bbox=custom_bbox,
         daynight=daynight,
@@ -233,11 +240,18 @@ def get_grid(
         start_date=start_date,
         end_date=end_date,
     )
+    if sensor.lower() in ("modis", "viirs"):
+        target_sensor = sensor.upper()
+        records = [r for r in all_records if r["sensor"] == target_sensor]
+    else:
+        records = all_records
     grid = build_spatial_grid(
         records,
         region_cfg,
         cell_size=cell_size,
         viirs_only_weight=viirs_only_weight,
+        sensor=sensor,
+        reference_records=all_records,
     )
     grid["sensor"] = sensor
     grid["period"] = period
