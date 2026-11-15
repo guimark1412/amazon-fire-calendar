@@ -1256,13 +1256,14 @@ body {
   width: 100%;
 }
 
-.mobile-controls-drawer .segmented-toggle {
+.mobile-controls-drawer .toggle-group {
   width: 100%;
   display: flex;
+  flex-wrap: nowrap;
 }
 
-.mobile-controls-drawer .segmented-toggle button {
-  flex: 1;
+.mobile-controls-drawer .toggle-btn {
+  flex: 1 1 0;
   justify-content: center;
 }
 
