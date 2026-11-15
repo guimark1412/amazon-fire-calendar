@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Calendar, ChevronDown, ChevronRight } from 'lucide-react';
 import { parsePeriodInfo } from '../dateUtils';
 import { I18N, type Language } from '../i18n';
@@ -55,19 +55,7 @@ export function CalendarMatrix({
       .filter((group) => group.items.length > 0);
   }, [filteredSeries, t.months, t.weekPrefix, t.quarters]);
 
-  const [expandedQuarters, setExpandedQuarters] = useState<number[]>(() => [
-    quarters.length > 0 ? quarters[quarters.length - 1].idx : 3,
-  ]);
-
-  useEffect(() => {
-    if (quarters.length === 0) return;
-    setExpandedQuarters((prev) => {
-      if (prev.some((idx) => quarters.some((q) => q.idx === idx))) {
-        return prev;
-      }
-      return [quarters[quarters.length - 1].idx];
-    });
-  }, [quarters]);
+  const [expandedQuarters, setExpandedQuarters] = useState<number[]>([]);
 
   const allQuartersExpanded =
     quarters.length > 0 && quarters.every((q) => expandedQuarters.includes(q.idx));
