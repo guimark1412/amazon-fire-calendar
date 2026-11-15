@@ -795,7 +795,7 @@ export function App() {
           <div className="kpi-inline-group">
             <div className="kpi-mini-pill">
               <span className="kpi-mini-label">
-                {t.kpiHotspots}
+                <span>{t.kpiHotspots}</span>
                 <InfoTooltip title={t.kpiHotspots} text={t.tips.kpiHotspots} />
               </span>
               <strong className="kpi-mini-value">
@@ -805,7 +805,7 @@ export function App() {
 
             <div className="kpi-mini-pill">
               <span className="kpi-mini-label">
-                {t.kpiFactor}
+                <span>{t.kpiFactor}</span>
                 <InfoTooltip title={t.kpiFactor} text={t.tips.kpiFactor} />
               </span>
               <strong className="kpi-mini-value">
@@ -815,7 +815,9 @@ export function App() {
 
             <div className="kpi-mini-pill">
               <span className="kpi-mini-label">
-                {t.kpiAlert} {latestPeriod ? `(${latestPeriod.period})` : ''}
+                <span>
+                  {t.kpiAlert} {latestPeriod ? `(${latestPeriod.period})` : ''}
+                </span>
                 <InfoTooltip title={t.kpiAlert} text={t.tips.kpiAlert} />
               </span>
               <div className="kpi-mini-alert">
@@ -854,9 +856,9 @@ export function App() {
               </select>
 
               <div className="weight-control">
-                <span>
+                <span className="weight-control-label">
                   {t.viirsWeightLabel}
-                  <InfoTooltip title="VIIRS-Only" text={t.tips.viirsWeight} />:
+                  <InfoTooltip title="VIIRS-Only" text={t.tips.viirsWeight} />
                 </span>
                 <select
                   className="control-select control-select-sm"
@@ -963,17 +965,14 @@ export function App() {
                     type="button"
                     className={`toggle-btn ${mapMode === 'points' ? 'active' : ''}`}
                     onClick={() => setMapMode('points')}
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}
                   >
                     <MapPin size={14} />
                     {t.pointsBtn}
-                    <InfoTooltip title={t.pointsBtn} text={t.tips.mapPoints} insideButton />
                   </button>
                   <button
                     type="button"
                     className={`toggle-btn ${mapMode === 'footprints' ? 'active' : ''}`}
                     onClick={() => setMapMode('footprints')}
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}
                   >
                     <Scan size={14} />
                     {t.footprintsBtn}
@@ -983,7 +982,6 @@ export function App() {
                     type="button"
                     className={`toggle-btn ${mapMode === 'grid' ? 'active' : ''}`}
                     onClick={() => setMapMode('grid')}
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}
                   >
                     <Grid3X3 size={14} />
                     {t.gridBtn}

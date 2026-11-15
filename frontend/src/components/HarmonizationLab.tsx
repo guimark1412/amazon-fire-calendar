@@ -65,11 +65,13 @@ export function HarmonizationLab({
           <div className="before-after-cards">
             <div className="ba-card ba-raw">
               <div className="ba-header">
-                <AlertOctagon size={16} color="#f87171" />
-                <span>
-                  {isPt ? 'SEM HARMONIZAÇÃO (Contagem Bruta)' : 'UNHARMONIZED (Raw Sensor Sum)'}
-                  <InfoTooltip text={t.tips.labRaw} />
+                <span className="ba-header-title">
+                  <AlertOctagon size={15} color="#f87171" />
+                  <span>
+                    {isPt ? 'SEM HARMONIZAÇÃO (Contagem Bruta)' : 'UNHARMONIZED (Raw Sensor Sum)'}
+                  </span>
                 </span>
+                <InfoTooltip text={t.tips.labRaw} />
               </div>
               <div className="ba-big-num">
                 {rawCombined.toLocaleString(lang === 'pt' ? 'pt-BR' : 'en-US')}{' '}
@@ -90,11 +92,13 @@ export function HarmonizationLab({
 
             <div className="ba-card ba-harm">
               <div className="ba-header">
-                <CheckCircle2 size={16} color="#34d399" />
-                <span>
-                  {isPt ? 'COM HARMONIZAÇÃO (Escala Unificada)' : 'HARMONIZED (Unified MODIS Scale)'}
-                  <InfoTooltip text={t.tips.labHarm} />
+                <span className="ba-header-title">
+                  <CheckCircle2 size={15} color="#34d399" />
+                  <span>
+                    {isPt ? 'COM HARMONIZAÇÃO (Escala Unificada)' : 'HARMONIZED (Unified MODIS Scale)'}
+                  </span>
                 </span>
+                <InfoTooltip text={t.tips.labHarm} />
               </div>
               <div className="ba-big-num">{harmTotal.toFixed(1)} eq. MODIS</div>
               <div className="ba-Formula">

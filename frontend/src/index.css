@@ -167,8 +167,11 @@ body {
 }
 
 .kpi-mini-label {
-  display: inline-flex;
+  display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
   font-size: 0.66rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -223,6 +226,7 @@ body {
 .toggle-btn {
   display: inline-flex;
   align-items: center;
+  gap: 5px;
   border: none;
   padding: 5px 10px;
   background: transparent;
@@ -1595,35 +1599,67 @@ body {
   align-items: center;
   justify-content: center;
   vertical-align: middle;
-  margin-left: 5px;
+  padding: 2px;
+  margin: -2px -1px -2px 2px;
   line-height: 1;
+}
+
+.toggle-btn .info-tip-anchor,
+.kpi-mini-label .info-tip-anchor,
+.ba-header .info-tip-anchor {
+  margin-left: 0;
+}
+
+.ba-header .info-tip-anchor {
+  margin-left: auto;
+}
+
+.kpi-mini-label .info-tip-anchor,
+.swath-stat > span > .info-tip-anchor {
+  flex-shrink: 0;
 }
 
 .info-tip-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 15px;
-  height: 15px;
+  width: 12px;
+  height: 12px;
   border-radius: 999px;
-  border: 1px solid rgba(148, 163, 184, 0.45);
-  background: rgba(30, 41, 59, 0.72);
-  color: #94a3b8;
-  font-size: 10px;
-  font-weight: 700;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  background: transparent;
+  color: rgba(148, 163, 184, 0.62);
+  opacity: 0.72;
+  font-size: 8.5px;
+  font-weight: 600;
   font-style: italic;
   font-family: Georgia, 'Times New Roman', serif;
   text-transform: none;
   letter-spacing: normal;
   cursor: help;
-  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+  transition: opacity 0.15s ease, border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+
+.kpi-mini-pill:hover .info-tip-badge,
+.ba-card:hover .info-tip-badge,
+.swath-stat:hover .info-tip-badge,
+.toggle-btn:hover .info-tip-badge {
+  opacity: 0.95;
+  border-color: rgba(148, 163, 184, 0.4);
 }
 
 .info-tip-anchor:hover .info-tip-badge,
 .info-tip-anchor:focus-visible .info-tip-badge {
-  border-color: #38bdf8;
+  opacity: 1;
+  border-color: rgba(56, 189, 248, 0.78);
   color: #38bdf8;
-  background: rgba(56, 189, 248, 0.15);
+  background: rgba(56, 189, 248, 0.12);
+}
+
+.weight-control-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
 }
 
 .info-tip-anchor:focus-visible {
@@ -1873,12 +1909,19 @@ body {
 .ba-header {
   display: flex;
   align-items: center;
-  gap: 6px;
+  justify-content: space-between;
+  gap: 8px;
   font-size: 0.72rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: #e5e7eb;
+}
+
+.ba-header-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .ba-big-num {
@@ -2037,7 +2080,12 @@ body {
   gap: 2px;
 }
 
-.swath-stat span {
+.swath-stat > span {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  width: 100%;
   font-size: 0.68rem;
   color: var(--muted);
 }
