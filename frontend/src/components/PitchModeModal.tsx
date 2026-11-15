@@ -288,6 +288,12 @@ export function PitchModeModal({
     }
 
     if (vw <= 768) {
+      if (tabHandoff) {
+        return {
+          top: `${Math.min(vh - 64, Math.max(12, Math.round(boxBottom + 12)))}px`,
+          left: '12px',
+        };
+      }
       const spotlightInUpperHalf = boxTop + boxHeight / 2 < vh * 0.52;
       return {
         top: spotlightInUpperHalf ? `${Math.max(16, vh - estHeight - 76)}px` : '12px',
@@ -297,16 +303,9 @@ export function PitchModeModal({
     }
 
     if (tabHandoff) {
-      const leftSpace = rect.left - cardWidth - 24;
-      if (leftSpace >= 16) {
-        return {
-          top: `${Math.max(16, Math.round(rect.top))}px`,
-          left: `${Math.round(leftSpace)}px`,
-        };
-      }
       return {
-        top: `${Math.min(vh - estHeight - 16, Math.max(16, Math.round(boxBottom + 16)))}px`,
-        left: `${Math.max(16, Math.min(rect.left, vw - cardWidth - 16))}px`,
+        top: `${Math.min(vh - 64, Math.max(16, Math.round(boxBottom + 14)))}px`,
+        left: `${Math.max(16, Math.min(Math.round(rect.left), vw - 360))}px`,
       };
     }
 
@@ -494,36 +493,46 @@ export function PitchModeModal({
         />
       )}
 
-      <div
-        className="tour-tooltip-card"
-        style={getTooltipStyle()}
-        role="dialog"
-        aria-modal="false"
-        aria-labelledby="pitch-tour-title"
-      >
-        <div className="modal-header">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Presentation size={18} color="#f97316" />
-            <span style={{ fontSize: '0.84rem', fontWeight: 700, color: '#fdba74' }}>
-              {step.badge}
+      {tabHandoff ? (
+        <div
+          key="handoff"
+          className="tour-tooltip-card tour-tooltip-card--handoff"
+          style={getTooltipStyle()}
+          role="status"
+          aria-live="polite"
+        >
+          <div className="tour-tab-handoff-only">
+            <ChevronRight size={15} />
+            <span>
+              {lang === 'pt' ? 'Abrindo aba:' : 'Switching to tab:'}{' '}
+              <strong>{destinationTabLabel}</strong>
             </span>
           </div>
-          <button type="button" className="modal-close" onClick={handleClose} aria-label="Fechar tour">
-            <X size={16} />
-          </button>
         </div>
-
-        <div className="tour-tooltip-body" key={stepIndex}>
-          {tabHandoff && (
-            <div className="tour-tab-handoff-pill">
-              <ChevronRight size={13} />
-              <span>
-                {lang === 'pt' ? 'Abrindo aba:' : 'Switching to tab:'} <strong>{destinationTabLabel}</strong>
+      ) : (
+        <div
+          key="step"
+          className="tour-tooltip-card"
+          style={getTooltipStyle()}
+          role="dialog"
+          aria-modal="false"
+          aria-labelledby="pitch-tour-title"
+        >
+          <div className="modal-header">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Presentation size={18} color="#f97316" />
+              <span style={{ fontSize: '0.84rem', fontWeight: 700, color: '#fdba74' }}>
+                {step.badge}
               </span>
             </div>
-          )}
-          <h3 id="pitch-tour-title">{step.title}</h3>
-          <p>{step.description}</p>
+            <button type="button" className="modal-close" onClick={handleClose} aria-label="Fechar tour">
+              <X size={16} />
+            </button>
+          </div>
+
+          <div className="tour-tooltip-body" key={stepIndex}>
+            <h3 id="pitch-tour-title">{step.title}</h3>
+            <p>{step.description}</p>
 
           {stepIndex === 0 && (
             <>
@@ -646,10 +655,11 @@ export function PitchModeModal({
               <strong>{t.tourCalibFactor}:</strong> <code>× {calibrationFactor}</code> · MODIS 1km ↔ VIIRS 375m
             </div>
           )}
-        </div>
+          </div>
 
-        {renderFooter()}
-      </div>
+          {renderFooter()}
+        </div>
+      )}
     </>
   );
 }

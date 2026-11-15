@@ -6,7 +6,6 @@ import {
   ChevronRight,
   Crosshair,
   Download,
-  Flame,
   FlaskConical,
   Globe,
   Grid3X3,
@@ -550,7 +549,7 @@ export function App() {
         <div className="topbar-main">
           <div className="brand">
             <div className="brand-icon">
-              <Flame size={20} />
+              <img src="/logo-calendar.png" alt="Amazon Fire Calendar" className="brand-logo-img" />
             </div>
             <div>
               <div className="brand-title-row">

@@ -68,14 +68,21 @@ body {
 }
 
 .brand-icon {
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border-radius: 10px;
-  background: linear-gradient(135deg, #ea580c, #dc2626);
+  background: transparent;
   display: grid;
   place-items: center;
-  color: #fff;
-  box-shadow: 0 0 18px rgba(239, 68, 68, 0.28);
+  flex-shrink: 0;
+}
+
+.brand-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  filter: drop-shadow(0 2px 10px rgba(249, 115, 22, 0.35));
 }
 
 .brand h1 {
@@ -955,21 +962,6 @@ body {
     0 0 34px rgba(249, 115, 22, 0.72);
 }
 
-.tour-tab-handoff-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  margin-bottom: 8px;
-  padding: 4px 10px;
-  border-radius: 999px;
-  background: rgba(249, 115, 22, 0.14);
-  border: 1px solid rgba(249, 115, 22, 0.42);
-  color: #fdba74;
-  font-size: 0.76rem;
-  font-weight: 600;
-  animation: pitchStepFade 0.22s ease-out both;
-}
-
 .tour-tooltip-card {
   position: fixed;
   box-sizing: border-box;
@@ -987,6 +979,37 @@ body {
     top 0.36s cubic-bezier(0.22, 1, 0.36, 1),
     left 0.36s cubic-bezier(0.22, 1, 0.36, 1),
     width 0.25s ease;
+}
+
+.tour-tooltip-card--handoff {
+  width: fit-content;
+  max-width: calc(100vw - 32px);
+  padding: 9px 16px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.96);
+  border-color: rgba(249, 115, 22, 0.72);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.68);
+  overflow: visible;
+}
+
+.tour-tab-handoff-only {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.84rem;
+  font-weight: 500;
+  color: #e2e8f0;
+  white-space: nowrap;
+}
+
+.tour-tab-handoff-only svg {
+  color: #fb923c;
+  flex-shrink: 0;
+}
+
+.tour-tab-handoff-only strong {
+  color: #fdba74;
+  font-weight: 700;
 }
 
 .tour-tooltip-body {
@@ -1145,6 +1168,17 @@ body {
     max-width: none;
     max-height: calc(100dvh - 96px);
     padding: 13px 15px;
+  }
+
+  .tour-tooltip-card.tour-tooltip-card--handoff {
+    right: auto;
+    width: fit-content !important;
+    max-width: calc(100vw - 24px);
+    padding: 8px 13px;
+  }
+
+  .tour-tab-handoff-only {
+    white-space: normal;
   }
 
   .mobile-bottom-nav {
@@ -2819,7 +2853,6 @@ body {
   .tour-spotlight-box,
   .tour-tooltip-card,
   .tour-tooltip-body,
-  .tour-tab-handoff-pill,
   .aoi-popover,
   .alert-popover,
   .info-tip-portal,

@@ -13,19 +13,20 @@ interface BurningHeatmapProps {
   onSelectPeriod?: (period: string | null) => void;
 }
 
-function getHeatColor(ratio: number, ramp: ColorRamp): string {
+function getHeatColor(pt: TimelinePoint, ramp: ColorRamp): string {
+  const ratio = pt.historical_avg > 0 ? pt.harmonized_total / pt.historical_avg : 1.0;
   if (ramp === 'viridis') {
-    if (ratio >= 1.45) return '#fde725';
-    if (ratio >= 1.2) return '#5ec962';
-    if (ratio >= 0.95) return '#21918c';
-    if (ratio >= 0.65) return '#3b528b';
-    return '#440154';
+    if (pt.alert_level === 'critical') return ratio >= 1.55 ? '#fde725' : '#5ec962';
+    if (pt.alert_level === 'elevated') return '#21918c';
+    return ratio >= 0.85 ? '#3b528b' : '#440154';
   }
-  if (ratio >= 1.45) return '#dc2626';
-  if (ratio >= 1.2) return '#ef4444';
-  if (ratio >= 1.0) return '#f59e0b';
-  if (ratio >= 0.75) return '#10b981';
-  return '#059669';
+  if (pt.alert_level === 'critical') {
+    return ratio >= 1.55 ? '#dc2626' : '#ef4444';
+  }
+  if (pt.alert_level === 'elevated') {
+    return '#f59e0b';
+  }
+  return ratio >= 0.85 ? '#10b981' : '#059669';
 }
 
 export function BurningHeatmap({
@@ -64,9 +65,6 @@ export function BurningHeatmap({
   const labelAvg = lang === 'pt' ? 'Média MODIS' : 'MODIS Avg';
   const labelDev = lang === 'pt' ? 'Desvio' : 'Deviation';
 
-  const getRatio = (pt: TimelinePoint) =>
-    pt.historical_avg > 0 ? pt.harmonized_total / pt.historical_avg : 1.0;
-
   const formatTooltip = (pt: TimelinePoint) =>
     `${formatPeriodDisplay(pt.period, t.months, t.weekPrefix)} | ${labelHarmonized}: ${pt.harmonized_total} | ${labelAvg}: ${pt.historical_avg} | ${labelDev}: ${pt.deviation_pct >= 0 ? '+' : ''}${pt.deviation_pct}%`;
 
@@ -85,7 +83,7 @@ export function BurningHeatmap({
           {isWeeklyMode && activeWeekPt && (
             <span className="heatmap-focus-pill">
               {formatPeriodDisplay(activeWeekPt.period, t.months, t.weekPrefix)} ·{' '}
-              <strong style={{ color: getHeatColor(getRatio(activeWeekPt), colorRamp) }}>
+              <strong style={{ color: getHeatColor(activeWeekPt, colorRamp) }}>
                 {activeWeekPt.deviation_pct >= 0 ? '+' : ''}
                 {Math.round(activeWeekPt.deviation_pct)}%
               </strong>
@@ -117,7 +115,7 @@ export function BurningHeatmap({
                 cur.deviation_pct > best.deviation_pct ? cur : best,
               );
               const displayPt = focusedInGroup ?? peakPt;
-              const displayBg = getHeatColor(getRatio(displayPt), colorRamp);
+              const displayBg = getHeatColor(displayPt, colorRamp);
               const focusedShort = focusedInGroup
                 ? `${focusedInGroup.period.split('-')[1]} `
                 : '';
@@ -129,9 +127,8 @@ export function BurningHeatmap({
                 >
                   <div className="heatmap-bar-well heatmap-week-well">
                     {group.weeks.map((pt) => {
-                      const ratio = getRatio(pt);
                       const heightPct = Math.max(18, Math.round((pt.harmonized_total / maxHarm) * 100));
-                      const bg = getHeatColor(ratio, colorRamp);
+                      const bg = getHeatColor(pt, colorRamp);
                       const isSelected = selectedPeriod === pt.period;
                       return (
                         <button
@@ -141,7 +138,7 @@ export function BurningHeatmap({
                           style={{
                             height: `${heightPct}%`,
                             background: bg,
-                            boxShadow: ratio >= 1.3 ? `0 0 8px ${bg}66` : undefined,
+                            boxShadow: pt.alert_level === 'critical' ? `0 0 8px ${bg}66` : undefined,
                           }}
                           title={formatTooltip(pt)}
                           aria-label={formatTooltip(pt)}
@@ -165,9 +162,8 @@ export function BurningHeatmap({
               );
             })
           : series.map((pt) => {
-              const ratio = getRatio(pt);
               const heightPct = Math.max(22, Math.round((pt.harmonized_total / maxHarm) * 100));
-              const bg = getHeatColor(ratio, colorRamp);
+              const bg = getHeatColor(pt, colorRamp);
               const shortPeriod =
                 t.months[Math.max(0, Math.min(11, parseInt(pt.period.split('-')[1], 10) - 1))] ??
                 pt.period;
@@ -192,7 +188,7 @@ export function BurningHeatmap({
                       style={{
                         height: `${heightPct}%`,
                         background: bg,
-                        boxShadow: ratio >= 1.3 ? `0 0 10px ${bg}88` : 'none',
+                        boxShadow: pt.alert_level === 'critical' ? `0 0 10px ${bg}88` : 'none',
                       }}
                     />
                   </div>
