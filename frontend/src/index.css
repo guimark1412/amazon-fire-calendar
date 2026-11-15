@@ -167,6 +167,8 @@ body {
 }
 
 .kpi-mini-label {
+  display: inline-flex;
+  align-items: center;
   font-size: 0.66rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -219,6 +221,8 @@ body {
 }
 
 .toggle-btn {
+  display: inline-flex;
+  align-items: center;
   border: none;
   padding: 5px 10px;
   background: transparent;
@@ -1582,6 +1586,103 @@ body {
     max-height: calc(100vh - 96px);
     overflow-y: auto;
   }
+}
+
+/* Info Tooltip (i) */
+.info-tip-anchor {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  margin-left: 5px;
+  line-height: 1;
+}
+
+.info-tip-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+  height: 15px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  background: rgba(30, 41, 59, 0.72);
+  color: #94a3b8;
+  font-size: 10px;
+  font-weight: 700;
+  font-style: italic;
+  font-family: Georgia, 'Times New Roman', serif;
+  text-transform: none;
+  letter-spacing: normal;
+  cursor: help;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+
+.info-tip-anchor:hover .info-tip-badge,
+.info-tip-anchor:focus-visible .info-tip-badge {
+  border-color: #38bdf8;
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.15);
+}
+
+.info-tip-anchor:focus-visible {
+  outline: none;
+}
+
+.info-tip-portal {
+  position: fixed;
+  z-index: 9999;
+  pointer-events: none;
+  background: rgba(15, 23, 42, 0.98);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(56, 189, 248, 0.42);
+  border-radius: 10px;
+  padding: 9px 11px;
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.72);
+  color: #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  text-align: left;
+  text-transform: none;
+  letter-spacing: normal;
+  font-weight: 400;
+}
+
+.info-tip-portal--top {
+  transform: translateY(-100%);
+}
+
+.info-tip-arrow {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: rgba(15, 23, 42, 0.98);
+  border-left: 1px solid rgba(56, 189, 248, 0.42);
+  border-top: 1px solid rgba(56, 189, 248, 0.42);
+  transform: translateX(-50%) rotate(45deg);
+}
+
+.info-tip-portal--top .info-tip-arrow {
+  bottom: -5px;
+  transform: translateX(-50%) rotate(225deg);
+}
+
+.info-tip-portal--bottom .info-tip-arrow {
+  top: -5px;
+}
+
+.info-tip-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+.info-tip-text {
+  font-size: 0.73rem;
+  line-height: 1.42;
+  color: #cbd5e1;
 }
 
 .map-drawing-aoi .leaflet-container {

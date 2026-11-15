@@ -3,6 +3,7 @@ import { Calendar, ChevronDown, ChevronRight } from 'lucide-react';
 import { parsePeriodInfo } from '../dateUtils';
 import { I18N, type Language } from '../i18n';
 import type { AlertLevel, MatrixMetric, TimelinePoint } from '../types';
+import { InfoTooltip } from './InfoTooltip';
 
 interface CalendarMatrixProps {
   series: TimelinePoint[];
@@ -182,6 +183,7 @@ export function CalendarMatrix({
                 onClick={() => setMetric('harmonized')}
               >
                 {t.metricHarmBtn}
+                <InfoTooltip title={t.metricHarmBtn} text={t.tips.chartHarm} insideButton />
               </button>
               <button
                 type="button"
@@ -189,6 +191,7 @@ export function CalendarMatrix({
                 onClick={() => setMetric('frp')}
               >
                 {t.metricFrpBtn}
+                <InfoTooltip title="FRP (MW)" text={t.tips.frp} insideButton />
               </button>
             </div>
 

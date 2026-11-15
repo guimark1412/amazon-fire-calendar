@@ -199,6 +199,40 @@ export const I18N = {
     dayNightShortLabel: 'Dia / Noite',
     devLabel: 'Desvio',
     months: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'],
+    tips: {
+      kpiHotspots:
+        'Total de focos de calor brutos detectados pelos satélites na região, período e filtros selecionados.',
+      kpiFactor:
+        'Razão empírica de calibração (MODIS ÷ VIIRS) que reduz o VIIRS (375 m) para a escala histórica do MODIS (1 km).',
+      kpiAlert:
+        'Desvio do período mais recente em relação à média histórica MODIS esperada para aquele mês ou semana.',
+      sensorModis:
+        'Sensor de referência climática desde 2000 com pixel nominal de 1 km × 1 km.',
+      sensorViirs:
+        'Sensor de alta resolução (375 m × 375 m), muito mais sensível a pequenos focos e queimas noturnas.',
+      viirsWeight:
+        'Peso aplicado aos pequenos focos vistos só pelo VIIRS. O padrão 0,85× evita inflar falsamente a série histórica.',
+      mapPoints: 'Localização pontual de cada foco de calor detectado por satélite.',
+      mapFootprints:
+        'Área real aproximada de cada pixel (Scan × Track em km²), mostrando o alongamento nas bordas de varredura.',
+      mapGrid:
+        'Células agregadas coloridas pelo nível de alerta comparado à média histórica MODIS local.',
+      chartHarm:
+        'Unifica MODIS (1 km) e VIIRS normalizado na mesma régua de 20 anos para comparação justa com a média.',
+      chartRaw:
+        'Contagem bruta sem correção de escala — evidencia por que o VIIRS detecta ~3–5× mais pixels que o MODIS.',
+      chartCoinc:
+        'Separa focos VIIRS do mesmo incêndio visto pelo MODIS dos pequenos focos isolados (VIIRS-Only).',
+      frp: 'Fire Radiative Power (MW): mede a potência térmica liberada pelo fogo em Megawatts (intensidade da queima), não só a quantidade de focos.',
+      heatmap:
+        'A altura da barra indica o volume do Índice Harmonizado no período e a cor indica o desvio frente à média MODIS.',
+      labRaw:
+        'Somar MODIS + VIIRS brutos conta múltiplos pixels de 375 m sobre o mesmo fogo, gerando picos artificiais.',
+      labHarm:
+        'Converte os focos VIIRS usando o fator de calibração e pondera focos isolados mantendo continuidade histórica.',
+      scanAngle:
+        'Quanto maior o ângulo lateral de visada do satélite (longe de 0°), maior a distorção da área do pixel no solo.',
+    },
     navPanel: 'Painel',
     navMap: 'Mapa',
     navCalendar: 'Matriz',
@@ -468,6 +502,40 @@ export const I18N = {
     dayNightShortLabel: 'Day / Night',
     devLabel: 'Deviation',
     months: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+    tips: {
+      kpiHotspots:
+        'Total raw hotspots detected by satellites for the selected region, window, and filters.',
+      kpiFactor:
+        'Empirical calibration ratio (MODIS ÷ VIIRS) scaling 375 m VIIRS detections onto the 1 km MODIS ruler.',
+      kpiAlert:
+        'Deviation of the latest loaded period relative to the expected MODIS historical baseline.',
+      sensorModis:
+        'Climate reference sensor since 2000 with nominal 1 km × 1 km pixel footprint.',
+      sensorViirs:
+        'High-resolution sensor (375 m × 375 m) with much higher sensitivity to small and nighttime fires.',
+      viirsWeight:
+        'Weight given to small fires seen only by VIIRS. NASA default 0.85× prevents inflating historical baselines.',
+      mapPoints: 'Point coordinate for each individual satellite fire detection.',
+      mapFootprints:
+        'Approximate ground pixel footprint (Scan × Track in km²), illustrating off-nadir stretching.',
+      mapGrid:
+        'Spatial grid cells colored by alert severity compared against the local MODIS historical mean.',
+      chartHarm:
+        'Unifies MODIS (1 km) and normalized VIIRS onto the 20-year baseline for apples-to-apples comparison.',
+      chartRaw:
+        'Uncalibrated counts showing why 375 m VIIRS detects ~3–5× more raw points than 1 km MODIS.',
+      chartCoinc:
+        'Partitions VIIRS detections matching a MODIS fire vs. isolated small burns (VIIRS-Only).',
+      frp: 'Fire Radiative Power (MW): measures thermal heat energy released in Megawatts (fire intensity), beyond raw hotspot count.',
+      heatmap:
+        'Bar height represents Harmonized Index volume; color encodes percentage deviation vs. MODIS average.',
+      labRaw:
+        'Adding raw MODIS + VIIRS counts double-counts fragmented 375 m pixels as if they were 1 km MODIS events.',
+      labHarm:
+        'Scales VIIRS via empirical calibration factor and weights VIIRS-only burns for climate continuity.',
+      scanAngle:
+        'Higher satellite off-nadir viewing angles stretch each pixel footprint across the scan swath.',
+    },
     navPanel: 'Overview',
     navMap: 'Map',
     navCalendar: 'Matrix',

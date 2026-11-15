@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { AlertOctagon, CheckCircle2, Scan, Sliders } from 'lucide-react';
-import type { Language } from '../i18n';
+import { I18N, type Language } from '../i18n';
 import type { HarmonizationDiagnostics, TimelineSummary } from '../types';
+import { InfoTooltip } from './InfoTooltip';
 
 interface HarmonizationLabProps {
   diagnostics?: HarmonizationDiagnostics;
@@ -44,6 +45,7 @@ export function HarmonizationLab({
   const ratio = Number((modisAreaKm2 / Math.max(0.05, viirsAreaKm2)).toFixed(1));
 
   const isPt = lang === 'pt';
+  const t = I18N[lang];
 
   return (
     <section className="harm-lab-section" data-tour="harm-lab">
@@ -66,6 +68,7 @@ export function HarmonizationLab({
                 <AlertOctagon size={16} color="#f87171" />
                 <span>
                   {isPt ? 'SEM HARMONIZAÇÃO (Contagem Bruta)' : 'UNHARMONIZED (Raw Sensor Sum)'}
+                  <InfoTooltip text={t.tips.labRaw} />
                 </span>
               </div>
               <div className="ba-big-num">
@@ -90,6 +93,7 @@ export function HarmonizationLab({
                 <CheckCircle2 size={16} color="#34d399" />
                 <span>
                   {isPt ? 'COM HARMONIZAÇÃO (Escala Unificada)' : 'HARMONIZED (Unified MODIS Scale)'}
+                  <InfoTooltip text={t.tips.labHarm} />
                 </span>
               </div>
               <div className="ba-big-num">{harmTotal.toFixed(1)} eq. MODIS</div>
@@ -117,6 +121,7 @@ export function HarmonizationLab({
                 {isPt
                   ? 'Ponderação de Pequenos Incêndios Exclusivos do VIIRS (VIIRS-Only Weight):'
                   : 'Unmatched VIIRS-Only Small Fires Weighting:'}
+                <InfoTooltip title="VIIRS-Only" text={t.tips.viirsWeight} />
               </span>
               <strong style={{ color: '#fdba74' }}>{Math.round(viirsOnlyWeight * 100)}%</strong>
             </div>
@@ -172,7 +177,10 @@ export function HarmonizationLab({
 
             <div className="swath-metrics-row">
               <div className="swath-stat">
-                <span>{isPt ? 'Ângulo de Visada (Off-Nadir)' : 'Scan Angle (Off-Nadir)'}</span>
+                <span>
+                  {isPt ? 'Ângulo de Visada (Off-Nadir)' : 'Scan Angle (Off-Nadir)'}
+                  <InfoTooltip title="Off-Nadir" text={t.tips.scanAngle} />
+                </span>
                 <strong>{scanAngle}°</strong>
               </div>
               <div className="swath-stat">

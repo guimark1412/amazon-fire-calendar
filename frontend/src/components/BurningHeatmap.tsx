@@ -1,6 +1,7 @@
 import { Flame } from 'lucide-react';
 import { I18N, type Language } from '../i18n';
 import type { ColorRamp, TimelinePoint } from '../types';
+import { InfoTooltip } from './InfoTooltip';
 
 interface BurningHeatmapProps {
   series: TimelinePoint[];
@@ -43,6 +44,7 @@ export function BurningHeatmap({
         <h2 className="panel-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <Flame size={18} color="#f97316" />
           {t.heatmapTitle}
+          <InfoTooltip title={t.heatmapTitle} text={t.tips.heatmap} />
         </h2>
         <div className="heatmap-legend">
           <span>{t.heatmapLow}</span>

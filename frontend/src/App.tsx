@@ -27,6 +27,7 @@ import { currentYear, dryPeak, last7Days, yearToDate } from './dateUtils';
 import { FireCalendarChart } from './components/FireCalendarChart';
 import { FireMap } from './components/FireMap';
 import { HarmonizationLab } from './components/HarmonizationLab';
+import { InfoTooltip } from './components/InfoTooltip';
 import { PitchModeModal, type WorkspaceView } from './components/PitchModeModal';
 import { I18N, type Language } from './i18n';
 import type {
@@ -752,6 +753,8 @@ export function App() {
                   onClick={() => setSensor(s)}
                 >
                   {s === 'both' ? t.both : s}
+                  {s === 'MODIS' && <InfoTooltip title="MODIS (1 km)" text={t.tips.sensorModis} insideButton />}
+                  {s === 'VIIRS' && <InfoTooltip title="VIIRS (375 m)" text={t.tips.sensorViirs} insideButton />}
                 </button>
               ))}
             </div>
@@ -791,14 +794,20 @@ export function App() {
 
           <div className="kpi-inline-group">
             <div className="kpi-mini-pill">
-              <span className="kpi-mini-label">{t.kpiHotspots}</span>
+              <span className="kpi-mini-label">
+                {t.kpiHotspots}
+                <InfoTooltip title={t.kpiHotspots} text={t.tips.kpiHotspots} />
+              </span>
               <strong className="kpi-mini-value">
                 {firesData ? firesData.total_count.toLocaleString(lang === 'pt' ? 'pt-BR' : 'en-US') : '—'}
               </strong>
             </div>
 
             <div className="kpi-mini-pill">
-              <span className="kpi-mini-label">{t.kpiFactor}</span>
+              <span className="kpi-mini-label">
+                {t.kpiFactor}
+                <InfoTooltip title={t.kpiFactor} text={t.tips.kpiFactor} />
+              </span>
               <strong className="kpi-mini-value">
                 {timelineData ? `× ${timelineData.calibration_factor}` : '—'}
               </strong>
@@ -807,6 +816,7 @@ export function App() {
             <div className="kpi-mini-pill">
               <span className="kpi-mini-label">
                 {t.kpiAlert} {latestPeriod ? `(${latestPeriod.period})` : ''}
+                <InfoTooltip title={t.kpiAlert} text={t.tips.kpiAlert} />
               </span>
               <div className="kpi-mini-alert">
                 {latestPeriod ? (
@@ -843,10 +853,14 @@ export function App() {
                 <option value="high">{t.confHigh}</option>
               </select>
 
-              <label className="weight-control">
-                <span>{t.viirsWeightLabel}:</span>
+              <div className="weight-control">
+                <span>
+                  {t.viirsWeightLabel}
+                  <InfoTooltip title="VIIRS-Only" text={t.tips.viirsWeight} />:
+                </span>
                 <select
                   className="control-select control-select-sm"
+                  aria-label={t.viirsWeightLabel}
                   value={String(viirsOnlyWeight)}
                   onChange={(e) => setViirsOnlyWeight(parseFloat(e.target.value))}
                 >
@@ -855,7 +869,7 @@ export function App() {
                   <option value="0.7">{lang === 'pt' ? '0.70× (Conservador)' : '0.70× (Conservative)'}</option>
                   <option value="0.5">{lang === 'pt' ? '0.50× (Foco Grandes Incêndios)' : '0.50× (Large Fires Focus)'}</option>
                 </select>
-              </label>
+              </div>
             </div>
           </div>
         )}
@@ -953,6 +967,7 @@ export function App() {
                   >
                     <MapPin size={14} />
                     {t.pointsBtn}
+                    <InfoTooltip title={t.pointsBtn} text={t.tips.mapPoints} insideButton />
                   </button>
                   <button
                     type="button"
@@ -962,6 +977,7 @@ export function App() {
                   >
                     <Scan size={14} />
                     {t.footprintsBtn}
+                    <InfoTooltip title={t.footprintsBtn} text={t.tips.mapFootprints} insideButton />
                   </button>
                   <button
                     type="button"
@@ -971,6 +987,7 @@ export function App() {
                   >
                     <Grid3X3 size={14} />
                     {t.gridBtn}
+                    <InfoTooltip title={t.gridBtn} text={t.tips.mapGrid} insideButton />
                   </button>
                 </div>
               </div>
@@ -1052,6 +1069,7 @@ export function App() {
                     onClick={() => setChartMode('harmonized')}
                   >
                     {t.chartModeHarm}
+                    <InfoTooltip title={t.chartModeHarm} text={t.tips.chartHarm} insideButton />
                   </button>
                   <button
                     type="button"
@@ -1059,6 +1077,7 @@ export function App() {
                     onClick={() => setChartMode('raw')}
                   >
                     {t.chartModeRaw}
+                    <InfoTooltip title={t.chartModeRaw} text={t.tips.chartRaw} insideButton />
                   </button>
                   <button
                     type="button"
@@ -1066,6 +1085,7 @@ export function App() {
                     onClick={() => setChartMode('coincidence')}
                   >
                     {t.chartModeCoinc}
+                    <InfoTooltip title={t.chartModeCoinc} text={t.tips.chartCoinc} insideButton />
                   </button>
                   <button
                     type="button"
@@ -1073,6 +1093,7 @@ export function App() {
                     onClick={() => setChartMode('frp')}
                   >
                     {t.chartModeFrp}
+                    <InfoTooltip title="FRP (MW)" text={t.tips.frp} insideButton />
                   </button>
                 </div>
               </div>
