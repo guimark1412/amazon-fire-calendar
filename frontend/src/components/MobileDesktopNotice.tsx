@@ -104,16 +104,6 @@ export function MobileDesktopNotice({ lang, appReady, onToggleLang }: MobileDesk
         ) : (
           <span />
         )}
-
-        {phase === 'playing' && (
-          <button
-            type="button"
-            className="mobile-splash-ghost-btn"
-            onClick={startFadeOut}
-          >
-            {t.mobileDesktopContinue}
-          </button>
-        )}
       </div>
 
       <div className="mobile-splash-center">
