@@ -233,7 +233,7 @@ class PreviewHandler(BaseHTTPRequestHandler):
             region_cfg = resolve_region_config(region, custom_bbox)
             records, data_source = get_timeline_records(
                 region_id=region,
-                days=5,
+                days=7,
                 custom_bbox=custom_bbox,
                 daynight=daynight,
                 min_confidence=min_confidence,
@@ -253,7 +253,7 @@ class PreviewHandler(BaseHTTPRequestHandler):
 
         if path == "/api/grid":
             sensor = qs.get("sensor", "both")
-            days = int(qs.get("days", "5"))
+            days = int(qs.get("days", "7"))
             cell_size = float(qs.get("cell_size", "1.25"))
             weight = float(qs.get("viirs_only_weight", "0.85"))
             region_cfg = resolve_region_config(region, custom_bbox)

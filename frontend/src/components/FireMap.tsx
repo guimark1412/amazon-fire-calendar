@@ -203,7 +203,7 @@ export function FireMap({
   onClearPeriod,
   isLoading = false,
 }: FireMapProps) {
-  const [basemap, setBasemap] = useState<'satellite' | 'dark'>('satellite');
+  const [basemap, setBasemap] = useState<'dark' | 'satellite' | 'gibs'>('dark');
   const t = I18N[lang];
   const palette = colorRamp === 'viridis' ? GRID_COLORS_VIRIDIS : GRID_COLORS_ALERT;
   const hasVisibleFeatures = viewMode === 'grid' ? gridCells.length > 0 : fires.length > 0;
@@ -213,6 +213,7 @@ export function FireMap({
       ? 'VIIRS_NOAA20_CorrectedReflectance_TrueColor'
       : 'MODIS_Terra_CorrectedReflectance_TrueColor';
   const sensorLabel = sensor === 'VIIRS' ? 'VIIRS NOAA-20' : 'MODIS Terra';
+  const shortSatDate = satelliteDate.slice(5);
 
   return (
     <div className={`map-container ${isDrawingAoi ? 'map-drawing-aoi' : ''}`}>
@@ -235,18 +236,11 @@ export function FireMap({
         />
       )}
       <div className="map-basemap-bar" role="group" aria-label="Basemap layer">
-        {basemap === 'satellite' && (
-          <span className="map-basemap-meta">
-            🛰️ NASA GIBS · {sensorLabel} · {satelliteDate}
+        {basemap === 'gibs' && (
+          <span className="map-basemap-meta" title={`NASA GIBS · ${sensorLabel} · ${satelliteDate}`}>
+            🛰️ {sensorLabel} · {satelliteDate}
           </span>
         )}
-        <button
-          type="button"
-          className={`map-basemap-btn ${basemap === 'satellite' ? 'active' : ''}`}
-          onClick={() => setBasemap('satellite')}
-        >
-          {lang === 'pt' ? `Satélite (${satelliteDate})` : `Satellite (${satelliteDate})`}
-        </button>
         <button
           type="button"
           className={`map-basemap-btn ${basemap === 'dark' ? 'active' : ''}`}
@@ -254,26 +248,71 @@ export function FireMap({
         >
           {lang === 'pt' ? 'Mapa Escuro' : 'Dark Map'}
         </button>
+        <button
+          type="button"
+          className={`map-basemap-btn ${basemap === 'satellite' ? 'active' : ''}`}
+          onClick={() => setBasemap('satellite')}
+        >
+          {lang === 'pt' ? 'Satélite' : 'Satellite'}
+        </button>
+        <button
+          type="button"
+          className={`map-basemap-btn ${basemap === 'gibs' ? 'active' : ''}`}
+          title={`NASA GIBS · ${sensorLabel} · ${satelliteDate}`}
+          onClick={() => setBasemap('gibs')}
+        >
+          {`NASA GIBS (${shortSatDate})`}
+        </button>
       </div>
       <MapContainer center={center} zoom={zoom} style={{ height: '100%', width: '100%' }}>
         <MapViewportSync center={center} zoom={zoom} />
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
-          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-        />
+        {basemap === 'dark' && (
+          <TileLayer
+            key="osm-dark"
+            className="osm-dark-tiles"
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+            maxZoom={18}
+          />
+        )}
         {basemap === 'satellite' && (
           <>
             <TileLayer
+              key="esri-imagery"
+              attribution="Imagery &copy; Esri"
+              url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+              maxZoom={18}
+            />
+            <TileLayer
+              key="esri-boundaries"
+              url="https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}"
+              maxZoom={18}
+              opacity={0.92}
+            />
+          </>
+        )}
+        {basemap === 'gibs' && (
+          <>
+            <TileLayer
+              key="gibs-underlay-esri"
+              attribution="Imagery &copy; Esri"
+              url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+              maxZoom={18}
+              opacity={0.85}
+            />
+            <TileLayer
               key={`gibs-${gibsLayer}-${satelliteDate}`}
-              attribution="Imagery &copy; NASA EOSDIS GIBS"
+              attribution={`Imagery &copy; NASA EOSDIS GIBS (${satelliteDate})`}
               url={`https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/${gibsLayer}/default/${satelliteDate}/GoogleMapsCompatible_Level9/{z}/{y}/{x}.jpg`}
               maxNativeZoom={9}
               maxZoom={18}
-              opacity={0.86}
+              opacity={0.88}
             />
             <TileLayer
-              url="https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png"
-              opacity={0.92}
+              key="gibs-boundaries"
+              url="https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}"
+              maxZoom={18}
+              opacity={0.95}
             />
           </>
         )}

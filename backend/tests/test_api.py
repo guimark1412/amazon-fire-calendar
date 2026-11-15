@@ -181,3 +181,99 @@ def test_november_2026_and_prior_year_queries():
     hist_body = hist_res.json()
     assert hist_body["total_count"] > 0
     assert all(f["acq_date"].startswith("2025-08") for f in hist_body["fires"])
+
+
+def test_firms_day_chunking_and_temporal_nrt_gating():
+    from datetime import date
+    from app import firms_client
+
+    ref = date(2026, 11, 15)
+    for d in range(1, 11):
+        chunks = firms_client._build_day_chunks(d, ref_utc=ref)
+        assert chunks, f"Expected non-empty chunks for days={d}"
+        assert all(1 <= span <= 5 for span, _ in chunks)
+
+    assert not firms_client._requests_live_nrt_window(7, period="2025-08", ref_utc=ref)
+    assert not firms_client._requests_live_nrt_window(
+        7, start_date="2026-08-01", end_date="2026-08-31", ref_utc=ref
+    )
+    assert firms_client._requests_live_nrt_window(7, period="2026-11", ref_utc=ref)
+    assert firms_client._requests_live_nrt_window(7, ref_utc=ref)
+
+
+def test_live_and_history_exact_date_merge_and_zero_row_handling(monkeypatch):
+    from app import firms_client
+
+    sample_live = [
+        {
+            "latitude": -8.5,
+            "longitude": -55.5,
+            "brightness": 330.0,
+            "frp": 45.0,
+            "confidence": "92",
+            "confidence_level": "high",
+            "scan": 1.1,
+            "track": 1.0,
+            "pixel_area_km2": 1.1,
+            "acq_date": "2026-11-12",
+            "acq_time": "1400",
+            "satellite": "Terra",
+            "sensor": "MODIS",
+            "daynight": "D",
+        }
+    ]
+    monkeypatch.setenv("FIRMS_MAP_KEY", "test_key_123")
+    monkeypatch.setattr(firms_client, "_fetch_live_firms", lambda *a, **kw: list(sample_live))
+
+    recs, src = firms_client.get_fire_records("amazonia_legal", period="2026-11", days=7)
+    assert src == "live_nasa_firms+history"
+    dates = {r["acq_date"] for r in recs}
+    # Earlier November days outside live_dates must NOT be stripped
+    assert "2026-11-01" in dates
+    assert "2026-11-12" in dates
+
+    # Valid empty live response must remain live (0 fires), not fall back to fake CSV
+    monkeypatch.setattr(firms_client, "_fetch_live_firms", lambda *a, **kw: [])
+    empty_recs, empty_src = firms_client.get_fire_records("acre", days=7)
+    assert empty_src == "live_nasa_firms"
+    assert empty_recs == []
+
+
+def test_spatial_coincident_partition_matches_exact_geometry():
+    import random
+    from app.harmonization import _partition_coincident_vs_small_viirs
+
+    rng = random.Random(42)
+    records = []
+    for _ in range(40):
+        records.append(
+            {
+                "latitude": rng.uniform(-15.0, 2.0),
+                "longitude": rng.uniform(-70.0, -48.0),
+                "sensor": "MODIS",
+                "scan": rng.uniform(0.9, 2.5),
+            }
+        )
+    for _ in range(250):
+        records.append(
+            {
+                "latitude": rng.uniform(-15.0, 2.0),
+                "longitude": rng.uniform(-70.0, -48.0),
+                "sensor": "VIIRS",
+                "scan": 0.4,
+            }
+        )
+
+    coinc, v_only = _partition_coincident_vs_small_viirs(records, proximity_deg=0.42)
+    modis = [r for r in records if r["sensor"] == "MODIS"]
+    viirs = [r for r in records if r["sensor"] == "VIIRS"]
+    brute_c = sum(
+        1
+        for v in viirs
+        if any(
+            abs(v["latitude"] - m["latitude"]) <= 0.42 * max(1.0, min(2.0, m["scan"]))
+            and abs(v["longitude"] - m["longitude"]) <= 0.42 * max(1.0, min(2.0, m["scan"]))
+            for m in modis
+        )
+    )
+    assert (coinc, v_only) == (brute_c, len(viirs) - brute_c)

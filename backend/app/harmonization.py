@@ -1,5 +1,6 @@
 from collections import defaultdict
 from datetime import datetime
+import math
 from typing import Any, Dict, List, Tuple
 
 from .config import DEFAULT_VIIRS_TO_MODIS_FACTOR, RegionConfig
@@ -70,15 +71,28 @@ def _partition_coincident_vs_small_viirs(
     if not modis_pts:
         return 0, len(viirs_pts)
 
+    cell_deg = max(0.05, proximity_deg * 2.0)
+    modis_grid: Dict[Tuple[int, int], List[Tuple[float, float, float]]] = defaultdict(list)
+    for m_lat, m_lon, m_scan in modis_pts:
+        eff_radius = proximity_deg * max(1.0, min(2.0, m_scan))
+        grid_key = (math.floor(m_lat / cell_deg), math.floor(m_lon / cell_deg))
+        modis_grid[grid_key].append((m_lat, m_lon, eff_radius))
+
     coincident = 0
     viirs_only = 0
     for v_lat, v_lon in viirs_pts:
+        cr = math.floor(v_lat / cell_deg)
+        cc = math.floor(v_lon / cell_deg)
         matched = False
-        for m_lat, m_lon, m_scan in modis_pts:
-            # Effective matching radius expands slightly when MODIS scan angle stretches the pixel
-            eff_radius = proximity_deg * max(1.0, min(2.0, m_scan))
-            if abs(v_lat - m_lat) <= eff_radius and abs(v_lon - m_lon) <= eff_radius:
-                matched = True
+        for dr in (-1, 0, 1):
+            for dc in (-1, 0, 1):
+                for m_lat, m_lon, eff_radius in modis_grid.get((cr + dr, cc + dc), ()):
+                    if abs(v_lat - m_lat) <= eff_radius and abs(v_lon - m_lon) <= eff_radius:
+                        matched = True
+                        break
+                if matched:
+                    break
+            if matched:
                 break
         if matched:
             coincident += 1
