@@ -49,12 +49,12 @@ export function MobileDesktopNotice({ lang, appReady, onToggleLang }: MobileDesk
     return () => window.clearTimeout(timer);
   }, [phase, appReady]);
 
-  // Step 2 -> Step 3: show phone (~1.5s) -> morph to monitor -> pause cleanly -> dissolve
+  // Step 2 -> Step 3: show phone (~1.5s) -> morph to monitor -> brief pause -> dissolve
   useEffect(() => {
     if (phase !== 'playing') return;
     const timer = window.setTimeout(() => {
       startFadeOut();
-    }, 4600);
+    }, 4200);
     return () => window.clearTimeout(timer);
   }, [phase, startFadeOut]);
 
