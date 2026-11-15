@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Globe } from 'lucide-react';
 import { I18N, type Language } from '../i18n';
 
 const STORAGE_KEY = 'afc_mobile_notice_seen';
@@ -53,22 +52,22 @@ export function MobileDesktopNotice({ lang, appReady, onToggleLang }: MobileDesk
     };
   }, [phase, startFadeOut]);
 
-  // Step 1 -> Step 2: wait until site data is loaded (min 450ms beat, max 4.5s safety cap)
+  // Step 1 -> Step 2: wait until site data is loaded (min 400ms beat, max 4.5s safety cap)
   useEffect(() => {
     if (phase !== 'loading') return;
-    const delay = appReady ? 450 : 4500;
+    const delay = appReady ? 400 : 4500;
     const timer = window.setTimeout(() => {
       setPhase('playing');
     }, delay);
     return () => window.clearTimeout(timer);
   }, [phase, appReady]);
 
-  // Step 2 -> Step 3: play phone->monitor morph + hold readable message, then smoothly dissolve
+  // Step 2 -> Step 3: show phone (~1.5s) -> morph to monitor -> pause cleanly -> dissolve
   useEffect(() => {
     if (phase !== 'playing') return;
     const timer = window.setTimeout(() => {
       startFadeOut();
-    }, 3600);
+    }, 4600);
     return () => window.clearTimeout(timer);
   }, [phase, startFadeOut]);
 
@@ -77,7 +76,7 @@ export function MobileDesktopNotice({ lang, appReady, onToggleLang }: MobileDesk
     if (phase !== 'fading') return;
     const timer = window.setTimeout(() => {
       setPhase('done');
-    }, 1250);
+    }, 1300);
     return () => window.clearTimeout(timer);
   }, [phase]);
 
@@ -96,11 +95,10 @@ export function MobileDesktopNotice({ lang, appReady, onToggleLang }: MobileDesk
         {onToggleLang ? (
           <button
             type="button"
-            className="control-select control-select-sm action-btn mobile-notice-lang-btn"
+            className="mobile-splash-ghost-btn"
             onClick={onToggleLang}
             aria-label="Switch language"
           >
-            <Globe size={13} />
             {lang === 'pt' ? 'EN' : 'PT'}
           </button>
         ) : (
@@ -110,7 +108,7 @@ export function MobileDesktopNotice({ lang, appReady, onToggleLang }: MobileDesk
         {phase === 'playing' && (
           <button
             type="button"
-            className="mobile-splash-skip"
+            className="mobile-splash-ghost-btn"
             onClick={startFadeOut}
           >
             {t.mobileDesktopContinue}
@@ -121,11 +119,6 @@ export function MobileDesktopNotice({ lang, appReady, onToggleLang }: MobileDesk
       <div className="mobile-splash-center">
         {phase === 'loading' ? (
           <div className="mobile-splash-loader" role="status">
-            <img
-              src="/logo-calendar.png"
-              alt="Amazon Fire Calendar"
-              className="mobile-splash-logo"
-            />
             <span className="mobile-splash-spinner" aria-hidden="true" />
             <p className="mobile-splash-loading-text">{t.mobileDesktopLoading}</p>
           </div>
@@ -136,19 +129,8 @@ export function MobileDesktopNotice({ lang, appReady, onToggleLang }: MobileDesk
               <div className="mobile-morph-device mobile-morph-device--hero">
                 <span className="mobile-morph-speaker" />
                 <div className="mobile-morph-screen">
-                  <div className="mobile-morph-ui-header" />
-                  <div className="mobile-morph-ui-body">
-                    <div className="mobile-morph-ui-map">
-                      <span className="mobile-morph-fire-dot mobile-morph-fire-dot--1" />
-                      <span className="mobile-morph-fire-dot mobile-morph-fire-dot--2" />
-                    </div>
-                    <div className="mobile-morph-ui-chart mobile-morph-ui-chart--hero">
-                      <span className="mobile-morph-bar" />
-                      <span className="mobile-morph-bar" />
-                      <span className="mobile-morph-bar" />
-                      <span className="mobile-morph-bar" />
-                    </div>
-                  </div>
+                  <span className="mobile-morph-ember" />
+                  <span className="mobile-morph-line mobile-morph-line--short" />
                 </div>
                 <span className="mobile-morph-home" />
               </div>

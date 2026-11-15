@@ -87,8 +87,43 @@ function usePopoverDismiss(
   }, [isOpen, anchorRef, setOpen]);
 }
 
+const LANG_STORAGE_KEY = 'afc_lang';
+
+function detectInitialLanguage(): Language {
+  if (typeof window === 'undefined') return 'en';
+  try {
+    const saved = window.localStorage.getItem(LANG_STORAGE_KEY);
+    if (saved === 'pt' || saved === 'en') return saved;
+  } catch {
+    // Ignore storage errors in restricted contexts
+  }
+  const prefs =
+    typeof navigator !== 'undefined'
+      ? navigator.languages?.length
+        ? navigator.languages
+        : [navigator.language]
+      : [];
+  for (const tag of prefs) {
+    const norm = (tag || '').toLowerCase();
+    if (norm.startsWith('pt')) return 'pt';
+    if (norm.startsWith('en')) return 'en';
+  }
+  return 'en';
+}
+
 export function App() {
-  const [lang, setLang] = useState<Language>('en');
+  const [lang, setLang] = useState<Language>(detectInitialLanguage);
+  const toggleLang = useCallback(() => {
+    setLang((prev) => {
+      const next: Language = prev === 'pt' ? 'en' : 'pt';
+      try {
+        window.localStorage.setItem(LANG_STORAGE_KEY, next);
+      } catch {
+        // Ignore storage errors in restricted contexts
+      }
+      return next;
+    });
+  }, []);
   useEffect(() => {
     document.documentElement.lang = lang === 'pt' ? 'pt-BR' : 'en';
   }, [lang]);
@@ -676,7 +711,7 @@ export function App() {
             <button
               type="button"
               className="control-select action-btn"
-              onClick={() => setLang((prev) => (prev === 'pt' ? 'en' : 'pt'))}
+              onClick={toggleLang}
               aria-label="Switch language"
             >
               <Globe size={15} />
@@ -1408,7 +1443,7 @@ export function App() {
       <MobileDesktopNotice
         lang={lang}
         appReady={!loading || Boolean(error)}
-        onToggleLang={() => setLang((prev) => (prev === 'pt' ? 'en' : 'pt'))}
+        onToggleLang={toggleLang}
       />
     </div>
   );

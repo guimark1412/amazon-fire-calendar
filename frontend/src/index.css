@@ -2945,7 +2945,8 @@ body {
   .mobile-morph-stand,
   .mobile-morph-speaker,
   .mobile-morph-home,
-  .mobile-morph-ui-chart,
+  .mobile-morph-ember,
+  .mobile-morph-line,
   .mobile-morph-glow,
   .mobile-notice-title,
   .mobile-notice-desc,
@@ -2963,17 +2964,10 @@ body {
     transition: none !important;
   }
   .mobile-morph-device--hero {
-    width: 136px;
-    height: 82px;
-    border-radius: 9px;
+    width: 132px;
+    height: 78px;
+    border-radius: 7px;
     transform: translateY(-6px);
-  }
-  .mobile-morph-ui-chart--hero {
-    flex: 0 0 50px;
-    width: 50px;
-    padding: 3px 4px;
-    border-width: 1px;
-    opacity: 1;
   }
   .mobile-morph-stand--hero {
     opacity: 1;
@@ -2984,7 +2978,7 @@ body {
   }
 }
 
-/* --- Mobile Full-Screen Splash & Phone-to-Monitor Morph --- */
+/* --- Mobile Minimalist Full-Screen Splash & Phone-to-Monitor Morph --- */
 
 .mobile-splash-overlay {
   position: fixed;
@@ -2992,23 +2986,20 @@ body {
   z-index: 2500;
   display: flex;
   flex-direction: column;
-  padding: max(18px, env(safe-area-inset-top)) 20px max(24px, env(safe-area-inset-bottom));
+  padding: max(18px, env(safe-area-inset-top)) 22px max(24px, env(safe-area-inset-bottom));
   background:
-    radial-gradient(circle at 50% 42%, rgba(249, 115, 22, 0.14), rgba(56, 189, 248, 0.08) 42%, #070b14 78%),
-    #070b14;
+    radial-gradient(circle at 50% 42%, rgba(249, 115, 22, 0.08), transparent 52%),
+    #060911;
   opacity: 1;
   transform: scale(1);
-  filter: blur(0px);
   transition:
-    opacity 1.25s cubic-bezier(0.22, 1, 0.36, 1),
-    transform 1.25s cubic-bezier(0.22, 1, 0.36, 1),
-    filter 1.25s ease;
+    opacity 1.3s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 1.3s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .mobile-splash-overlay--fading {
   opacity: 0;
-  transform: scale(1.03);
-  filter: blur(4px);
+  transform: scale(1.02);
   pointer-events: none;
 }
 
@@ -3019,17 +3010,23 @@ body {
   width: 100%;
 }
 
-.mobile-notice-lang-btn {
-  padding: 5px 11px;
-  font-size: 0.76rem;
+.mobile-splash-ghost-btn {
+  appearance: none;
+  background: transparent;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 999px;
+  padding: 5px 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  color: rgba(226, 232, 240, 0.78);
+  cursor: pointer;
+  transition: color 0.2s ease, border-color 0.2s ease;
 }
 
-.mobile-splash-skip {
-  padding: 5px 12px;
-  font-size: 0.78rem;
-  color: #cbd5e1;
-  border-color: rgba(148, 163, 184, 0.25);
-  background: rgba(15, 23, 42, 0.55);
+.mobile-splash-ghost-btn:hover {
+  color: #f8fafc;
+  border-color: rgba(226, 232, 240, 0.45);
 }
 
 .mobile-splash-center {
@@ -3039,56 +3036,47 @@ body {
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 0 8px 36px;
+  padding: 0 12px 32px;
 }
 
 .mobile-splash-loader {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
+  gap: 14px;
   animation: noticeTextIn 0.35s ease-out both;
 }
 
-.mobile-splash-logo {
-  width: 54px;
-  height: 54px;
-  border-radius: 14px;
-  object-fit: contain;
-  filter: drop-shadow(0 0 18px rgba(249, 115, 22, 0.38));
-}
-
 .mobile-splash-spinner {
-  width: 34px;
-  height: 34px;
+  width: 26px;
+  height: 26px;
   border-radius: 999px;
-  border: 2.5px solid rgba(148, 163, 184, 0.18);
-  border-top-color: #f97316;
-  border-right-color: #38bdf8;
+  border: 1.75px solid rgba(148, 163, 184, 0.16);
+  border-top-color: rgba(248, 250, 252, 0.88);
   animation: mobileSplashSpin 0.85s linear infinite;
 }
 
 .mobile-splash-loading-text {
   margin: 0;
-  font-size: 0.88rem;
-  font-weight: 500;
-  letter-spacing: 0.01em;
-  color: #cbd5e1;
+  font-size: 0.82rem;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  color: rgba(203, 213, 225, 0.72);
 }
 
 .mobile-splash-morph-wrap {
   display: flex;
   flex-direction: column;
   align-items: center;
-  max-width: 340px;
+  max-width: 310px;
   width: 100%;
 }
 
 .mobile-morph-stage--hero {
   position: relative;
-  height: 138px;
+  height: 124px;
   width: 100%;
-  margin: 0 auto 22px;
+  margin: 0 auto 24px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -3097,136 +3085,79 @@ body {
 
 .mobile-morph-glow--hero {
   position: absolute;
-  width: 190px;
-  height: 110px;
+  width: 160px;
+  height: 92px;
   border-radius: 999px;
-  background: radial-gradient(circle, rgba(249, 115, 22, 0.28), rgba(56, 189, 248, 0.14), transparent 72%);
+  background: radial-gradient(circle, rgba(249, 115, 22, 0.16), transparent 70%);
   filter: blur(18px);
-  animation: morphGlowHero 2.2s ease-out forwards;
+  animation: morphGlowHero 3.2s ease-out forwards;
   pointer-events: none;
 }
 
 .mobile-morph-device--hero {
   position: relative;
   z-index: 2;
-  width: 48px;
-  height: 86px;
-  border-radius: 11px;
-  border: 2.5px solid #cbd5e1;
-  background: #0b1120;
-  padding: 6px 5px;
+  width: 44px;
+  height: 80px;
+  border-radius: 10px;
+  border: 1.75px solid rgba(226, 232, 240, 0.88);
+  background: rgba(11, 17, 32, 0.92);
+  padding: 5px;
   display: flex;
   flex-direction: column;
   gap: 4px;
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.55);
-  animation: morphPhoneToMonitorHero 2.1s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.5);
+  animation: morphPhoneToMonitorHero 3.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
 .mobile-morph-speaker {
   display: block;
-  width: 14px;
-  height: 2.5px;
+  width: 12px;
+  height: 2px;
   border-radius: 999px;
-  background: #64748b;
+  background: rgba(148, 163, 184, 0.55);
   margin: 0 auto;
-  animation: morphSpeakerHeroFade 2.1s ease-out forwards;
+  animation: morphSpeakerHeroFade 3.2s ease-out forwards;
 }
 
 .mobile-morph-home {
   display: block;
-  width: 12px;
-  height: 2.5px;
+  width: 11px;
+  height: 2px;
   border-radius: 999px;
-  background: #475569;
+  background: rgba(148, 163, 184, 0.4);
   margin: 0 auto;
-  animation: morphSpeakerHeroFade 2.1s ease-out forwards;
+  animation: morphSpeakerHeroFade 3.2s ease-out forwards;
 }
 
 .mobile-morph-screen {
   flex: 1;
   min-height: 0;
-  border-radius: 5px;
-  background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.9));
-  border: 1px solid rgba(56, 189, 248, 0.28);
-  padding: 4px;
+  border-radius: 4px;
+  background: rgba(15, 23, 42, 0.72);
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  padding: 6px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   overflow: hidden;
 }
 
-.mobile-morph-ui-header {
-  height: 5px;
-  width: 100%;
-  border-radius: 2px;
-  background: linear-gradient(90deg, rgba(249, 115, 22, 0.8), rgba(56, 189, 248, 0.55));
-}
-
-.mobile-morph-ui-body {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  gap: 4px;
-}
-
-.mobile-morph-ui-map {
-  position: relative;
-  flex: 1;
-  border-radius: 3px;
-  background: rgba(16, 185, 129, 0.14);
-  border: 1px solid rgba(16, 185, 129, 0.24);
-}
-
-.mobile-morph-fire-dot {
-  position: absolute;
-  width: 5px;
-  height: 5px;
+.mobile-morph-ember {
+  width: 6px;
+  height: 6px;
   border-radius: 999px;
   background: #f97316;
-  box-shadow: 0 0 8px #f97316;
+  box-shadow: 0 0 10px rgba(249, 115, 22, 0.65);
 }
 
-.mobile-morph-fire-dot--1 {
-  top: 28%;
-  left: 34%;
-}
-
-.mobile-morph-fire-dot--2 {
-  top: 56%;
-  left: 60%;
-  background: #ef4444;
-}
-
-.mobile-morph-ui-chart--hero {
-  display: flex;
-  align-items: flex-end;
-  gap: 3px;
-  padding: 3px 4px;
-  border-radius: 3px;
-  background: rgba(56, 189, 248, 0.08);
-  border: 1px solid rgba(56, 189, 248, 0.2);
-  overflow: hidden;
-  animation: morphChartHeroExpand 2.1s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-}
-
-.mobile-morph-bar {
-  flex: 1;
-  min-width: 4px;
-  border-radius: 1.5px 1.5px 0 0;
-  background: #38bdf8;
-}
-
-.mobile-morph-bar:nth-child(1) {
-  height: 45%;
-}
-
-.mobile-morph-bar:nth-child(2) {
-  height: 85%;
-  background: #f97316;
-}
-
-.mobile-morph-bar:nth-child(3) {
-  height: 62%;
+.mobile-morph-line--short {
+  width: 58%;
+  height: 2px;
+  border-radius: 999px;
+  background: rgba(203, 213, 225, 0.25);
 }
 
 .mobile-morph-stand--hero {
@@ -3235,39 +3166,40 @@ body {
   align-items: center;
   margin-top: -5px;
   transform-origin: top center;
-  animation: morphStandHeroGrow 2.1s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation: morphStandHeroGrow 3.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
 .mobile-morph-neck--hero {
-  width: 18px;
-  height: 15px;
-  background: linear-gradient(180deg, #94a3b8, #64748b);
-  border-radius: 0 0 3px 3px;
+  width: 14px;
+  height: 13px;
+  background: rgba(148, 163, 184, 0.65);
+  border-radius: 0 0 2px 2px;
 }
 
 .mobile-morph-base--hero {
-  width: 58px;
-  height: 5px;
-  background: #cbd5e1;
+  width: 50px;
+  height: 3.5px;
+  background: rgba(226, 232, 240, 0.85);
   border-radius: 999px;
 }
 
 .mobile-notice-title--hero {
-  margin: 0 0 10px;
-  font-size: 1.24rem;
-  font-weight: 700;
-  line-height: 1.3;
+  margin: 0 0 8px;
+  font-size: 1.12rem;
+  font-weight: 600;
+  line-height: 1.35;
   letter-spacing: -0.01em;
   color: #f8fafc;
-  animation: noticeTextIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.7s both;
+  animation: noticeTextIn 0.65s cubic-bezier(0.16, 1, 0.3, 1) 1.45s both;
 }
 
 .mobile-notice-desc--hero {
   margin: 0;
-  font-size: 0.92rem;
-  line-height: 1.55;
-  color: #cbd5e1;
-  animation: noticeTextIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.9s both;
+  font-size: 0.85rem;
+  font-weight: 400;
+  line-height: 1.5;
+  color: rgba(203, 213, 225, 0.76);
+  animation: noticeTextIn 0.65s cubic-bezier(0.16, 1, 0.3, 1) 1.65s both;
 }
 
 @keyframes mobileSplashSpin {
@@ -3276,72 +3208,67 @@ body {
   }
 }
 
+/* Hold phone cleanly for ~1.5s (0%..47% of 3.2s), then morph smoothly into monitor */
 @keyframes morphPhoneToMonitorHero {
-  0%, 16% {
-    width: 48px;
-    height: 86px;
-    border-radius: 11px;
-    border-color: #cbd5e1;
-    transform: translateY(8px);
-    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.55);
+  0% {
+    opacity: 0;
+    width: 44px;
+    height: 80px;
+    border-radius: 10px;
+    border-color: rgba(226, 232, 240, 0.88);
+    transform: translateY(10px) scale(0.96);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.5);
   }
-  72%, 100% {
-    width: 136px;
-    height: 82px;
-    border-radius: 9px;
+  10%, 47% {
+    opacity: 1;
+    width: 44px;
+    height: 80px;
+    border-radius: 10px;
+    border-color: rgba(226, 232, 240, 0.88);
+    transform: translateY(6px) scale(1);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.5);
+  }
+  84%, 100% {
+    opacity: 1;
+    width: 132px;
+    height: 78px;
+    border-radius: 7px;
     border-color: #f8fafc;
-    transform: translateY(-6px);
+    transform: translateY(-6px) scale(1);
     box-shadow:
-      0 18px 38px rgba(0, 0, 0, 0.66),
-      0 0 28px rgba(249, 115, 22, 0.32);
+      0 18px 36px rgba(0, 0, 0, 0.6),
+      0 0 22px rgba(249, 115, 22, 0.16);
   }
 }
 
 @keyframes morphSpeakerHeroFade {
-  0%, 16% {
-    opacity: 0.9;
+  0%, 47% {
+    opacity: 0.85;
   }
-  42%, 100% {
+  66%, 100% {
     opacity: 0;
-  }
-}
-
-@keyframes morphChartHeroExpand {
-  0%, 20% {
-    flex: 0 0 0px;
-    width: 0;
-    padding: 0;
-    border-width: 0;
-    opacity: 0;
-  }
-  72%, 100% {
-    flex: 0 0 50px;
-    width: 50px;
-    padding: 3px 4px;
-    border-width: 1px;
-    opacity: 1;
   }
 }
 
 @keyframes morphStandHeroGrow {
-  0%, 34% {
+  0%, 54% {
     opacity: 0;
     transform: translateY(-6px) scaleY(0.2);
   }
-  76%, 100% {
+  86%, 100% {
     opacity: 1;
     transform: translateY(0) scaleY(1);
   }
 }
 
 @keyframes morphGlowHero {
-  0% {
-    opacity: 0.25;
-    transform: scale(0.65);
+  0%, 45% {
+    opacity: 0.2;
+    transform: scale(0.75);
   }
-  75%, 100% {
+  86%, 100% {
     opacity: 1;
-    transform: scale(1.12);
+    transform: scale(1.08);
   }
 }
 
