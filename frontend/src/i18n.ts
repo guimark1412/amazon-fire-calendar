@@ -293,6 +293,11 @@ export const I18N = {
     mobileDesktopTitle: 'Altamente recomendado visualização no computador',
     mobileDesktopDesc: 'Mapas e gráficos oferecem leitura superior em telas maiores.',
     mobileDesktopContinue: 'Entrar',
+    mobileControlsTitle: 'Controles Globais',
+    mobileFiltersSection: 'Região, Sensores & Janela',
+    mobileActionsSection: 'Exportação & Idioma',
+    kpiHotspotsShort: 'Focos',
+    kpiFactorShort: 'Fator',
   },
   en: {
     subtitle: 'MODIS (1 km) × VIIRS (375 m) · NASA FIRMS',
@@ -558,5 +563,10 @@ export const I18N = {
     mobileDesktopTitle: 'Desktop viewing is highly recommended',
     mobileDesktopDesc: 'Interactive maps and charts are best explored on a larger screen.',
     mobileDesktopContinue: 'Enter',
+    mobileControlsTitle: 'Global Controls',
+    mobileFiltersSection: 'Region, Sensors & Window',
+    mobileActionsSection: 'Export & Language',
+    kpiHotspotsShort: 'Hotspots',
+    kpiFactorShort: 'Scale',
   },
 } as const;

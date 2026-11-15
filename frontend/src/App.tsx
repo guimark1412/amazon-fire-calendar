@@ -11,6 +11,7 @@ import {
   Grid3X3,
   LayoutGrid,
   MapPin,
+  Menu,
   Presentation,
   Radio,
   Scan,
@@ -409,6 +410,40 @@ export function App() {
   const calibrationFactor = timelineData?.calibration_factor ?? 0.25;
   const activeFilterCount = (minConfidence !== 'all' ? 1 : 0) + (viirsOnlyWeight !== 0.85 ? 1 : 0);
   const hasModifiedSubfilters = activeFilterCount > 0;
+  const hasCustomControls =
+    selectedRegion !== 'amazonia_legal' ||
+    Boolean(customBbox) ||
+    sensor !== 'both' ||
+    granularity !== 'month' ||
+    hasModifiedSubfilters;
+
+  const [isMobileViewport, setIsMobileViewport] = useState<boolean>(() =>
+    typeof window !== 'undefined' ? window.matchMedia('(max-width: 768px)').matches : false,
+  );
+  const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const mq = window.matchMedia('(max-width: 768px)');
+    const sync = () => {
+      setIsMobileViewport(mq.matches);
+      if (!mq.matches) setMobileMenuOpen(false);
+    };
+    sync();
+    mq.addEventListener?.('change', sync);
+    return () => mq.removeEventListener?.('change', sync);
+  }, []);
+
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !aoiPanelOpen && !subfiltersOpen && !exportMenuOpen) {
+        setMobileMenuOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [mobileMenuOpen, aoiPanelOpen, subfiltersOpen, exportMenuOpen]);
 
   const handleSelectPeriodFromViz = useCallback((period: string | null) => {
     setSelectedPeriod(period);
@@ -583,6 +618,345 @@ export function App() {
     URL.revokeObjectURL(url);
   };
 
+  const utilityActionsNode = (
+    <div className="controls utility-actions">
+      <button
+        type="button"
+        className="control-select action-btn pitch-btn"
+        onClick={() => setPitchOpen(true)}
+      >
+        <Presentation size={15} />
+        {t.pitchBtn}
+      </button>
+
+      <div className="export-dropdown-wrap" ref={exportMenuRef}>
+        <button
+          type="button"
+          className="control-select action-btn"
+          onClick={() => setExportMenuOpen((prev) => !prev)}
+          aria-expanded={exportMenuOpen}
+        >
+          <Download size={15} />
+          {t.exportBtnLabel}
+          <ChevronDown size={14} />
+        </button>
+
+        {exportMenuOpen && (
+          <div className="export-dropdown-menu" role="menu">
+            <button
+              type="button"
+              role="menuitem"
+              className="export-dropdown-item"
+              onClick={() => {
+                handleExportCsv();
+                setExportMenuOpen(false);
+              }}
+              disabled={!timelineData?.series.length}
+            >
+              <Download size={14} />
+              {t.exportBtn}
+            </button>
+            <button
+              type="button"
+              role="menuitem"
+              className="export-dropdown-item"
+              onClick={() => {
+                handleExportGeoJson();
+                setExportMenuOpen(false);
+              }}
+              disabled={!firesData?.fires.length && !gridData?.cells.length}
+            >
+              <Download size={14} />
+              {t.exportGeoJsonBtn}
+            </button>
+          </div>
+        )}
+      </div>
+
+      <button
+        type="button"
+        className="control-select action-btn"
+        onClick={toggleLang}
+        aria-label="Switch language"
+      >
+        <Globe size={15} />
+        {lang === 'pt' ? 'EN' : 'PT'}
+      </button>
+    </div>
+  );
+
+  const filterControlsNode = (
+    <div className="controls filter-controls">
+      <select
+        className="control-select"
+        value={selectedRegion}
+        onChange={(e) => {
+          const nextId = e.target.value;
+          setSelectedRegion(nextId);
+          setCustomBbox(null);
+          const found = regions.find((r) => r.id === nextId);
+          if (found) {
+            setBboxInputs({
+              west: String(found.bbox[0]),
+              south: String(found.bbox[1]),
+              east: String(found.bbox[2]),
+              north: String(found.bbox[3]),
+            });
+          }
+        }}
+        aria-label="Region"
+      >
+        {regions.map((r) => (
+          <option key={r.id} value={r.id}>
+            {r.name}
+          </option>
+        ))}
+      </select>
+
+      <div className="aoi-anchor" ref={aoiPopoverRef}>
+        <button
+          type="button"
+          className={`control-select action-btn ${customBbox || aoiPanelOpen || isDrawingAoi ? 'aoi-active-btn' : ''}`}
+          aria-expanded={aoiPanelOpen}
+          aria-haspopup="dialog"
+          onClick={() => {
+            setAoiError(false);
+            setAoiPanelOpen((prev) => !prev);
+          }}
+        >
+          <Crosshair size={14} />
+          {t.customAoiBtn}
+        </button>
+
+        {aoiPanelOpen && (
+          <div className="aoi-popover" role="dialog" aria-label={t.aoiPopoverTitle}>
+            <div className="aoi-popover-header">
+              <span className="aoi-popover-title">
+                <Crosshair size={14} color="#38bdf8" />
+                {t.aoiPopoverTitle}
+              </span>
+              <button
+                type="button"
+                className="aoi-popover-close"
+                onClick={() => setAoiPanelOpen(false)}
+                aria-label="Close AOI card"
+              >
+                <X size={14} />
+              </button>
+            </div>
+
+            <p className="aoi-popover-desc">{t.aoiInstruction}</p>
+
+            <div className="aoi-popover-actions">
+              <button
+                type="button"
+                className={`control-select control-select-sm action-btn aoi-draw-btn ${isDrawingAoi ? 'pitch-btn' : ''}`}
+                onClick={() => {
+                  setActiveView('overview');
+                  setIsDrawingAoi((prev) => !prev);
+                  setAoiPanelOpen(false);
+                  setMobileMenuOpen(false);
+                }}
+              >
+                <Crosshair size={14} />
+                {isDrawingAoi ? t.cancelDrawBtn : t.drawAoiBtn}
+              </button>
+              {customBbox && (
+                <button
+                  type="button"
+                  className="control-select control-select-sm action-btn"
+                  onClick={() => {
+                    setCustomBbox(null);
+                    setIsDrawingAoi(false);
+                    setAoiError(false);
+                    setAoiPanelOpen(false);
+                  }}
+                >
+                  <X size={14} />
+                  {t.clearAoiBtn}
+                </button>
+              )}
+            </div>
+
+            <div className="aoi-coords-grid">
+              <label>
+                <span>West (Lon)</span>
+                <input
+                  type="number"
+                  step="0.5"
+                  value={bboxInputs.west}
+                  onChange={(e) => {
+                    setAoiError(false);
+                    setBboxInputs((s) => ({ ...s, west: e.target.value }));
+                  }}
+                />
+              </label>
+              <label>
+                <span>South (Lat)</span>
+                <input
+                  type="number"
+                  step="0.5"
+                  value={bboxInputs.south}
+                  onChange={(e) => {
+                    setAoiError(false);
+                    setBboxInputs((s) => ({ ...s, south: e.target.value }));
+                  }}
+                />
+              </label>
+              <label>
+                <span>East (Lon)</span>
+                <input
+                  type="number"
+                  step="0.5"
+                  value={bboxInputs.east}
+                  onChange={(e) => {
+                    setAoiError(false);
+                    setBboxInputs((s) => ({ ...s, east: e.target.value }));
+                  }}
+                />
+              </label>
+              <label>
+                <span>North (Lat)</span>
+                <input
+                  type="number"
+                  step="0.5"
+                  value={bboxInputs.north}
+                  onChange={(e) => {
+                    setAoiError(false);
+                    setBboxInputs((s) => ({ ...s, north: e.target.value }));
+                  }}
+                />
+              </label>
+            </div>
+
+            {aoiError && <p className="aoi-error-hint">{t.aoiInvalidBounds}</p>}
+
+            <button
+              type="button"
+              className="control-select action-btn pitch-btn aoi-apply-full"
+              onClick={handleApplyCoords}
+            >
+              {t.applyCoordsBtn}
+            </button>
+          </div>
+        )}
+      </div>
+
+      <SlidingToggleGroup
+        ariaLabel="Sensor filter"
+        value={sensor}
+        onChange={setSensor}
+        deps={[lang, mobileMenuOpen]}
+        options={(['both', 'MODIS', 'VIIRS'] as SensorFilter[]).map((s) => ({
+          value: s,
+          label: (
+            <>
+              {s === 'both' ? t.both : s}
+              {s === 'MODIS' && <InfoTooltip title="MODIS (1 km)" text={t.tips.sensorModis} insideButton />}
+              {s === 'VIIRS' && <InfoTooltip title="VIIRS (375 m)" text={t.tips.sensorViirs} insideButton />}
+            </>
+          ),
+        }))}
+      />
+
+      <SlidingToggleGroup
+        ariaLabel="Granularity"
+        value={granularity}
+        onChange={(next) => {
+          setGranularity(next);
+          setSelectedPeriod(null);
+        }}
+        deps={[lang, mobileMenuOpen]}
+        options={[
+          { value: 'month', label: t.monthly },
+          { value: 'week', label: t.weekly },
+        ]}
+      />
+
+      <div className="aoi-anchor filters-anchor" ref={filtersPopoverRef}>
+        <button
+          type="button"
+          className={`control-select action-btn ${subfiltersOpen || hasModifiedSubfilters ? 'aoi-active-btn' : ''}`}
+          onClick={() => setSubfiltersOpen((prev) => !prev)}
+          aria-expanded={subfiltersOpen}
+          aria-haspopup="dialog"
+        >
+          <SlidersHorizontal size={14} />
+          {t.advFiltersBtn}
+          {activeFilterCount > 0 && (
+            <span className="filters-active-count">{activeFilterCount}</span>
+          )}
+        </button>
+
+        {subfiltersOpen && (
+          <div className="aoi-popover filters-popover" role="dialog" aria-label={t.advFiltersBtn}>
+            <div className="aoi-popover-header">
+              <span className="aoi-popover-title">
+                <SlidersHorizontal size={14} color="#f97316" />
+                {t.advFiltersBtn}
+              </span>
+              <button
+                type="button"
+                className="aoi-popover-close"
+                onClick={() => setSubfiltersOpen(false)}
+                aria-label="Close filters"
+              >
+                <X size={14} />
+              </button>
+            </div>
+
+            <div className="filters-field">
+              <label className="filters-field-label" htmlFor="filter-confidence-select">
+                {lang === 'pt' ? 'Confiança NASA FIRMS' : 'NASA FIRMS Confidence'}
+              </label>
+              <select
+                id="filter-confidence-select"
+                className="control-select control-select-sm"
+                value={minConfidence}
+                onChange={(e) => setMinConfidence(e.target.value as ConfidenceFilter)}
+              >
+                <option value="all">{t.confAll}</option>
+                <option value="nominal">{t.confNominal}</option>
+                <option value="high">{t.confHigh}</option>
+              </select>
+            </div>
+
+            <div className="filters-field">
+              <span className="filters-field-label">
+                <label htmlFor="filter-viirs-weight-select">{t.viirsWeightLabel}</label>
+                <InfoTooltip title="VIIRS-Only" text={t.tips.viirsWeight} />
+              </span>
+              <select
+                id="filter-viirs-weight-select"
+                className="control-select control-select-sm"
+                value={String(viirsOnlyWeight)}
+                onChange={(e) => setViirsOnlyWeight(parseFloat(e.target.value))}
+              >
+                <option value="1">{lang === 'pt' ? '1.00× (Sem Desconto)' : '1.00× (No Discount)'}</option>
+                <option value="0.85">{lang === 'pt' ? '0.85× (Padrão NASA)' : '0.85× (NASA Default)'}</option>
+                <option value="0.7">{lang === 'pt' ? '0.70× (Conservador)' : '0.70× (Conservative)'}</option>
+                <option value="0.5">{lang === 'pt' ? '0.50× (Foco Grandes Incêndios)' : '0.50× (Large Fires Focus)'}</option>
+              </select>
+            </div>
+
+            {hasModifiedSubfilters && (
+              <button
+                type="button"
+                className="control-select control-select-sm action-btn filters-reset-btn"
+                onClick={() => {
+                  setMinConfidence('all');
+                  setViirsOnlyWeight(0.85);
+                }}
+              >
+                {lang === 'pt' ? 'Restaurar padrão' : 'Reset defaults'}
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
   return (
     <div className="app-shell">
       <header className="workspace-header" data-tour="topbar">
@@ -591,7 +965,7 @@ export function App() {
             <div className="brand-icon">
               <img src="/logo-calendar.png" alt="Amazon Fire Calendar" className="brand-logo-img" />
             </div>
-            <div>
+            <div className="brand-text">
               <div className="brand-title-row">
                 <h1>Amazon Fire Calendar</h1>
                 <span className={`badge badge-compact ${isLive ? 'badge-live' : 'badge-elevated'}`}>
@@ -599,7 +973,7 @@ export function App() {
                   {loading ? t.syncing : isLive ? t.sourceLive : t.sourceFallback}
                 </span>
               </div>
-              <p>{t.subtitle}</p>
+              {!isMobileViewport && <p>{t.subtitle}</p>}
             </div>
           </div>
 
@@ -654,339 +1028,30 @@ export function App() {
             </button>
           </nav>
 
-          <div className="controls utility-actions">
+          {!isMobileViewport ? (
+            utilityActionsNode
+          ) : (
             <button
               type="button"
-              className="control-select action-btn pitch-btn"
-              onClick={() => setPitchOpen(true)}
+              className={`mobile-menu-trigger ${mobileMenuOpen ? 'active' : ''}`}
+              onClick={() => setMobileMenuOpen((prev) => !prev)}
+              aria-expanded={mobileMenuOpen}
+              aria-label={t.mobileControlsTitle}
             >
-              <Presentation size={15} />
-              {t.pitchBtn}
+              {mobileMenuOpen ? <X size={19} /> : <Menu size={19} />}
+              {hasCustomControls && !mobileMenuOpen && <span className="mobile-menu-dot" aria-hidden="true" />}
             </button>
-
-            <div className="export-dropdown-wrap" ref={exportMenuRef}>
-              <button
-                type="button"
-                className="control-select action-btn"
-                onClick={() => setExportMenuOpen((prev) => !prev)}
-                aria-expanded={exportMenuOpen}
-              >
-                <Download size={15} />
-                {t.exportBtnLabel}
-                <ChevronDown size={14} />
-              </button>
-
-              {exportMenuOpen && (
-                <div className="export-dropdown-menu" role="menu">
-                  <button
-                    type="button"
-                    role="menuitem"
-                    className="export-dropdown-item"
-                    onClick={() => {
-                      handleExportCsv();
-                      setExportMenuOpen(false);
-                    }}
-                    disabled={!timelineData?.series.length}
-                  >
-                    <Download size={14} />
-                    {t.exportBtn}
-                  </button>
-                  <button
-                    type="button"
-                    role="menuitem"
-                    className="export-dropdown-item"
-                    onClick={() => {
-                      handleExportGeoJson();
-                      setExportMenuOpen(false);
-                    }}
-                    disabled={!firesData?.fires.length && !gridData?.cells.length}
-                  >
-                    <Download size={14} />
-                    {t.exportGeoJsonBtn}
-                  </button>
-                </div>
-              )}
-            </div>
-
-            <button
-              type="button"
-              className="control-select action-btn"
-              onClick={toggleLang}
-              aria-label="Switch language"
-            >
-              <Globe size={15} />
-              {lang === 'pt' ? 'EN' : 'PT'}
-            </button>
-          </div>
+          )}
         </div>
 
         <div className="filter-kpi-strip">
-          <div className="controls filter-controls">
-            <select
-              className="control-select"
-              value={selectedRegion}
-              onChange={(e) => {
-                const nextId = e.target.value;
-                setSelectedRegion(nextId);
-                setCustomBbox(null);
-                const found = regions.find((r) => r.id === nextId);
-                if (found) {
-                  setBboxInputs({
-                    west: String(found.bbox[0]),
-                    south: String(found.bbox[1]),
-                    east: String(found.bbox[2]),
-                    north: String(found.bbox[3]),
-                  });
-                }
-              }}
-              aria-label="Region"
-            >
-              {regions.map((r) => (
-                <option key={r.id} value={r.id}>
-                  {r.name}
-                </option>
-              ))}
-            </select>
-
-            <div className="aoi-anchor" ref={aoiPopoverRef}>
-              <button
-                type="button"
-                className={`control-select action-btn ${customBbox || aoiPanelOpen || isDrawingAoi ? 'aoi-active-btn' : ''}`}
-                aria-expanded={aoiPanelOpen}
-                aria-haspopup="dialog"
-                onClick={() => {
-                  setAoiError(false);
-                  setAoiPanelOpen((prev) => !prev);
-                }}
-              >
-                <Crosshair size={14} />
-                {t.customAoiBtn}
-              </button>
-
-              {aoiPanelOpen && (
-                <div className="aoi-popover" role="dialog" aria-label={t.aoiPopoverTitle}>
-                  <div className="aoi-popover-header">
-                    <span className="aoi-popover-title">
-                      <Crosshair size={14} color="#38bdf8" />
-                      {t.aoiPopoverTitle}
-                    </span>
-                    <button
-                      type="button"
-                      className="aoi-popover-close"
-                      onClick={() => setAoiPanelOpen(false)}
-                      aria-label="Close AOI card"
-                    >
-                      <X size={14} />
-                    </button>
-                  </div>
-
-                  <p className="aoi-popover-desc">{t.aoiInstruction}</p>
-
-                  <div className="aoi-popover-actions">
-                    <button
-                      type="button"
-                      className={`control-select control-select-sm action-btn aoi-draw-btn ${isDrawingAoi ? 'pitch-btn' : ''}`}
-                      onClick={() => {
-                        setActiveView('overview');
-                        setIsDrawingAoi((prev) => !prev);
-                        setAoiPanelOpen(false);
-                      }}
-                    >
-                      <Crosshair size={14} />
-                      {isDrawingAoi ? t.cancelDrawBtn : t.drawAoiBtn}
-                    </button>
-                    {customBbox && (
-                      <button
-                        type="button"
-                        className="control-select control-select-sm action-btn"
-                        onClick={() => {
-                          setCustomBbox(null);
-                          setIsDrawingAoi(false);
-                          setAoiError(false);
-                          setAoiPanelOpen(false);
-                        }}
-                      >
-                        <X size={14} />
-                        {t.clearAoiBtn}
-                      </button>
-                    )}
-                  </div>
-
-                  <div className="aoi-coords-grid">
-                    <label>
-                      <span>West (Lon)</span>
-                      <input
-                        type="number"
-                        step="0.5"
-                        value={bboxInputs.west}
-                        onChange={(e) => {
-                          setAoiError(false);
-                          setBboxInputs((s) => ({ ...s, west: e.target.value }));
-                        }}
-                      />
-                    </label>
-                    <label>
-                      <span>South (Lat)</span>
-                      <input
-                        type="number"
-                        step="0.5"
-                        value={bboxInputs.south}
-                        onChange={(e) => {
-                          setAoiError(false);
-                          setBboxInputs((s) => ({ ...s, south: e.target.value }));
-                        }}
-                      />
-                    </label>
-                    <label>
-                      <span>East (Lon)</span>
-                      <input
-                        type="number"
-                        step="0.5"
-                        value={bboxInputs.east}
-                        onChange={(e) => {
-                          setAoiError(false);
-                          setBboxInputs((s) => ({ ...s, east: e.target.value }));
-                        }}
-                      />
-                    </label>
-                    <label>
-                      <span>North (Lat)</span>
-                      <input
-                        type="number"
-                        step="0.5"
-                        value={bboxInputs.north}
-                        onChange={(e) => {
-                          setAoiError(false);
-                          setBboxInputs((s) => ({ ...s, north: e.target.value }));
-                        }}
-                      />
-                    </label>
-                  </div>
-
-                  {aoiError && <p className="aoi-error-hint">{t.aoiInvalidBounds}</p>}
-
-                  <button
-                    type="button"
-                    className="control-select action-btn pitch-btn aoi-apply-full"
-                    onClick={handleApplyCoords}
-                  >
-                    {t.applyCoordsBtn}
-                  </button>
-                </div>
-              )}
-            </div>
-
-            <SlidingToggleGroup
-              ariaLabel="Sensor filter"
-              value={sensor}
-              onChange={setSensor}
-              deps={[lang]}
-              options={(['both', 'MODIS', 'VIIRS'] as SensorFilter[]).map((s) => ({
-                value: s,
-                label: (
-                  <>
-                    {s === 'both' ? t.both : s}
-                    {s === 'MODIS' && <InfoTooltip title="MODIS (1 km)" text={t.tips.sensorModis} insideButton />}
-                    {s === 'VIIRS' && <InfoTooltip title="VIIRS (375 m)" text={t.tips.sensorViirs} insideButton />}
-                  </>
-                ),
-              }))}
-            />
-
-            <SlidingToggleGroup
-              ariaLabel="Granularity"
-              value={granularity}
-              onChange={(next) => {
-                setGranularity(next);
-                setSelectedPeriod(null);
-              }}
-              deps={[lang]}
-              options={[
-                { value: 'month', label: t.monthly },
-                { value: 'week', label: t.weekly },
-              ]}
-            />
-
-            <div className="aoi-anchor filters-anchor" ref={filtersPopoverRef}>
-              <button
-                type="button"
-                className={`control-select action-btn ${subfiltersOpen || hasModifiedSubfilters ? 'aoi-active-btn' : ''}`}
-                onClick={() => setSubfiltersOpen((prev) => !prev)}
-                aria-expanded={subfiltersOpen}
-                aria-haspopup="dialog"
-              >
-                <SlidersHorizontal size={14} />
-                {t.advFiltersBtn}
-                {activeFilterCount > 0 && (
-                  <span className="filters-active-count">{activeFilterCount}</span>
-                )}
-              </button>
-
-              {subfiltersOpen && (
-                <div className="aoi-popover filters-popover" role="dialog" aria-label={t.advFiltersBtn}>
-                  <div className="aoi-popover-header">
-                    <span className="aoi-popover-title">
-                      <SlidersHorizontal size={14} color="#f97316" />
-                      {t.advFiltersBtn}
-                    </span>
-                  </div>
-
-                  <div className="filters-field">
-                    <label className="filters-field-label" htmlFor="filter-confidence-select">
-                      {lang === 'pt' ? 'Confiança NASA FIRMS' : 'NASA FIRMS Confidence'}
-                    </label>
-                    <select
-                      id="filter-confidence-select"
-                      className="control-select control-select-sm"
-                      value={minConfidence}
-                      onChange={(e) => setMinConfidence(e.target.value as ConfidenceFilter)}
-                    >
-                      <option value="all">{t.confAll}</option>
-                      <option value="nominal">{t.confNominal}</option>
-                      <option value="high">{t.confHigh}</option>
-                    </select>
-                  </div>
-
-                  <div className="filters-field">
-                    <span className="filters-field-label">
-                      <label htmlFor="filter-viirs-weight-select">{t.viirsWeightLabel}</label>
-                      <InfoTooltip title="VIIRS-Only" text={t.tips.viirsWeight} />
-                    </span>
-                    <select
-                      id="filter-viirs-weight-select"
-                      className="control-select control-select-sm"
-                      value={String(viirsOnlyWeight)}
-                      onChange={(e) => setViirsOnlyWeight(parseFloat(e.target.value))}
-                    >
-                      <option value="1">{lang === 'pt' ? '1.00× (Sem Desconto)' : '1.00× (No Discount)'}</option>
-                      <option value="0.85">{lang === 'pt' ? '0.85× (Padrão NASA)' : '0.85× (NASA Default)'}</option>
-                      <option value="0.7">{lang === 'pt' ? '0.70× (Conservador)' : '0.70× (Conservative)'}</option>
-                      <option value="0.5">{lang === 'pt' ? '0.50× (Foco Grandes Incêndios)' : '0.50× (Large Fires Focus)'}</option>
-                    </select>
-                  </div>
-
-                  {hasModifiedSubfilters && (
-                    <button
-                      type="button"
-                      className="control-select control-select-sm action-btn filters-reset-btn"
-                      onClick={() => {
-                        setMinConfidence('all');
-                        setViirsOnlyWeight(0.85);
-                      }}
-                    >
-                      {lang === 'pt' ? 'Restaurar padrão' : 'Reset defaults'}
-                    </button>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
+          {!isMobileViewport && filterControlsNode}
 
           <div className="kpi-inline-group">
             <div className="kpi-mini-pill">
               <span className="kpi-mini-label">
-                <span>{t.kpiHotspots}</span>
-                <InfoTooltip title={t.kpiHotspots} text={t.tips.kpiHotspots} />
+                <span>{isMobileViewport ? t.kpiHotspotsShort : t.kpiHotspots}</span>
+                {!isMobileViewport && <InfoTooltip title={t.kpiHotspots} text={t.tips.kpiHotspots} />}
               </span>
               <strong className="kpi-mini-value">
                 {firesData ? firesData.total_count.toLocaleString(lang === 'pt' ? 'pt-BR' : 'en-US') : '—'}
@@ -995,8 +1060,8 @@ export function App() {
 
             <div className="kpi-mini-pill">
               <span className="kpi-mini-label">
-                <span>{t.kpiFactor}</span>
-                <InfoTooltip title={t.kpiFactor} text={t.tips.kpiFactor} />
+                <span>{isMobileViewport ? t.kpiFactorShort : t.kpiFactor}</span>
+                {!isMobileViewport && <InfoTooltip title={t.kpiFactor} text={t.tips.kpiFactor} />}
               </span>
               <strong className="kpi-mini-value">
                 {timelineData ? `× ${timelineData.calibration_factor}` : '—'}
@@ -1006,15 +1071,19 @@ export function App() {
             <div className="kpi-mini-pill">
               <span className="kpi-mini-label">
                 <span>
-                  {t.kpiAlert} {latestPeriod ? `(${latestPeriod.period})` : ''}
+                  {isMobileViewport
+                    ? latestPeriod
+                      ? `Status · ${latestPeriod.period}`
+                      : 'Status'
+                    : `${t.kpiAlert} ${latestPeriod ? `(${latestPeriod.period})` : ''}`}
                 </span>
-                <InfoTooltip title={t.kpiAlert} text={t.tips.kpiAlert} />
+                {!isMobileViewport && <InfoTooltip title={t.kpiAlert} text={t.tips.kpiAlert} />}
               </span>
               <div className="kpi-mini-alert">
                 {latestPeriod ? (
                   <>
                     <span className={`badge badge-${latestPeriod.alert_level}`}>
-                      <AlertTriangle size={12} />
+                      <AlertTriangle size={11} />
                       {t.alertLabels[latestPeriod.alert_level]}
                     </span>
                     <strong className={`dev-${latestPeriod.alert_level}`}>
@@ -1030,6 +1099,42 @@ export function App() {
           </div>
         </div>
       </header>
+
+      {isMobileViewport && mobileMenuOpen && (
+        <>
+          <div
+            className="mobile-drawer-backdrop"
+            onClick={() => setMobileMenuOpen(false)}
+            aria-hidden="true"
+          />
+          <aside
+            className="mobile-controls-drawer"
+            role="dialog"
+            aria-modal="true"
+            aria-label={t.mobileControlsTitle}
+          >
+            <div className="mobile-drawer-header">
+              <span className="mobile-drawer-title">{t.mobileControlsTitle}</span>
+              <button
+                type="button"
+                className="aoi-popover-close"
+                onClick={() => setMobileMenuOpen(false)}
+                aria-label="Close controls"
+              >
+                <X size={16} />
+              </button>
+            </div>
+            <div className="mobile-drawer-section">
+              <span className="mobile-drawer-section-label">{t.mobileFiltersSection}</span>
+              {filterControlsNode}
+            </div>
+            <div className="mobile-drawer-section">
+              <span className="mobile-drawer-section-label">{t.mobileActionsSection}</span>
+              {utilityActionsNode}
+            </div>
+          </aside>
+        </>
+      )}
 
       {error && (
         <div className="error-banner" role="alert">
