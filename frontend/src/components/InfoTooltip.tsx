@@ -15,10 +15,20 @@ interface TooltipPos {
   arrowLeft: number;
 }
 
+const HOVER_DELAY_MS = 500;
+
 export function InfoTooltip({ text, title, insideButton = false }: InfoTooltipProps) {
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState<TooltipPos | null>(null);
   const triggerRef = useRef<HTMLSpanElement | null>(null);
+  const hoverTimerRef = useRef<number | null>(null);
+
+  const clearHoverTimer = useCallback(() => {
+    if (hoverTimerRef.current !== null) {
+      window.clearTimeout(hoverTimerRef.current);
+      hoverTimerRef.current = null;
+    }
+  }, []);
 
   const computePos = useCallback((): TooltipPos | null => {
     const el = triggerRef.current;
@@ -34,14 +44,28 @@ export function InfoTooltip({ text, title, insideButton = false }: InfoTooltipPr
   }, []);
 
   const show = useCallback(() => {
+    clearHoverTimer();
     const next = computePos();
     if (next) setPos(next);
     setOpen(true);
-  }, [computePos]);
+  }, [clearHoverTimer, computePos]);
+
+  const scheduleShow = useCallback(() => {
+    clearHoverTimer();
+    hoverTimerRef.current = window.setTimeout(() => {
+      hoverTimerRef.current = null;
+      const next = computePos();
+      if (next) setPos(next);
+      setOpen(true);
+    }, HOVER_DELAY_MS);
+  }, [clearHoverTimer, computePos]);
 
   const hide = useCallback(() => {
+    clearHoverTimer();
     setOpen(false);
-  }, []);
+  }, [clearHoverTimer]);
+
+  useEffect(() => clearHoverTimer, [clearHoverTimer]);
 
   useLayoutEffect(() => {
     if (!open) return;
@@ -76,7 +100,7 @@ export function InfoTooltip({ text, title, insideButton = false }: InfoTooltipPr
     <span
       ref={triggerRef}
       className="info-tip-anchor"
-      onMouseEnter={show}
+      onMouseEnter={scheduleShow}
       onMouseLeave={hide}
       onFocus={insideButton ? undefined : show}
       onBlur={insideButton ? undefined : hide}
