@@ -15,7 +15,39 @@ def test_regions():
     res = client.get("/api/regions")
     assert res.status_code == 200
     ids = {r["id"] for r in res.json()["regions"]}
-    assert {"amazonia_legal", "amazonas", "para", "mato_grosso", "rondonia", "acre"}.issubset(ids)
+    assert {
+        "amazonia_legal",
+        "norte_america_sul",
+        "amazonas",
+        "para",
+        "mato_grosso",
+        "rondonia",
+        "acre",
+    }.issubset(ids)
+
+
+def test_region_polygon_filtering():
+    from app.config import REGIONS, in_region
+
+    br_legal = REGIONS["amazonia_legal"]
+    south_am = REGIONS["norte_america_sul"]
+    am_only = REGIONS["amazonas"]
+    pa_only = REGIONS["para"]
+
+    # Brazilian cities inside Legal Amazon
+    for lon, lat in [(-60.02, -3.12), (-48.50, -1.46), (-56.10, -15.60), (-67.82, -9.97)]:
+        assert in_region(lon, lat, br_legal)
+        assert in_region(lon, lat, south_am)
+
+    # Neighboring countries included in Northern South America, excluded from Brazil's Legal Amazon
+    for lon, lat in [(-65.00, 5.00), (-55.50, 3.50), (-63.18, -17.78), (-73.25, -3.75)]:
+        assert not in_region(lon, lat, br_legal)
+        assert in_region(lon, lat, south_am)
+
+    assert in_region(-60.02, -3.12, am_only)
+    assert not in_region(-48.50, -1.46, am_only)
+    assert in_region(-48.50, -1.46, pa_only)
+    assert not in_region(-55.50, 3.50, pa_only)
 
 
 def test_fires_filter_by_sensor_and_footprint():
@@ -277,3 +309,58 @@ def test_spatial_coincident_partition_matches_exact_geometry():
         )
     )
     assert (coinc, v_only) == (brute_c, len(viirs) - brute_c)
+
+
+def test_live_cache_preserves_unclipped_bbox_across_regions(monkeypatch):
+    import time
+    from app import firms_client
+    from app.config import REGIONS
+
+    monkeypatch.setenv("FIRMS_MAP_KEY", "test_key_cache")
+    firms_client._LIVE_CACHE.clear()
+    sa_area = ",".join(str(x) for x in REGIONS["norte_america_sul"].bbox)
+    now = time.time()
+    cached_rows = [
+        {
+            "latitude": -3.12,
+            "longitude": -60.02,
+            "brightness": 325.0,
+            "frp": 22.0,
+            "confidence": "90",
+            "confidence_level": "high",
+            "scan": 1.0,
+            "track": 1.0,
+            "pixel_area_km2": 1.0,
+            "acq_date": "2026-11-12",
+            "acq_time": "1400",
+            "satellite": "Terra",
+            "sensor": "MODIS",
+            "daynight": "D",
+        },
+        {
+            "latitude": 5.00,
+            "longitude": -65.00,
+            "brightness": 325.0,
+            "frp": 22.0,
+            "confidence": "90",
+            "confidence_level": "high",
+            "scan": 1.0,
+            "track": 1.0,
+            "pixel_area_km2": 1.0,
+            "acq_date": "2026-11-12",
+            "acq_time": "1405",
+            "satellite": "Terra",
+            "sensor": "MODIS",
+            "daynight": "D",
+        },
+    ]
+    firms_client._LIVE_CACHE[(sa_area, 7, "MODIS_NRT")] = (now, cached_rows)
+
+    br_recs, br_src = firms_client.get_fire_records("amazonia_legal", sensor="MODIS", days=7)
+    sa_recs, sa_src = firms_client.get_fire_records("norte_america_sul", sensor="MODIS", days=7)
+    assert br_src == "live_nasa_firms"
+    assert sa_src == "live_nasa_firms"
+    assert len(br_recs) == 1
+    assert br_recs[0]["longitude"] == -60.02
+    assert len(sa_recs) == 2
+    firms_client._LIVE_CACHE.clear()

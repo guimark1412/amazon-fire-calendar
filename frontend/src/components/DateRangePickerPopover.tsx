@@ -8,7 +8,7 @@ import {
   dryPeak,
   isSameRange,
   last30Days,
-  last7Days,
+  todayIso,
   yearToDate,
 } from '../dateUtils';
 
@@ -79,7 +79,6 @@ function formatPillDateRange(
 export function DateRangePickerPopover({
   startDate,
   endDate,
-  granularity,
   selectedPeriod,
   lang,
   variant = 'floating',
@@ -96,7 +95,6 @@ export function DateRangePickerPopover({
   const [draftStart, setDraftStart] = useState<string | null>(startDate);
   const [draftEnd, setDraftEnd] = useState<string | null>(endDate);
   const [hoverDate, setHoverDate] = useState<string | null>(null);
-  const [localGranularity, setLocalGranularity] = useState<Granularity>(granularity);
 
   useEffect(() => {
     setDraftStart(startDate);
@@ -118,10 +116,6 @@ export function DateRangePickerPopover({
       setViewMonth(Number(m[2]) - 1);
     }
   }, [selectedPeriod]);
-
-  useEffect(() => {
-    setLocalGranularity(granularity);
-  }, [granularity]);
 
   useEffect(() => {
     if (!open) return;
@@ -181,6 +175,7 @@ export function DateRangePickerPopover({
   };
 
   const handleDayClick = (iso: string) => {
+    if (iso > todayIso()) return;
     if (!draftStart || (draftStart && draftEnd)) {
       setDraftStart(iso);
       setDraftEnd(null);
@@ -190,59 +185,45 @@ export function DateRangePickerPopover({
     setDraftStart(orderedStart);
     setDraftEnd(orderedEnd);
     setHoverDate(null);
-    onApplyRange(orderedStart, orderedEnd, localGranularity);
+    onApplyRange(orderedStart, orderedEnd);
     setOpen(false);
-  };
-
-  const handleScaleToggle = (nextScale: Granularity) => {
-    setLocalGranularity(nextScale);
-    if (nextScale === 'week') {
-      const r = last7Days();
-      setViewYear(DEFAULT_YEAR);
-      setViewMonth(DEFAULT_MONTH);
-      setDraftStart(r.start);
-      setDraftEnd(r.end);
-      onApplyRange(r.start, r.end, 'week');
-    } else {
-      const mStart = toIsoDate(viewYear, viewMonth, 1);
-      const mEnd = toIsoDate(viewYear, viewMonth, daysInMonth(viewYear, viewMonth));
-      setDraftStart(mStart);
-      setDraftEnd(mEnd);
-      onApplyRange(mStart, mEnd, 'month');
-    }
   };
 
   const handleSelectMonthChip = (monthIdx: number) => {
     const periodStr = `${viewYear}-${padTwoDigits(monthIdx + 1)}`;
     setViewMonth(monthIdx);
-    setLocalGranularity('month');
     if (onSelectPeriod) {
       onSelectPeriod(selectedPeriod === periodStr ? null : periodStr, 'month');
     } else {
       const mStart = toIsoDate(viewYear, monthIdx, 1);
-      const mEnd = toIsoDate(viewYear, monthIdx, daysInMonth(viewYear, monthIdx));
-      onApplyRange(mStart, mEnd, 'month');
+      const rawEnd = toIsoDate(viewYear, monthIdx, daysInMonth(viewYear, monthIdx));
+      const today = todayIso();
+      if (mStart > today) return;
+      const mEnd = rawEnd > today ? today : rawEnd;
+      onApplyRange(mStart, mEnd);
     }
     setOpen(false);
   };
 
   const handleSelectFullMonth = () => {
     const mStart = toIsoDate(viewYear, viewMonth, 1);
-    const mEnd = toIsoDate(viewYear, viewMonth, daysInMonth(viewYear, viewMonth));
+    const rawEnd = toIsoDate(viewYear, viewMonth, daysInMonth(viewYear, viewMonth));
+    const today = todayIso();
+    if (mStart > today) return;
+    const mEnd = rawEnd > today ? today : rawEnd;
     setDraftStart(mStart);
     setDraftEnd(mEnd);
-    setLocalGranularity('month');
-    onApplyRange(mStart, mEnd, 'month');
+    onApplyRange(mStart, mEnd);
     setOpen(false);
   };
 
   const handleApplyDraft = () => {
     if (draftStart && draftEnd) {
       const [s, e] = draftStart <= draftEnd ? [draftStart, draftEnd] : [draftEnd, draftStart];
-      onApplyRange(s, e, localGranularity);
+      onApplyRange(s, e);
       setOpen(false);
     } else if (draftStart) {
-      onApplyRange(draftStart, draftStart, localGranularity);
+      onApplyRange(draftStart, draftStart);
       setOpen(false);
     }
   };
@@ -251,7 +232,7 @@ export function DateRangePickerPopover({
     setDraftStart(null);
     setDraftEnd(null);
     setHoverDate(null);
-    onApplyRange(null, null, localGranularity);
+    onApplyRange(null, null);
     onClearPeriod?.();
     setOpen(false);
   };
@@ -289,9 +270,6 @@ export function DateRangePickerPopover({
               pillValue
             )}
           </span>
-          <span className="map-date-scale-tag">
-            {granularity === 'week' ? t.weekly : t.monthly}
-          </span>
           <ChevronDown size={14} />
         </button>
 
@@ -316,22 +294,6 @@ export function DateRangePickerPopover({
         >
           <div className="cal-popover-top">
             <span className="cal-popover-title">{t.datePickerTitle}</span>
-            <div className="toggle-group cal-scale-toggle" role="group" aria-label={t.datePickerModeLabel}>
-              <button
-                type="button"
-                className={`toggle-btn ${localGranularity === 'month' ? 'active' : ''}`}
-                onClick={() => handleScaleToggle('month')}
-              >
-                {t.monthly}
-              </button>
-              <button
-                type="button"
-                className={`toggle-btn ${localGranularity === 'week' ? 'active' : ''}`}
-                onClick={() => handleScaleToggle('week')}
-              >
-                {t.weekly}
-              </button>
-            </div>
           </div>
 
           <div className="cal-month-chips" role="group" aria-label="Quick month periods">
@@ -364,8 +326,7 @@ export function DateRangePickerPopover({
               type="button"
               className={`cal-preset-btn ${isSameRange(startDate, endDate, r30) ? 'active' : ''}`}
               onClick={() => {
-                setLocalGranularity('month');
-                onApplyRange(r30.start, r30.end, 'month');
+                onApplyRange(r30.start, r30.end);
                 setOpen(false);
               }}
             >
@@ -375,8 +336,7 @@ export function DateRangePickerPopover({
               type="button"
               className={`cal-preset-btn ${isSameRange(startDate, endDate, rPeak) ? 'active' : ''}`}
               onClick={() => {
-                setLocalGranularity('month');
-                onApplyRange(rPeak.start, rPeak.end, 'month');
+                onApplyRange(rPeak.start, rPeak.end);
                 setOpen(false);
               }}
             >
@@ -386,8 +346,7 @@ export function DateRangePickerPopover({
               type="button"
               className={`cal-preset-btn ${isSameRange(startDate, endDate, rYear) ? 'active' : ''}`}
               onClick={() => {
-                setLocalGranularity('month');
-                onApplyRange(rYear.start, rYear.end, 'month');
+                onApplyRange(rYear.start, rYear.end);
                 setOpen(false);
               }}
             >
@@ -460,30 +419,35 @@ export function DateRangePickerPopover({
           </div>
 
           <div className="cal-grid" onMouseLeave={() => setHoverDate(null)}>
-            {calendarCells.map((cell, idx) => {
-              if (!cell) {
-                return <span key={`empty-${idx}`} className="cal-day-empty" />;
-              }
-              const inRange = Boolean(
-                previewRange && cell.iso >= previewRange[0] && cell.iso <= previewRange[1],
-              );
-              const isEdge = Boolean(
-                previewRange && (cell.iso === previewRange[0] || cell.iso === previewRange[1]),
-              );
-              return (
-                <button
-                  key={cell.iso}
-                  type="button"
-                  className={`cal-day ${inRange ? 'in-range' : ''} ${isEdge ? 'range-edge' : ''}`}
-                  onMouseEnter={() => {
-                    if (draftStart && !draftEnd) setHoverDate(cell.iso);
-                  }}
-                  onClick={() => handleDayClick(cell.iso)}
-                >
-                  {cell.day}
-                </button>
-              );
-            })}
+            {(() => {
+              const today = todayIso();
+              return calendarCells.map((cell, idx) => {
+                if (!cell) {
+                  return <span key={`empty-${idx}`} className="cal-day-empty" />;
+                }
+                const isFuture = cell.iso > today;
+                const inRange = Boolean(
+                  !isFuture && previewRange && cell.iso >= previewRange[0] && cell.iso <= previewRange[1],
+                );
+                const isEdge = Boolean(
+                  !isFuture && previewRange && (cell.iso === previewRange[0] || cell.iso === previewRange[1]),
+                );
+                return (
+                  <button
+                    key={cell.iso}
+                    type="button"
+                    disabled={isFuture}
+                    className={`cal-day ${inRange ? 'in-range' : ''} ${isEdge ? 'range-edge' : ''} ${isFuture ? 'future-day' : ''}`}
+                    onMouseEnter={() => {
+                      if (!isFuture && draftStart && !draftEnd) setHoverDate(cell.iso);
+                    }}
+                    onClick={() => handleDayClick(cell.iso)}
+                  >
+                    {cell.day}
+                  </button>
+                );
+              });
+            })()}
           </div>
 
           <div className="cal-popover-footer">

@@ -19,7 +19,7 @@ try:
 except ImportError:
     pass
 
-from .config import REGIONS, RegionConfig, resolve_region_config
+from .config import REGIONS, RegionConfig, in_region, resolve_region_config
 
 logger = logging.getLogger(__name__)
 
@@ -172,7 +172,7 @@ def _load_local_csv(
             record = _normalize_row(row)
             if not include_prior_years and record["acq_date"] < "2026-01-01":
                 continue
-            if _in_bbox(record, region.bbox):
+            if in_region(record["longitude"], record["latitude"], region):
                 records.append(record)
     return records
 
@@ -344,6 +344,9 @@ def _fetch_live_firms(
 
     if total_ok_sources == 0:
         raise RuntimeError("All NASA FIRMS NRT requests failed")
+
+    if region.polygon is not None:
+        records = [r for r in records if in_region(r["longitude"], r["latitude"], region)]
 
     records.sort(key=lambda r: (r["acq_date"], r["acq_time"], r["sensor"]))
     return records

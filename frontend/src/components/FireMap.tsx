@@ -236,11 +236,6 @@ export function FireMap({
         />
       )}
       <div className="map-basemap-bar" role="group" aria-label="Basemap layer">
-        {basemap === 'gibs' && (
-          <span className="map-basemap-meta" title={`NASA GIBS · ${sensorLabel} · ${satelliteDate}`}>
-            🛰️ {sensorLabel} · {satelliteDate}
-          </span>
-        )}
         <button
           type="button"
           className={`map-basemap-btn ${basemap === 'dark' ? 'active' : ''}`}

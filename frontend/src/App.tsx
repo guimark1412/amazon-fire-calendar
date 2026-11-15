@@ -22,7 +22,7 @@ import { getFires, getGrid, getRegions, getTimeline } from './api';
 import { BurningHeatmap } from './components/BurningHeatmap';
 import { CalendarMatrix } from './components/CalendarMatrix';
 import { DateRangePickerPopover } from './components/DateRangePickerPopover';
-import { currentYear, dryPeak, isSameRange, last30Days, last7Days, yearToDate } from './dateUtils';
+import { currentYear, dryPeak, last7Days, yearToDate } from './dateUtils';
 import { FireCalendarChart } from './components/FireCalendarChart';
 import { FireMap } from './components/FireMap';
 import { HarmonizationLab } from './components/HarmonizationLab';
@@ -607,11 +607,8 @@ export function App() {
                 type="button"
                 className={`toggle-btn ${granularity === 'month' ? 'active' : ''}`}
                 onClick={() => {
-                  const range = last30Days();
-                  const alreadyLast30 = isSameRange(dateRange.start, dateRange.end, range);
                   setGranularity('month');
                   setSelectedPeriod(null);
-                  setDateRange(alreadyLast30 ? { start: null, end: null } : range);
                 }}
               >
                 {t.monthly}
@@ -620,11 +617,8 @@ export function App() {
                 type="button"
                 className={`toggle-btn ${granularity === 'week' ? 'active' : ''}`}
                 onClick={() => {
-                  const range = last7Days();
-                  const alreadyLast7 = isSameRange(dateRange.start, dateRange.end, range);
                   setGranularity('week');
                   setSelectedPeriod(null);
-                  setDateRange(alreadyLast7 ? { start: null, end: null } : range);
                 }}
               >
                 {t.weekly}

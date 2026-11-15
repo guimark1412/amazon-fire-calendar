@@ -4,7 +4,7 @@ from typing import Dict, Optional, Tuple
 
 @dataclass(frozen=True)
 class RegionConfig:
-    """Geographic bounding box and historical monthly MODIS baseline for a region."""
+    """Geographic bounding box, optional clipping polygon, and historical baseline for a region."""
 
     id: str
     name: str
@@ -14,36 +14,104 @@ class RegionConfig:
     zoom: int
     # Average monthly MODIS-equivalent fire hotspots (Jan-Dec)
     historical_monthly_avg: Tuple[float, ...]
+    # Optional (lon, lat) boundary polygon to restrict points inside the bbox
+    polygon: Optional[Tuple[Tuple[float, float], ...]] = None
+
+
+# Coarse boundary polygon for Brazil's 9 Legal Amazon states (AC, AM, RR, AP, PA, RO, MT, TO, W-MA),
+# excluding neighboring countries (Venezuela, Guianas, Suriname, Colombia, Peru, Bolivia).
+AMAZONIA_LEGAL_BR_POLYGON: Tuple[Tuple[float, float], ...] = (
+    (-73.99, -7.12), (-73.70, -4.40), (-70.10, -4.25), (-69.50, -1.50),
+    (-70.05, 1.25), (-67.15, 2.25), (-64.20, 4.10), (-62.95, 4.25),
+    (-60.73, 5.27), (-59.80, 4.15), (-59.65, 1.85), (-58.15, 1.25),
+    (-56.00, 1.85), (-54.05, 2.15), (-53.20, 3.25), (-51.80, 4.45),
+    (-49.85, 2.20), (-48.35, -0.45), (-46.10, -1.05), (-44.15, -2.25),
+    (-44.00, -5.80), (-45.50, -9.80), (-46.30, -13.10), (-48.80, -13.45),
+    (-50.55, -13.15), (-52.25, -16.10), (-53.15, -17.95), (-57.60, -17.90),
+    (-60.35, -16.30), (-60.50, -13.65), (-63.10, -12.60), (-65.40, -11.95),
+    (-65.35, -9.80), (-68.75, -11.00), (-70.60, -10.95), (-72.80, -9.50),
+)
+
+AMAZONAS_POLYGON: Tuple[Tuple[float, float], ...] = (
+    (-73.99, -7.12), (-73.70, -4.40), (-70.10, -4.25), (-69.50, -1.50),
+    (-70.05, 1.25), (-67.15, 2.25), (-64.20, 2.20), (-60.90, 0.40),
+    (-58.90, 1.25), (-56.10, -2.15), (-56.15, -5.80), (-57.60, -9.05),
+    (-59.05, -9.55), (-61.90, -8.10), (-64.10, -8.75), (-66.85, -9.65),
+    (-69.50, -8.90), (-72.90, -7.50),
+)
+
+PARA_POLYGON: Tuple[Tuple[float, float], ...] = (
+    (-58.90, 1.25), (-58.15, 1.25), (-56.00, 1.85), (-54.05, 2.15),
+    (-53.50, 0.25), (-51.90, -1.25), (-49.00, 0.25), (-48.10, -0.45),
+    (-46.10, -1.05), (-47.45, -4.60), (-48.60, -5.25), (-48.55, -8.35),
+    (-49.85, -9.75), (-52.20, -9.80), (-55.00, -9.70), (-58.10, -9.15),
+    (-57.60, -7.20), (-56.15, -5.80), (-56.10, -2.15),
+)
+
+
+def point_in_polygon(lon: float, lat: float, polygon: Tuple[Tuple[float, float], ...]) -> bool:
+    """Return True when (lon, lat) lies inside the given (lon, lat) polygon via ray casting."""
+    inside = False
+    n = len(polygon)
+    j = n - 1
+    for i in range(n):
+        xi, yi = polygon[i]
+        xj, yj = polygon[j]
+        if ((yi > lat) != (yj > lat)) and (lon < (xj - xi) * (lat - yi) / ((yj - yi) or 1e-12) + xi):
+            inside = not inside
+        j = i
+    return inside
+
+
+def in_region(lon: float, lat: float, region: RegionConfig) -> bool:
+    """Return True if (lon, lat) falls within the region's bounding box and optional polygon."""
+    west, south, east, north = region.bbox
+    if not (west <= lon <= east and south <= lat <= north):
+        return False
+    if region.polygon is not None:
+        return point_in_polygon(lon, lat, region.polygon)
+    return True
 
 
 REGIONS: Dict[str, RegionConfig] = {
     "amazonia_legal": RegionConfig(
         id="amazonia_legal",
-        name="Amazônia Legal",
+        name="Amazônia Legal (Brasil)",
         bbox=(-74.0, -18.0, -44.0, 5.5),
         center=(-5.5, -59.5),
         zoom=5,
         historical_monthly_avg=(4, 3, 4, 5, 7, 14, 26, 48, 58, 36, 22, 12),
+        polygon=AMAZONIA_LEGAL_BR_POLYGON,
+    ),
+    "norte_america_sul": RegionConfig(
+        id="norte_america_sul",
+        name="Norte da América do Sul",
+        bbox=(-74.0, -18.0, -44.0, 5.5),
+        center=(-4.5, -59.5),
+        zoom=5,
+        historical_monthly_avg=(5, 4, 5, 6, 8, 16, 29, 52, 64, 40, 26, 15),
     ),
     "amazonas": RegionConfig(
         id="amazonas",
-        name="Amazonas (Foco Manaus & Sul do AM)",
+        name="Somente Amazonas",
         bbox=(-73.8, -9.8, -56.1, 2.2),
         center=(-4.2, -63.0),
         zoom=6,
         historical_monthly_avg=(2, 1, 2, 2, 3, 5, 9, 16, 20, 12, 8, 4),
+        polygon=AMAZONAS_POLYGON,
     ),
     "para": RegionConfig(
         id="para",
-        name="Pará",
+        name="Somente Pará",
         bbox=(-58.9, -9.8, -46.1, 2.6),
         center=(-4.5, -52.5),
         zoom=6,
         historical_monthly_avg=(2, 1, 2, 2, 3, 5, 9, 16, 20, 12, 8, 4),
+        polygon=PARA_POLYGON,
     ),
     "mato_grosso": RegionConfig(
         id="mato_grosso",
-        name="Mato Grosso (Arco do Desmatamento)",
+        name="Somente Mato Grosso",
         bbox=(-61.6, -18.0, -50.2, -7.3),
         center=(-12.6, -55.9),
         zoom=6,
@@ -51,7 +119,7 @@ REGIONS: Dict[str, RegionConfig] = {
     ),
     "rondonia": RegionConfig(
         id="rondonia",
-        name="Rondônia",
+        name="Somente Rondônia",
         bbox=(-66.8, -13.7, -59.8, -7.9),
         center=(-10.8, -63.0),
         zoom=7,
@@ -59,7 +127,7 @@ REGIONS: Dict[str, RegionConfig] = {
     ),
     "acre": RegionConfig(
         id="acre",
-        name="Acre",
+        name="Somente Acre",
         bbox=(-74.0, -11.1, -66.6, -7.1),
         center=(-9.1, -70.4),
         zoom=7,

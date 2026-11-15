@@ -2134,6 +2134,11 @@ body {
   border-color: #fb923c;
 }
 
+.cal-day.future-day:disabled {
+  opacity: 0.32;
+  cursor: not-allowed;
+}
+
 .cal-popover-footer {
   display: flex;
   align-items: center;
@@ -2216,11 +2221,12 @@ body {
   right: 10px;
   z-index: 950;
   display: inline-flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   justify-content: flex-end;
   align-items: center;
   gap: 4px;
-  max-width: calc(100% - 62px);
+  max-width: calc(100% - 58px);
+  white-space: nowrap;
   padding: 4px 6px;
   border-radius: 9px;
   background: rgba(11, 17, 32, 0.9);
