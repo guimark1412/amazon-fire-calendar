@@ -83,11 +83,6 @@ export function HarmonizationLab({
               <div className="ba-badge ba-badge-danger">
                 +{rawFalseSpikePct}% vs. Média MODIS ({isPt ? 'Falso Alarme Estatístico' : 'False Statistical Spike'})
               </div>
-              <p className="ba-desc">
-                {isPt
-                  ? 'Somar ou comparar VIIRS bruto direto com o histórico MODIS infla artificialmente a curva em ~4× devido à fragmentação de pixels de 375m.'
-                  : 'Comparing raw VIIRS counts directly against the 20-year MODIS baseline artificially inflates fire activity by ~4× due to 375m pixel fragmentation.'}
-              </p>
             </div>
 
             <div className="ba-card ba-harm">
@@ -110,11 +105,6 @@ export function HarmonizationLab({
                 {harmDevPct >= 0 ? '+' : ''}
                 {harmDevPct.toFixed(1)}% vs. Média MODIS ({isPt ? 'Anomalia Real Calibrada' : 'True Calibrated Anomaly'})
               </div>
-              <p className="ba-desc">
-                {isPt
-                  ? 'Unifica os dois sensores na mesma régua histórica de 20 anos, preservando a detecção precoce de pequenos focos sem distorcer a tendência climática.'
-                  : 'Unifies both sensors onto the 20-year historical ruler, preserving early detection of small burns without distorting multi-decadal trends.'}
-              </p>
             </div>
           </div>
 
@@ -122,9 +112,7 @@ export function HarmonizationLab({
             <div className="weight-box-top">
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontWeight: 600 }}>
                 <Sliders size={14} color="#f97316" />
-                {isPt
-                  ? 'Ponderação de Pequenos Incêndios Exclusivos do VIIRS (VIIRS-Only Weight):'
-                  : 'Unmatched VIIRS-Only Small Fires Weighting:'}
+                {t.viirsWeightLabel}
                 <InfoTooltip title="VIIRS-Only" text={t.tips.viirsWeight} />
               </span>
               <strong style={{ color: '#fdba74' }}>{Math.round(viirsOnlyWeight * 100)}%</strong>
@@ -181,13 +169,6 @@ export function HarmonizationLab({
 
             <div className="swath-metrics-row">
               <div className="swath-stat">
-                <span>
-                  {isPt ? 'Ângulo de Visada (Off-Nadir)' : 'Scan Angle (Off-Nadir)'}
-                  <InfoTooltip title="Off-Nadir" text={t.tips.scanAngle} />
-                </span>
-                <strong>{scanAngle}°</strong>
-              </div>
-              <div className="swath-stat">
                 <span>{isPt ? 'Área Efetiva MODIS' : 'MODIS Pixel Area'}</span>
                 <strong style={{ color: '#fbbf24' }}>{modisAreaKm2} km²</strong>
               </div>
@@ -203,10 +184,9 @@ export function HarmonizationLab({
 
             <div className="interactive-weight-box" style={{ marginTop: '8px' }}>
               <div className="weight-box-top">
-                <span>
-                  {isPt
-                    ? 'Arraste para simular a posição do satélite na faixa de varredura:'
-                    : 'Drag to simulate satellite scan angle from Nadir (0°) to Swath Edge (55°):'}
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontWeight: 600 }}>
+                  {isPt ? 'Ângulo de Visada (Off-Nadir)' : 'Scan Angle (Off-Nadir)'}
+                  <InfoTooltip title="Off-Nadir" text={t.tips.scanAngle} />
                 </span>
                 <strong style={{ color: '#38bdf8' }}>{scanAngle}°</strong>
               </div>

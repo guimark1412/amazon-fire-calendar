@@ -1194,45 +1194,17 @@ export function App() {
             </button>
 
             {scienceDetailsOpen && (
-              <>
-                <p className="panel-subtitle" style={{ maxWidth: '75ch', marginTop: '2px' }}>
-                  {t.modalIntro}
-                </p>
-
-                <div className="science-panel-grid">
-                  <div className="sensor-compare-grid" style={{ margin: 0 }}>
-                    <div className="sensor-box">
-                      <span className="badge badge-elevated">MODIS (Terra / Aqua)</span>
-                      <div className="pixel-demo">
-                        <div className="pixel-modis">1.0 km → 2.6 km (Scan × Track)</div>
-                      </div>
-                      <p className="sensor-desc">{t.modalModisDesc}</p>
-                    </div>
-
-                    <div className="sensor-box">
-                      <span className="badge badge-critical">VIIRS (Suomi NPP / NOAA-20 / 21)</span>
-                      <div className="pixel-demo">
-                        <div className="pixel-viirs-grid">
-                          {Array.from({ length: 6 }).map((_, i) => (
-                            <span key={i} className="pixel-viirs-cell" />
-                          ))}
-                        </div>
-                      </div>
-                      <p className="sensor-desc">{t.modalViirsDesc}</p>
-                    </div>
-                  </div>
-
-                  <div className="formula-box">
-                    <strong>{t.modalFormulaTitle}</strong>
-                    <code>
-                      VIIRS_effective = Coincident_VIIRS + (VIIRS_only_small × {viirsOnlyWeight})
-                    </code>
-                    <code>VIIRS_normalized = VIIRS_effective × {calibrationFactor}</code>
-                    <code>Harmonized_Index = (MODIS_raw + VIIRS_normalized) / 2</code>
-                    <p style={{ margin: '6px 0 0', fontSize: '0.84rem', color: '#9ca3af', lineHeight: 1.55 }}>
-                      {t.modalFormulaNote(calibrationFactor)}
-                    </p>
-                  </div>
+              <div className="science-panel-grid">
+                <div className="formula-box">
+                  <strong>{t.modalFormulaTitle}</strong>
+                  <code>
+                    VIIRS_effective = Coincident_VIIRS + (VIIRS_only_small × {viirsOnlyWeight})
+                  </code>
+                  <code>VIIRS_normalized = VIIRS_effective × {calibrationFactor}</code>
+                  <code>Harmonized_Index = (MODIS_raw + VIIRS_normalized) / 2</code>
+                  <p style={{ margin: '6px 0 0', fontSize: '0.84rem', color: '#9ca3af', lineHeight: 1.55 }}>
+                    {t.modalFormulaNote(calibrationFactor)}
+                  </p>
                 </div>
 
                 <div className="science-arch-block">
@@ -1246,7 +1218,7 @@ export function App() {
                     ))}
                   </div>
                 </div>
-              </>
+              </div>
             )}
           </section>
         </div>

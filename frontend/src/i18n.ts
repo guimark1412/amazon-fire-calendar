@@ -43,7 +43,7 @@ export const I18N = {
     heatmapLow: 'Normal',
     heatmapHigh: 'Crítico',
     physDiagToggle: 'Detalhes Físicos',
-    scienceMethodToggle: 'Metodologia Científica, Equações & 4 Pilares',
+    scienceMethodToggle: 'Equações de Harmonização & 4 Pilares',
     expandAllQuarters: 'Expandir todos',
     collapseQuarters: 'Compactar trimestres',
     pitchSummaryMetrics: {
@@ -346,7 +346,7 @@ export const I18N = {
     heatmapLow: 'Low',
     heatmapHigh: 'Critical',
     physDiagToggle: 'Physical Details',
-    scienceMethodToggle: 'Scientific Methodology, Equations & 4 Pillars',
+    scienceMethodToggle: 'Harmonization Equations & 4 Pillars',
     expandAllQuarters: 'Expand all',
     collapseQuarters: 'Collapse quarters',
     pitchSummaryMetrics: {

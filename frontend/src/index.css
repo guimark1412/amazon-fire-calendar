@@ -849,66 +849,6 @@ body {
   color: #e5e7eb;
 }
 
-.sensor-compare-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin: 14px 0;
-}
-
-@media (max-width: 640px) {
-  .sensor-compare-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-.sensor-box {
-  background: #0f172a;
-  border: 1px solid var(--panel-border);
-  border-radius: 10px;
-  padding: 12px;
-}
-
-.pixel-demo {
-  margin: 12px 0;
-  display: grid;
-  place-items: center;
-  height: 76px;
-}
-
-.pixel-modis {
-  width: 130px;
-  height: 64px;
-  border-radius: 6px;
-  background: rgba(245, 158, 11, 0.25);
-  border: 2px solid #f59e0b;
-  display: grid;
-  place-items: center;
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: #fbbf24;
-}
-
-.pixel-viirs-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 28px);
-  gap: 4px;
-}
-
-.pixel-viirs-cell {
-  width: 28px;
-  height: 28px;
-  border-radius: 4px;
-  background: rgba(239, 68, 68, 0.3);
-  border: 1.5px solid #ef4444;
-}
-
-.sensor-desc {
-  margin: 0;
-  font-size: 0.82rem;
-  color: #d1d5db;
-}
-
 .formula-box {
   background: #0f172a;
   border: 1px solid rgba(249, 115, 22, 0.35);
@@ -1099,9 +1039,9 @@ body {
 
 .science-panel-grid {
   display: grid;
-  grid-template-columns: 1.15fr 0.85fr;
+  grid-template-columns: 0.9fr 1.1fr;
   gap: 16px;
-  align-items: stretch;
+  align-items: start;
 }
 
 @media (max-width: 960px) {
@@ -1111,8 +1051,7 @@ body {
 }
 
 .science-arch-block {
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  padding-top: 16px;
+  padding-top: 0;
 }
 
 .science-arch-title {
@@ -1966,16 +1905,14 @@ body {
   color: #fca5a5;
 }
 
+.harm-compare-panel,
+.swath-sim-panel {
+  justify-content: space-between;
+}
+
 .ba-badge-ok {
   background: rgba(16, 185, 129, 0.2);
   color: #6ee7b7;
-}
-
-.ba-desc {
-  margin: 2px 0 0;
-  font-size: 0.74rem;
-  color: var(--muted);
-  line-height: 1.4;
 }
 
 .interactive-weight-box {
@@ -2081,7 +2018,7 @@ body {
 
 .swath-metrics-row {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
 }
 
@@ -2898,7 +2835,7 @@ body {
 
 @media (max-width: 640px) {
   .swath-metrics-row {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .heatmap-cells-row--monthly {
