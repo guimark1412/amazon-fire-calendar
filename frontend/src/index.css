@@ -252,6 +252,7 @@ body {
 }
 
 .toggle-group {
+  position: relative;
   display: inline-flex;
   flex-wrap: wrap;
   max-width: 100%;
@@ -262,7 +263,27 @@ body {
   gap: 3px;
 }
 
+.toggle-pill-indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-radius: 6px;
+  background: #1f2937;
+  box-shadow:
+    inset 0 0 0 1px rgba(249, 115, 22, 0.28),
+    0 2px 8px rgba(0, 0, 0, 0.25);
+  pointer-events: none;
+  z-index: 0;
+  transition:
+    transform 0.34s cubic-bezier(0.22, 1, 0.36, 1),
+    width 0.34s cubic-bezier(0.22, 1, 0.36, 1),
+    height 0.34s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform, width, height;
+}
+
 .toggle-btn {
+  position: relative;
+  z-index: 1;
   display: inline-flex;
   align-items: center;
   gap: 5px;
@@ -270,12 +291,17 @@ body {
   padding: 5px 10px;
   background: transparent;
   color: var(--muted);
+  transition: color 0.22s ease;
 }
 
 .toggle-btn.active {
   background: #1f2937;
   color: #fff;
   font-weight: 600;
+}
+
+.toggle-group.has-indicator .toggle-btn.active {
+  background: transparent;
 }
 
 .badge {
@@ -2683,6 +2709,8 @@ body {
 }
 
 .map-basemap-btn {
+  position: relative;
+  z-index: 1;
   appearance: none;
   border: 1px solid rgba(148, 163, 184, 0.28);
   background: rgba(30, 41, 59, 0.85);
@@ -2692,7 +2720,24 @@ body {
   padding: 3px 8px;
   border-radius: 7px;
   cursor: pointer;
-  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  transition: background-color 0.18s ease, border-color 0.18s ease, color 0.22s ease;
+}
+
+.map-basemap-indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-radius: 7px;
+  background: rgba(249, 115, 22, 0.22);
+  border: 1px solid rgba(249, 115, 22, 0.75);
+  box-shadow: 0 2px 10px rgba(249, 115, 22, 0.16);
+  pointer-events: none;
+  z-index: 0;
+  transition:
+    transform 0.34s cubic-bezier(0.22, 1, 0.36, 1),
+    width 0.34s cubic-bezier(0.22, 1, 0.36, 1),
+    height 0.34s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform, width, height;
 }
 
 .map-basemap-btn:hover {
@@ -2704,6 +2749,16 @@ body {
   background: rgba(249, 115, 22, 0.22);
   border-color: rgba(249, 115, 22, 0.75);
   color: #fdba74;
+}
+
+.map-basemap-bar.has-indicator .map-basemap-btn {
+  background: transparent;
+  border-color: rgba(148, 163, 184, 0.22);
+}
+
+.map-basemap-bar.has-indicator .map-basemap-btn.active {
+  background: transparent;
+  border-color: transparent;
 }
 
 /* --- Visual Declutter & Progressive Disclosure --- */
@@ -2848,6 +2903,8 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .view-tab-indicator,
+  .toggle-pill-indicator,
+  .map-basemap-indicator,
   .modal-overlay,
   .modal-card,
   .tour-spotlight-box,

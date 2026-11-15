@@ -23,6 +23,7 @@ import { currentYear, dryPeak, last7Days, yearToDate } from './dateUtils';
 import { FireCalendarChart } from './components/FireCalendarChart';
 import { FireMap } from './components/FireMap';
 import { InfoTooltip } from './components/InfoTooltip';
+import { SlidingToggleGroup } from './components/SlidingToggleGroup';
 import type { WorkspaceView } from './components/PitchModeModal';
 import { I18N, type Language } from './i18n';
 import type {
@@ -87,6 +88,9 @@ function usePopoverDismiss(
 
 export function App() {
   const [lang, setLang] = useState<Language>('pt');
+  useEffect(() => {
+    document.documentElement.lang = lang === 'pt' ? 'pt-BR' : 'en';
+  }, [lang]);
   const [activeView, setActiveView] = useState<WorkspaceView>('overview');
   const [regions, setRegions] = useState<RegionInfo[]>([]);
   const [selectedRegion, setSelectedRegion] = useState<string>('amazonia_legal');
@@ -836,43 +840,36 @@ export function App() {
               )}
             </div>
 
-            <div className="toggle-group" role="group" aria-label="Sensor filter">
-              {(['both', 'MODIS', 'VIIRS'] as SensorFilter[]).map((s) => (
-                <button
-                  key={s}
-                  type="button"
-                  className={`toggle-btn ${sensor === s ? 'active' : ''}`}
-                  onClick={() => setSensor(s)}
-                >
-                  {s === 'both' ? t.both : s}
-                  {s === 'MODIS' && <InfoTooltip title="MODIS (1 km)" text={t.tips.sensorModis} insideButton />}
-                  {s === 'VIIRS' && <InfoTooltip title="VIIRS (375 m)" text={t.tips.sensorViirs} insideButton />}
-                </button>
-              ))}
-            </div>
+            <SlidingToggleGroup
+              ariaLabel="Sensor filter"
+              value={sensor}
+              onChange={setSensor}
+              deps={[lang]}
+              options={(['both', 'MODIS', 'VIIRS'] as SensorFilter[]).map((s) => ({
+                value: s,
+                label: (
+                  <>
+                    {s === 'both' ? t.both : s}
+                    {s === 'MODIS' && <InfoTooltip title="MODIS (1 km)" text={t.tips.sensorModis} insideButton />}
+                    {s === 'VIIRS' && <InfoTooltip title="VIIRS (375 m)" text={t.tips.sensorViirs} insideButton />}
+                  </>
+                ),
+              }))}
+            />
 
-            <div className="toggle-group" role="group" aria-label="Granularity">
-              <button
-                type="button"
-                className={`toggle-btn ${granularity === 'month' ? 'active' : ''}`}
-                onClick={() => {
-                  setGranularity('month');
-                  setSelectedPeriod(null);
-                }}
-              >
-                {t.monthly}
-              </button>
-              <button
-                type="button"
-                className={`toggle-btn ${granularity === 'week' ? 'active' : ''}`}
-                onClick={() => {
-                  setGranularity('week');
-                  setSelectedPeriod(null);
-                }}
-              >
-                {t.weekly}
-              </button>
-            </div>
+            <SlidingToggleGroup
+              ariaLabel="Granularity"
+              value={granularity}
+              onChange={(next) => {
+                setGranularity(next);
+                setSelectedPeriod(null);
+              }}
+              deps={[lang]}
+              options={[
+                { value: 'month', label: t.monthly },
+                { value: 'week', label: t.weekly },
+              ]}
+            />
 
             <div className="aoi-anchor filters-anchor" ref={filtersPopoverRef}>
               <button
@@ -1081,34 +1078,43 @@ export function App() {
                         : t.mapSubPoints}
                   </p>
                 </div>
-                <div className="toggle-group" role="group" aria-label="Map mode">
-                  <button
-                    type="button"
-                    className={`toggle-btn ${mapMode === 'points' ? 'active' : ''}`}
-                    onClick={() => setMapMode('points')}
-                  >
-                    <MapPin size={14} />
-                    {t.pointsBtn}
-                  </button>
-                  <button
-                    type="button"
-                    className={`toggle-btn ${mapMode === 'footprints' ? 'active' : ''}`}
-                    onClick={() => setMapMode('footprints')}
-                  >
-                    <Scan size={14} />
-                    {t.footprintsBtn}
-                    <InfoTooltip title={t.footprintsBtn} text={t.tips.mapFootprints} insideButton />
-                  </button>
-                  <button
-                    type="button"
-                    className={`toggle-btn ${mapMode === 'grid' ? 'active' : ''}`}
-                    onClick={() => setMapMode('grid')}
-                  >
-                    <Grid3X3 size={14} />
-                    {t.gridBtn}
-                    <InfoTooltip title={t.gridBtn} text={t.tips.mapGrid} insideButton />
-                  </button>
-                </div>
+                <SlidingToggleGroup
+                  ariaLabel="Map mode"
+                  value={mapMode}
+                  onChange={setMapMode}
+                  deps={[lang]}
+                  options={[
+                    {
+                      value: 'points',
+                      label: (
+                        <>
+                          <MapPin size={14} />
+                          {t.pointsBtn}
+                        </>
+                      ),
+                    },
+                    {
+                      value: 'footprints',
+                      label: (
+                        <>
+                          <Scan size={14} />
+                          {t.footprintsBtn}
+                          <InfoTooltip title={t.footprintsBtn} text={t.tips.mapFootprints} insideButton />
+                        </>
+                      ),
+                    },
+                    {
+                      value: 'grid',
+                      label: (
+                        <>
+                          <Grid3X3 size={14} />
+                          {t.gridBtn}
+                          <InfoTooltip title={t.gridBtn} text={t.tips.mapGrid} insideButton />
+                        </>
+                      ),
+                    },
+                  ]}
+                />
               </div>
 
               <FireMap
@@ -1181,40 +1187,50 @@ export function App() {
                   </p>
                 </div>
 
-                <div className="toggle-group" role="group" aria-label="Chart mode">
-                  <button
-                    type="button"
-                    className={`toggle-btn ${chartMode === 'harmonized' ? 'active' : ''}`}
-                    onClick={() => setChartMode('harmonized')}
-                  >
-                    {t.chartModeHarm}
-                    <InfoTooltip title={t.chartModeHarm} text={t.tips.chartHarm} insideButton />
-                  </button>
-                  <button
-                    type="button"
-                    className={`toggle-btn ${chartMode === 'raw' ? 'active' : ''}`}
-                    onClick={() => setChartMode('raw')}
-                  >
-                    {t.chartModeRaw}
-                    <InfoTooltip title={t.chartModeRaw} text={t.tips.chartRaw} insideButton />
-                  </button>
-                  <button
-                    type="button"
-                    className={`toggle-btn ${chartMode === 'coincidence' ? 'active' : ''}`}
-                    onClick={() => setChartMode('coincidence')}
-                  >
-                    {t.chartModeCoinc}
-                    <InfoTooltip title={t.chartModeCoinc} text={t.tips.chartCoinc} insideButton />
-                  </button>
-                  <button
-                    type="button"
-                    className={`toggle-btn ${chartMode === 'frp' ? 'active' : ''}`}
-                    onClick={() => setChartMode('frp')}
-                  >
-                    {t.chartModeFrp}
-                    <InfoTooltip title="FRP (MW)" text={t.tips.frp} insideButton />
-                  </button>
-                </div>
+                <SlidingToggleGroup
+                  ariaLabel="Chart mode"
+                  value={chartMode}
+                  onChange={setChartMode}
+                  deps={[lang]}
+                  options={[
+                    {
+                      value: 'harmonized',
+                      label: (
+                        <>
+                          {t.chartModeHarm}
+                          <InfoTooltip title={t.chartModeHarm} text={t.tips.chartHarm} insideButton />
+                        </>
+                      ),
+                    },
+                    {
+                      value: 'raw',
+                      label: (
+                        <>
+                          {t.chartModeRaw}
+                          <InfoTooltip title={t.chartModeRaw} text={t.tips.chartRaw} insideButton />
+                        </>
+                      ),
+                    },
+                    {
+                      value: 'coincidence',
+                      label: (
+                        <>
+                          {t.chartModeCoinc}
+                          <InfoTooltip title={t.chartModeCoinc} text={t.tips.chartCoinc} insideButton />
+                        </>
+                      ),
+                    },
+                    {
+                      value: 'frp',
+                      label: (
+                        <>
+                          {t.chartModeFrp}
+                          <InfoTooltip title="FRP (MW)" text={t.tips.frp} insideButton />
+                        </>
+                      ),
+                    },
+                  ]}
+                />
               </div>
 
               <FireCalendarChart

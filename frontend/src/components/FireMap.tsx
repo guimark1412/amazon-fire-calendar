@@ -20,6 +20,7 @@ import type {
   SensorFilter,
 } from '../types';
 import { DateRangePickerPopover } from './DateRangePickerPopover';
+import { SlidingToggleGroup } from './SlidingToggleGroup';
 
 interface FireMapProps {
   fires: FireHotspot[];
@@ -272,30 +273,24 @@ export const FireMap = memo(function FireMap({
           onClearPeriod={onClearPeriod}
         />
       )}
-      <div className="map-basemap-bar" role="group" aria-label="Basemap layer">
-        <button
-          type="button"
-          className={`map-basemap-btn ${basemap === 'dark' ? 'active' : ''}`}
-          onClick={() => setBasemap('dark')}
-        >
-          {lang === 'pt' ? 'Mapa Escuro' : 'Dark Map'}
-        </button>
-        <button
-          type="button"
-          className={`map-basemap-btn ${basemap === 'satellite' ? 'active' : ''}`}
-          onClick={() => setBasemap('satellite')}
-        >
-          {lang === 'pt' ? 'Satélite' : 'Satellite'}
-        </button>
-        <button
-          type="button"
-          className={`map-basemap-btn ${basemap === 'gibs' ? 'active' : ''}`}
-          title={`NASA GIBS · ${sensorLabel} · ${satelliteDate}`}
-          onClick={() => setBasemap('gibs')}
-        >
-          {`NASA GIBS (${shortSatDate})`}
-        </button>
-      </div>
+      <SlidingToggleGroup
+        ariaLabel="Basemap layer"
+        groupClassName="map-basemap-bar"
+        btnClassName="map-basemap-btn"
+        indicatorClassName="map-basemap-indicator"
+        value={basemap}
+        onChange={setBasemap}
+        deps={[lang, shortSatDate]}
+        options={[
+          { value: 'dark', label: lang === 'pt' ? 'Mapa Escuro' : 'Dark Map' },
+          { value: 'satellite', label: lang === 'pt' ? 'Satélite' : 'Satellite' },
+          {
+            value: 'gibs',
+            label: `NASA GIBS (${shortSatDate})`,
+            title: `NASA GIBS · ${sensorLabel} · ${satelliteDate}`,
+          },
+        ]}
+      />
       <MapContainer preferCanvas center={center} zoom={zoom} style={MAP_CONTAINER_STYLE}>
         <MapViewportSync center={center} zoom={zoom} />
         {basemap === 'dark' && (

@@ -4,6 +4,7 @@ import { parsePeriodInfo } from '../dateUtils';
 import { I18N, type Language } from '../i18n';
 import type { AlertLevel, MatrixMetric, TimelinePoint } from '../types';
 import { InfoTooltip } from './InfoTooltip';
+import { SlidingToggleGroup } from './SlidingToggleGroup';
 
 interface CalendarMatrixProps {
   series: TimelinePoint[];
@@ -171,24 +172,32 @@ export function CalendarMatrix({
           </div>
 
           <div className="matrix-controls-wrap">
-            <div className="toggle-group" role="group" aria-label="Matrix metric">
-              <button
-                type="button"
-                className={`toggle-btn ${metric === 'harmonized' ? 'active' : ''}`}
-                onClick={() => setMetric('harmonized')}
-              >
-                {t.metricHarmBtn}
-                <InfoTooltip title={t.metricHarmBtn} text={t.tips.chartHarm} insideButton />
-              </button>
-              <button
-                type="button"
-                className={`toggle-btn ${metric === 'frp' ? 'active' : ''}`}
-                onClick={() => setMetric('frp')}
-              >
-                {t.metricFrpBtn}
-                <InfoTooltip title="FRP (MW)" text={t.tips.frp} insideButton />
-              </button>
-            </div>
+            <SlidingToggleGroup
+              ariaLabel="Matrix metric"
+              value={metric}
+              onChange={setMetric}
+              deps={[lang]}
+              options={[
+                {
+                  value: 'harmonized',
+                  label: (
+                    <>
+                      {t.metricHarmBtn}
+                      <InfoTooltip title={t.metricHarmBtn} text={t.tips.chartHarm} insideButton />
+                    </>
+                  ),
+                },
+                {
+                  value: 'frp',
+                  label: (
+                    <>
+                      {t.metricFrpBtn}
+                      <InfoTooltip title="FRP (MW)" text={t.tips.frp} insideButton />
+                    </>
+                  ),
+                },
+              ]}
+            />
 
             <div className="matrix-filter-bar" role="group" aria-label="Filter periods by status">
               {(['all', 'critical', 'elevated', 'normal'] as const).map((status) => {
