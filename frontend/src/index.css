@@ -1252,35 +1252,54 @@ body {
 
 /* --- NASA Space Apps 2026 Enhancements --- */
 
-.subfilter-bar {
-  width: 100%;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  padding-top: 8px;
-  border-top: 1px dashed rgba(55, 65, 81, 0.55);
+.filters-popover {
+  width: min(312px, calc(100vw - 24px));
 }
 
-.subfilter-group {
-  display: flex;
-  flex-wrap: wrap;
+.filters-active-count {
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: #38bdf8;
+  color: #090d16;
+  font-size: 0.68rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.filters-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.filters-field .control-select {
+  width: 100%;
+}
+
+.filters-field-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: #94a3b8;
+}
+
+.filters-reset-btn {
+  width: 100%;
+  justify-content: center;
+  color: #cbd5e1;
 }
 
 .control-select-sm {
   padding: 5px 10px;
   font-size: 0.8rem;
-}
-
-.weight-control {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.78rem;
-  color: var(--muted);
 }
 
 .aoi-active-btn {
@@ -1436,7 +1455,8 @@ body {
 }
 
 @media (max-width: 640px) {
-  .aoi-popover {
+  .aoi-popover,
+  .filters-popover {
     position: fixed;
     top: 72px;
     left: 12px;
@@ -1643,7 +1663,8 @@ body {
 .kpi-mini-pill:hover .info-tip-badge,
 .ba-card:hover .info-tip-badge,
 .swath-stat:hover .info-tip-badge,
-.toggle-btn:hover .info-tip-badge {
+.toggle-btn:hover .info-tip-badge,
+.filters-field-label:hover .info-tip-badge {
   opacity: 0.95;
   border-color: rgba(148, 163, 184, 0.4);
 }
@@ -1654,12 +1675,6 @@ body {
   border-color: rgba(56, 189, 248, 0.78);
   color: #38bdf8;
   background: rgba(56, 189, 248, 0.12);
-}
-
-.weight-control-label {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
 }
 
 .info-tip-anchor:focus-visible {

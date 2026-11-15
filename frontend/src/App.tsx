@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type RefObject } from 'react';
 import {
   AlertTriangle,
   Calendar,
@@ -42,6 +42,31 @@ import type {
   TimelineResponse,
 } from './types';
 
+/** Close a floating popover on outside pointer down or Escape key press. */
+function usePopoverDismiss(
+  isOpen: boolean,
+  anchorRef: RefObject<HTMLDivElement | null>,
+  setOpen: (next: boolean) => void,
+) {
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleOutside = (e: MouseEvent) => {
+      if (anchorRef.current && !anchorRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+    window.addEventListener('mousedown', handleOutside);
+    window.addEventListener('keydown', handleEsc);
+    return () => {
+      window.removeEventListener('mousedown', handleOutside);
+      window.removeEventListener('keydown', handleEsc);
+    };
+  }, [isOpen, anchorRef, setOpen]);
+}
+
 export function App() {
   const [lang, setLang] = useState<Language>('pt');
   const [activeView, setActiveView] = useState<WorkspaceView>('overview');
@@ -77,40 +102,16 @@ export function App() {
   const [retryNonce, setRetryNonce] = useState<number>(0);
   const exportMenuRef = useRef<HTMLDivElement | null>(null);
   const aoiPopoverRef = useRef<HTMLDivElement | null>(null);
+  const filtersPopoverRef = useRef<HTMLDivElement | null>(null);
   const [selectedPeriod, setSelectedPeriod] = useState<string | null>(null);
   const [dateRange, setDateRange] = useState<{ start: string | null; end: string | null }>({
     start: null,
     end: null,
   });
 
-  useEffect(() => {
-    if (!exportMenuOpen) return;
-    const handleOutside = (e: MouseEvent) => {
-      if (exportMenuRef.current && !exportMenuRef.current.contains(e.target as Node)) {
-        setExportMenuOpen(false);
-      }
-    };
-    window.addEventListener('mousedown', handleOutside);
-    return () => window.removeEventListener('mousedown', handleOutside);
-  }, [exportMenuOpen]);
-
-  useEffect(() => {
-    if (!aoiPanelOpen) return;
-    const handleOutside = (e: MouseEvent) => {
-      if (aoiPopoverRef.current && !aoiPopoverRef.current.contains(e.target as Node)) {
-        setAoiPanelOpen(false);
-      }
-    };
-    const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setAoiPanelOpen(false);
-    };
-    window.addEventListener('mousedown', handleOutside);
-    window.addEventListener('keydown', handleEsc);
-    return () => {
-      window.removeEventListener('mousedown', handleOutside);
-      window.removeEventListener('keydown', handleEsc);
-    };
-  }, [aoiPanelOpen]);
+  usePopoverDismiss(exportMenuOpen, exportMenuRef, setExportMenuOpen);
+  usePopoverDismiss(aoiPanelOpen, aoiPopoverRef, setAoiPanelOpen);
+  usePopoverDismiss(subfiltersOpen, filtersPopoverRef, setSubfiltersOpen);
 
   const [firesData, setFiresData] = useState<FiresResponse | null>(null);
   const [gridData, setGridData] = useState<GridResponse | null>(null);
@@ -301,10 +302,8 @@ export function App() {
   const isLive = firesData?.data_source?.startsWith('live_nasa_firms') ?? false;
   const summary = timelineData?.summary;
   const calibrationFactor = timelineData?.calibration_factor ?? 0.25;
-  const hasActiveSubfilters =
-    subfiltersOpen ||
-    minConfidence !== 'all' ||
-    viirsOnlyWeight !== 0.85;
+  const activeFilterCount = (minConfidence !== 'all' ? 1 : 0) + (viirsOnlyWeight !== 0.85 ? 1 : 0);
+  const hasModifiedSubfilters = activeFilterCount > 0;
 
   const handleSelectPeriodFromViz = (period: string | null) => {
     setSelectedPeriod(period);
@@ -782,14 +781,87 @@ export function App() {
               </button>
             </div>
 
-            <button
-              type="button"
-              className={`control-select action-btn ${subfiltersOpen || minConfidence !== 'all' || viirsOnlyWeight !== 0.85 ? 'aoi-active-btn' : ''}`}
-              onClick={() => setSubfiltersOpen((prev) => !prev)}
-            >
-              <SlidersHorizontal size={14} />
-              {t.advFiltersBtn}
-            </button>
+            <div className="aoi-anchor filters-anchor" ref={filtersPopoverRef}>
+              <button
+                type="button"
+                className={`control-select action-btn ${subfiltersOpen || hasModifiedSubfilters ? 'aoi-active-btn' : ''}`}
+                onClick={() => setSubfiltersOpen((prev) => !prev)}
+                aria-expanded={subfiltersOpen}
+                aria-haspopup="dialog"
+              >
+                <SlidersHorizontal size={14} />
+                {t.advFiltersBtn}
+                {activeFilterCount > 0 && (
+                  <span className="filters-active-count">{activeFilterCount}</span>
+                )}
+              </button>
+
+              {subfiltersOpen && (
+                <div className="aoi-popover filters-popover" role="dialog" aria-label={t.advFiltersBtn}>
+                  <div className="aoi-popover-header">
+                    <span className="aoi-popover-title">
+                      <SlidersHorizontal size={14} color="#f97316" />
+                      {t.advFiltersBtn}
+                    </span>
+                    <button
+                      type="button"
+                      className="aoi-popover-close"
+                      onClick={() => setSubfiltersOpen(false)}
+                      aria-label={lang === 'pt' ? 'Fechar filtros' : 'Close filters'}
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+
+                  <div className="filters-field">
+                    <label className="filters-field-label" htmlFor="filter-confidence-select">
+                      {lang === 'pt' ? 'Confiança NASA FIRMS' : 'NASA FIRMS Confidence'}
+                    </label>
+                    <select
+                      id="filter-confidence-select"
+                      className="control-select control-select-sm"
+                      value={minConfidence}
+                      onChange={(e) => setMinConfidence(e.target.value as ConfidenceFilter)}
+                    >
+                      <option value="all">{t.confAll}</option>
+                      <option value="nominal">{t.confNominal}</option>
+                      <option value="high">{t.confHigh}</option>
+                    </select>
+                  </div>
+
+                  <div className="filters-field">
+                    <span className="filters-field-label">
+                      <label htmlFor="filter-viirs-weight-select">{t.viirsWeightLabel}</label>
+                      <InfoTooltip title="VIIRS-Only" text={t.tips.viirsWeight} />
+                    </span>
+                    <select
+                      id="filter-viirs-weight-select"
+                      className="control-select control-select-sm"
+                      value={String(viirsOnlyWeight)}
+                      onChange={(e) => setViirsOnlyWeight(parseFloat(e.target.value))}
+                    >
+                      <option value="1">{lang === 'pt' ? '1.00× (Sem Desconto)' : '1.00× (No Discount)'}</option>
+                      <option value="0.85">{lang === 'pt' ? '0.85× (Padrão NASA)' : '0.85× (NASA Default)'}</option>
+                      <option value="0.7">{lang === 'pt' ? '0.70× (Conservador)' : '0.70× (Conservative)'}</option>
+                      <option value="0.5">{lang === 'pt' ? '0.50× (Foco Grandes Incêndios)' : '0.50× (Large Fires Focus)'}</option>
+                    </select>
+                  </div>
+
+                  {hasModifiedSubfilters && (
+                    <button
+                      type="button"
+                      className="control-select control-select-sm action-btn filters-reset-btn"
+                      onClick={() => {
+                        setMinConfidence('all');
+                        setViirsOnlyWeight(0.85);
+                      }}
+                    >
+                      {lang === 'pt' ? 'Restaurar padrão' : 'Reset defaults'}
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="kpi-inline-group">
@@ -839,42 +911,6 @@ export function App() {
             </div>
           </div>
         </div>
-
-        {hasActiveSubfilters && (
-          <div className="subfilter-bar">
-            <div className="subfilter-group">
-              <SlidersHorizontal size={14} color="#f97316" />
-              <select
-                className="control-select control-select-sm"
-                value={minConfidence}
-                onChange={(e) => setMinConfidence(e.target.value as ConfidenceFilter)}
-                aria-label="Confidence Filter"
-              >
-                <option value="all">{t.confAll}</option>
-                <option value="nominal">{t.confNominal}</option>
-                <option value="high">{t.confHigh}</option>
-              </select>
-
-              <div className="weight-control">
-                <span className="weight-control-label">
-                  {t.viirsWeightLabel}
-                  <InfoTooltip title="VIIRS-Only" text={t.tips.viirsWeight} />
-                </span>
-                <select
-                  className="control-select control-select-sm"
-                  aria-label={t.viirsWeightLabel}
-                  value={String(viirsOnlyWeight)}
-                  onChange={(e) => setViirsOnlyWeight(parseFloat(e.target.value))}
-                >
-                  <option value="1">{lang === 'pt' ? '1.00× (Sem Desconto)' : '1.00× (No Discount)'}</option>
-                  <option value="0.85">{lang === 'pt' ? '0.85× (Padrão NASA)' : '0.85× (NASA Default)'}</option>
-                  <option value="0.7">{lang === 'pt' ? '0.70× (Conservador)' : '0.70× (Conservative)'}</option>
-                  <option value="0.5">{lang === 'pt' ? '0.50× (Foco Grandes Incêndios)' : '0.50× (Large Fires Focus)'}</option>
-                </select>
-              </div>
-            </div>
-          </div>
-        )}
       </header>
 
       {error && (
