@@ -87,7 +87,7 @@ function usePopoverDismiss(
 }
 
 export function App() {
-  const [lang, setLang] = useState<Language>('pt');
+  const [lang, setLang] = useState<Language>('en');
   useEffect(() => {
     document.documentElement.lang = lang === 'pt' ? 'pt-BR' : 'en';
   }, [lang]);
