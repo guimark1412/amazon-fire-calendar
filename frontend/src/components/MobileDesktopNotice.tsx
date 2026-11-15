@@ -1,8 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { I18N, type Language } from '../i18n';
 
-const STORAGE_KEY = 'afc_mobile_notice_seen';
-
 type SplashPhase = 'loading' | 'playing' | 'fading' | 'done';
 
 interface MobileDesktopNoticeProps {
@@ -14,22 +12,11 @@ interface MobileDesktopNoticeProps {
 export function MobileDesktopNotice({ lang, appReady, onToggleLang }: MobileDesktopNoticeProps) {
   const [phase, setPhase] = useState<SplashPhase>(() => {
     if (typeof window === 'undefined') return 'done';
-    const isMobile = window.matchMedia('(max-width: 768px)').matches;
-    if (!isMobile) return 'done';
-    try {
-      return window.sessionStorage.getItem(STORAGE_KEY) === '1' ? 'done' : 'loading';
-    } catch {
-      return 'loading';
-    }
+    return window.matchMedia('(max-width: 768px)').matches ? 'loading' : 'done';
   });
 
   const startFadeOut = useCallback(() => {
     setPhase((prev) => (prev === 'fading' || prev === 'done' ? prev : 'fading'));
-    try {
-      window.sessionStorage.setItem(STORAGE_KEY, '1');
-    } catch {
-      // Ignore storage errors in restricted contexts
-    }
   }, []);
 
   // Desktop viewport check & Escape shortcut
