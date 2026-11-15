@@ -185,19 +185,28 @@ export function PitchModeModal({
   const boxBottom = boxTop + boxHeight;
 
   const getTooltipStyle = (): CSSProperties => {
-    if (!rect || typeof window === 'undefined') {
-      return { bottom: '24px', right: '24px' };
+    if (typeof window === 'undefined') {
+      return { top: '80px', left: '24px' };
     }
     const vw = window.innerWidth;
     const vh = window.innerHeight;
     const cardWidth = Math.min(460, vw - 32);
     const estHeight = 320;
 
+    if (!rect) {
+      return {
+        top: `${Math.max(20, vh - estHeight - 24)}px`,
+        left: `${Math.max(20, vw - cardWidth - 24)}px`,
+      };
+    }
+
     if (vw <= 768) {
       const spotlightInUpperHalf = boxTop + boxHeight / 2 < vh * 0.52;
-      return spotlightInUpperHalf
-        ? { bottom: '76px', left: '12px', right: '12px', width: 'auto' }
-        : { top: '12px', left: '12px', right: '12px', width: 'auto' };
+      return {
+        top: spotlightInUpperHalf ? `${Math.max(16, vh - estHeight - 76)}px` : '12px',
+        left: '12px',
+        width: 'calc(100vw - 24px)',
+      };
     }
 
     if (rect.width < vw * 0.65) {
@@ -225,12 +234,15 @@ export function PitchModeModal({
 
     if (boxTop - 16 - estHeight >= 0) {
       return {
-        bottom: `${vh - boxTop + 16}px`,
+        top: `${Math.max(16, boxTop - estHeight - 16)}px`,
         left: `${clampedLeft}px`,
       };
     }
 
-    return { bottom: '20px', right: '20px' };
+    return {
+      top: `${Math.max(20, vh - estHeight - 20)}px`,
+      left: `${Math.max(20, vw - cardWidth - 20)}px`,
+    };
   };
 
   const renderFooter = () => (
@@ -393,7 +405,7 @@ export function PitchModeModal({
           </button>
         </div>
 
-        <div className="tour-tooltip-body">
+        <div className="tour-tooltip-body" key={stepIndex}>
           <h3 id="pitch-tour-title">{step.title}</h3>
           <p>{step.description}</p>
 
