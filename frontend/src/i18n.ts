@@ -186,7 +186,7 @@ export const I18N = {
         'Células agregadas coloridas pelo nível de alerta comparado à média histórica MODIS local.',
       liveUnscaledTitle: 'Modo ao vivo (sem reescala)',
       liveUnscaledTip:
-        'Nos modos em tempo real (Últimos 7 dias ou Semana atual), o mapa exibe todas as detecções brutas recebidas da NASA FIRMS (milhares de focos). Ao clicar em um mês no calendário, novembro é reescalado proporcionalmente para comparação justa com os demais meses.',
+        'Nos modos ao vivo de até 7 dias (Últimos 7 dias ou Semana atual), o mapa exibe todas as detecções brutas recebidas da NASA FIRMS (milhares de focos). Em janelas maiores que 7 dias ou na seleção mensal, novembro é reescalado proporcionalmente para comparação justa com os demais meses.',
       chartHarm:
         'Unifica MODIS (1 km) e VIIRS normalizado na mesma régua de 20 anos para comparação justa com a média.',
       chartRaw:
@@ -450,7 +450,7 @@ export const I18N = {
         'Spatial grid cells colored by alert severity compared against the local MODIS historical mean.',
       liveUnscaledTitle: 'Live mode (unscaled FIRMS)',
       liveUnscaledTip:
-        'In real-time views (Last 7 days or current live week), the map displays all raw NASA FIRMS detections (thousands of hotspots). Selecting a month in the calendar proportionally scales November so it matches earlier months’ baseline.',
+        'In live views up to 7 days (Last 7 days or current live week), the map displays all raw NASA FIRMS detections (thousands of hotspots). For ranges longer than 7 days or monthly selections, November is proportionally scaled to match earlier months’ baseline.',
       chartHarm:
         'Unifies MODIS (1 km) and normalized VIIRS onto the 20-year baseline for apples-to-apples comparison.',
       chartRaw:

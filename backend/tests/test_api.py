@@ -524,5 +524,13 @@ def test_monthly_map_uses_calendar_scale_while_live_weekly_stays_unscaled():
     assert fires_week["live_unscaled"] is ("live_nasa_firms" in fires_week["data_source"])
     assert grid_week["live_unscaled"] is ("live_nasa_firms" in grid_week["data_source"])
 
+    # Ranges > 7 days use scaled/harmonized view; <= 7 day live window stays unscaled
+    fires_30d = client.get("/api/fires?region=amazonia_legal&start_date=2026-10-16&end_date=2026-11-15").json()
+    grid_ytd = client.get("/api/grid?region=amazonia_legal&start_date=2026-01-01&end_date=2026-11-15").json()
+    fires_7d = client.get("/api/fires?region=amazonia_legal&start_date=2026-11-09&end_date=2026-11-15").json()
+    assert fires_30d["live_unscaled"] is False
+    assert grid_ytd["live_unscaled"] is False
+    assert fires_7d["live_unscaled"] is ("live_nasa_firms" in fires_7d["data_source"])
+
 
 

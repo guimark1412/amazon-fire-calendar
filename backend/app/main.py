@@ -1,3 +1,4 @@
+from datetime import date
 from typing import Dict, Optional
 
 from fastapi import FastAPI, HTTPException, Query
@@ -105,15 +106,32 @@ def _sample_by_month(items: list, target: int) -> list:
     return sampled
 
 
-def _uses_monthly_calendar_scale(period: Optional[str]) -> bool:
-    """Monthly/annual calendar clicks share the calibrated timeline scale; live 7d & weekly clicks stay unscaled."""
-    if not period:
-        return False
-    p = period.strip()
-    if len(p) == 7 and p[4] == "-" and not p[5:].upper().startswith("W"):
-        return True
-    if len(p) == 4 and p.isdigit():
-        return True
+def _uses_monthly_calendar_scale(
+    period: Optional[str],
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+) -> bool:
+    """Use calibrated timeline scale for monthly/annual picks or >7-day ranges; keep <=7d & weekly live views unscaled."""
+    if period:
+        p = period.strip()
+        if len(p) == 7 and p[4] == "-" and not p[5:].upper().startswith("W"):
+            return True
+        if len(p) == 4 and p.isdigit():
+            return True
+    if start_date and end_date:
+        try:
+            d_start = date.fromisoformat(start_date.strip())
+            d_end = date.fromisoformat(end_date.strip())
+            # 7 inclusive days (e.g. Nov 9..Nov 15) has .days == 6; >= 7 spans 8+ inclusive days.
+            return abs((d_end - d_start).days) >= 7
+        except ValueError:
+            return False
+    if start_date and not end_date:
+        try:
+            d_start = date.fromisoformat(start_date.strip())
+            return (date.today() - d_start).days >= 7
+        except ValueError:
+            return False
     return False
 
 
@@ -134,7 +152,7 @@ def get_fires(
     if custom_bbox is None and region not in REGIONS:
         raise HTTPException(status_code=404, detail=f"Unknown region '{region}'")
 
-    use_scaled_calendar = _uses_monthly_calendar_scale(period)
+    use_scaled_calendar = _uses_monthly_calendar_scale(period, start_date, end_date)
     if use_scaled_calendar:
         records, data_source = get_timeline_records(
             region_id=region,
@@ -256,7 +274,7 @@ def get_grid(
         raise HTTPException(status_code=404, detail=f"Unknown region '{region}'")
 
     region_cfg = with_dynamic_historical_baseline(resolve_region_config(region, custom_bbox))
-    use_scaled_calendar = _uses_monthly_calendar_scale(period)
+    use_scaled_calendar = _uses_monthly_calendar_scale(period, start_date, end_date)
     if use_scaled_calendar:
         all_records, data_source = get_timeline_records(
             region_id=region,
