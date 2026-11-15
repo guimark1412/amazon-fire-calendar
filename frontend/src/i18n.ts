@@ -289,10 +289,11 @@ export const I18N = {
     tourCalibFactor: 'Fator de calibração',
     tourYtdDev: 'desvio acumulado de',
     tourPeakIn: 'Pico em',
+    mobileDesktopLoading: 'Carregando dados NASA FIRMS...',
     mobileDesktopTitle: 'Altamente recomendado visualização no computador',
     mobileDesktopDesc:
       'Mapas interativos, gráficos temporais e painéis da NASA FIRMS oferecem melhor leitura em telas maiores.',
-    mobileDesktopContinue: 'Continuar no celular',
+    mobileDesktopContinue: 'Entrar agora',
   },
   en: {
     subtitle: 'MODIS (1 km) × VIIRS (375 m) · NASA FIRMS',
@@ -554,9 +555,10 @@ export const I18N = {
     tourCalibFactor: 'Calibration factor',
     tourYtdDev: 'cumulative deviation of',
     tourPeakIn: 'Peak in',
+    mobileDesktopLoading: 'Loading NASA FIRMS data...',
     mobileDesktopTitle: 'Desktop viewing is highly recommended',
     mobileDesktopDesc:
       'Interactive NASA FIRMS maps, time-series charts, and analytical panels are best experienced on larger screens.',
-    mobileDesktopContinue: 'Continue on mobile',
+    mobileDesktopContinue: 'Enter now',
   },
 } as const;

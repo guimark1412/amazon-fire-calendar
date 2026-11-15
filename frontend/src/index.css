@@ -2938,6 +2938,9 @@ body {
   .view-tab-indicator,
   .toggle-pill-indicator,
   .map-basemap-indicator,
+  .mobile-splash-overlay,
+  .mobile-splash-loader,
+  .mobile-splash-spinner,
   .mobile-morph-device,
   .mobile-morph-stand,
   .mobile-morph-speaker,
@@ -2959,10 +2962,21 @@ body {
     animation: none !important;
     transition: none !important;
   }
-  .mobile-morph-device {
-    width: 98px;
-    height: 58px;
-    border-radius: 7px;
+  .mobile-morph-device--hero {
+    width: 136px;
+    height: 82px;
+    border-radius: 9px;
+    transform: translateY(-6px);
+  }
+  .mobile-morph-ui-chart--hero {
+    flex: 0 0 50px;
+    width: 50px;
+    padding: 3px 4px;
+    border-width: 1px;
+    opacity: 1;
+  }
+  .mobile-morph-stand--hero {
+    opacity: 1;
   }
   .mobile-morph-speaker,
   .mobile-morph-home {
@@ -2970,145 +2984,206 @@ body {
   }
 }
 
-/* --- Mobile Desktop Recommendation Morph Modal --- */
+/* --- Mobile Full-Screen Splash & Phone-to-Monitor Morph --- */
 
-.mobile-notice-overlay {
+.mobile-splash-overlay {
   position: fixed;
   inset: 0;
   z-index: 2500;
-  background: rgba(2, 6, 23, 0.8);
-  backdrop-filter: blur(8px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  animation: modalFadeIn 0.28s ease-out both;
-}
-
-.mobile-notice-card {
-  width: min(360px, 100%);
-  background: linear-gradient(180deg, rgba(15, 23, 42, 0.98) 0%, rgba(11, 17, 32, 0.99) 100%);
-  border: 1px solid rgba(249, 115, 22, 0.34);
-  border-radius: 18px;
-  padding: 16px 20px 22px;
-  box-shadow:
-    0 24px 60px rgba(0, 0, 0, 0.72),
-    0 0 34px rgba(249, 115, 22, 0.14);
-  text-align: center;
-  animation: modalCardPop 0.34s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-.mobile-notice-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 4px;
-}
-
-.mobile-notice-lang-btn {
-  padding: 4px 9px;
-  font-size: 0.74rem;
-}
-
-.mobile-morph-stage {
-  position: relative;
-  height: 102px;
-  margin: 4px auto 14px;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  padding: max(18px, env(safe-area-inset-top)) 20px max(24px, env(safe-area-inset-bottom));
+  background:
+    radial-gradient(circle at 50% 42%, rgba(249, 115, 22, 0.14), rgba(56, 189, 248, 0.08) 42%, #070b14 78%),
+    #070b14;
+  opacity: 1;
+  transform: scale(1);
+  filter: blur(0px);
+  transition:
+    opacity 1.25s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 1.25s cubic-bezier(0.22, 1, 0.36, 1),
+    filter 1.25s ease;
 }
 
-.mobile-morph-glow {
-  position: absolute;
-  width: 112px;
-  height: 70px;
-  border-radius: 999px;
-  background: radial-gradient(circle, rgba(249, 115, 22, 0.22), rgba(56, 189, 248, 0.12), transparent 72%);
-  filter: blur(10px);
-  animation: morphGlowPulse 4.4s ease-in-out infinite;
+.mobile-splash-overlay--fading {
+  opacity: 0;
+  transform: scale(1.03);
+  filter: blur(4px);
   pointer-events: none;
 }
 
-.mobile-morph-device {
-  position: relative;
-  z-index: 2;
-  width: 34px;
-  height: 60px;
-  border-radius: 8px;
-  border: 2px solid #cbd5e1;
-  background: #0b1120;
-  padding: 5px 4px;
+.mobile-splash-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.mobile-notice-lang-btn {
+  padding: 5px 11px;
+  font-size: 0.76rem;
+}
+
+.mobile-splash-skip {
+  padding: 5px 12px;
+  font-size: 0.78rem;
+  color: #cbd5e1;
+  border-color: rgba(148, 163, 184, 0.25);
+  background: rgba(15, 23, 42, 0.55);
+}
+
+.mobile-splash-center {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 3px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
-  animation: morphPhoneToMonitor 4.4s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0 8px 36px;
+}
+
+.mobile-splash-loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  animation: noticeTextIn 0.35s ease-out both;
+}
+
+.mobile-splash-logo {
+  width: 54px;
+  height: 54px;
+  border-radius: 14px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 18px rgba(249, 115, 22, 0.38));
+}
+
+.mobile-splash-spinner {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  border: 2.5px solid rgba(148, 163, 184, 0.18);
+  border-top-color: #f97316;
+  border-right-color: #38bdf8;
+  animation: mobileSplashSpin 0.85s linear infinite;
+}
+
+.mobile-splash-loading-text {
+  margin: 0;
+  font-size: 0.88rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: #cbd5e1;
+}
+
+.mobile-splash-morph-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 340px;
+  width: 100%;
+}
+
+.mobile-morph-stage--hero {
+  position: relative;
+  height: 138px;
+  width: 100%;
+  margin: 0 auto 22px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.mobile-morph-glow--hero {
+  position: absolute;
+  width: 190px;
+  height: 110px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(249, 115, 22, 0.28), rgba(56, 189, 248, 0.14), transparent 72%);
+  filter: blur(18px);
+  animation: morphGlowHero 2.2s ease-out forwards;
+  pointer-events: none;
+}
+
+.mobile-morph-device--hero {
+  position: relative;
+  z-index: 2;
+  width: 48px;
+  height: 86px;
+  border-radius: 11px;
+  border: 2.5px solid #cbd5e1;
+  background: #0b1120;
+  padding: 6px 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.55);
+  animation: morphPhoneToMonitorHero 2.1s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
 .mobile-morph-speaker {
   display: block;
-  width: 11px;
-  height: 2px;
+  width: 14px;
+  height: 2.5px;
   border-radius: 999px;
   background: #64748b;
   margin: 0 auto;
-  animation: morphSpeakerFade 4.4s ease-in-out infinite;
+  animation: morphSpeakerHeroFade 2.1s ease-out forwards;
 }
 
 .mobile-morph-home {
   display: block;
-  width: 10px;
-  height: 2px;
+  width: 12px;
+  height: 2.5px;
   border-radius: 999px;
   background: #475569;
   margin: 0 auto;
-  animation: morphSpeakerFade 4.4s ease-in-out infinite;
+  animation: morphSpeakerHeroFade 2.1s ease-out forwards;
 }
 
 .mobile-morph-screen {
   flex: 1;
   min-height: 0;
-  border-radius: 4px;
+  border-radius: 5px;
   background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.9));
-  border: 1px solid rgba(56, 189, 248, 0.25);
-  padding: 3px;
+  border: 1px solid rgba(56, 189, 248, 0.28);
+  padding: 4px;
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 4px;
   overflow: hidden;
 }
 
 .mobile-morph-ui-header {
-  height: 4px;
+  height: 5px;
   width: 100%;
   border-radius: 2px;
-  background: linear-gradient(90deg, rgba(249, 115, 22, 0.75), rgba(56, 189, 248, 0.5));
+  background: linear-gradient(90deg, rgba(249, 115, 22, 0.8), rgba(56, 189, 248, 0.55));
 }
 
 .mobile-morph-ui-body {
   flex: 1;
   min-height: 0;
   display: flex;
-  gap: 3px;
+  gap: 4px;
 }
 
 .mobile-morph-ui-map {
   position: relative;
   flex: 1;
-  border-radius: 2px;
+  border-radius: 3px;
   background: rgba(16, 185, 129, 0.14);
-  border: 1px solid rgba(16, 185, 129, 0.22);
+  border: 1px solid rgba(16, 185, 129, 0.24);
 }
 
 .mobile-morph-fire-dot {
   position: absolute;
-  width: 4px;
-  height: 4px;
+  width: 5px;
+  height: 5px;
   border-radius: 999px;
   background: #f97316;
-  box-shadow: 0 0 6px #f97316;
+  box-shadow: 0 0 8px #f97316;
 }
 
 .mobile-morph-fire-dot--1 {
@@ -3122,21 +3197,22 @@ body {
   background: #ef4444;
 }
 
-.mobile-morph-ui-chart {
+.mobile-morph-ui-chart--hero {
   display: flex;
   align-items: flex-end;
-  gap: 2px;
-  padding: 2px 3px;
-  border-radius: 2px;
+  gap: 3px;
+  padding: 3px 4px;
+  border-radius: 3px;
   background: rgba(56, 189, 248, 0.08);
-  border: 1px solid rgba(56, 189, 248, 0.18);
+  border: 1px solid rgba(56, 189, 248, 0.2);
   overflow: hidden;
-  animation: morphChartExpand 4.4s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+  animation: morphChartHeroExpand 2.1s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
 .mobile-morph-bar {
-  width: 4px;
-  border-radius: 1px 1px 0 0;
+  flex: 1;
+  min-width: 4px;
+  border-radius: 1.5px 1.5px 0 0;
   background: #38bdf8;
 }
 
@@ -3153,141 +3229,119 @@ body {
   height: 62%;
 }
 
-.mobile-morph-stand {
+.mobile-morph-stand--hero {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-top: -4px;
+  margin-top: -5px;
   transform-origin: top center;
-  animation: morphStandGrow 4.4s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+  animation: morphStandHeroGrow 2.1s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
-.mobile-morph-neck {
-  width: 14px;
-  height: 11px;
+.mobile-morph-neck--hero {
+  width: 18px;
+  height: 15px;
   background: linear-gradient(180deg, #94a3b8, #64748b);
-  border-radius: 0 0 2px 2px;
+  border-radius: 0 0 3px 3px;
 }
 
-.mobile-morph-base {
-  width: 42px;
-  height: 4px;
+.mobile-morph-base--hero {
+  width: 58px;
+  height: 5px;
   background: #cbd5e1;
   border-radius: 999px;
 }
 
-.mobile-notice-title {
-  margin: 0 0 8px;
-  font-size: 1.02rem;
+.mobile-notice-title--hero {
+  margin: 0 0 10px;
+  font-size: 1.24rem;
   font-weight: 700;
-  line-height: 1.32;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
   color: #f8fafc;
-  animation: noticeTextIn 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.16s both;
+  animation: noticeTextIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.7s both;
 }
 
-.mobile-notice-desc {
-  margin: 0 0 18px;
-  font-size: 0.82rem;
-  line-height: 1.48;
+.mobile-notice-desc--hero {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.55;
   color: #cbd5e1;
-  animation: noticeTextIn 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.28s both;
+  animation: noticeTextIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.9s both;
 }
 
-.mobile-notice-cta {
-  width: 100%;
-  justify-content: center;
-  padding: 9px 14px;
-  font-size: 0.85rem;
+@keyframes mobileSplashSpin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
-@keyframes morphPhoneToMonitor {
+@keyframes morphPhoneToMonitorHero {
   0%, 16% {
-    width: 34px;
-    height: 60px;
-    border-radius: 8px;
+    width: 48px;
+    height: 86px;
+    border-radius: 11px;
     border-color: #cbd5e1;
-    transform: translateY(6px);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.48);
+    transform: translateY(8px);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.55);
   }
-  38%, 78% {
-    width: 98px;
-    height: 58px;
-    border-radius: 7px;
+  72%, 100% {
+    width: 136px;
+    height: 82px;
+    border-radius: 9px;
     border-color: #f8fafc;
-    transform: translateY(-4px);
+    transform: translateY(-6px);
     box-shadow:
-      0 12px 26px rgba(0, 0, 0, 0.58),
-      0 0 18px rgba(249, 115, 22, 0.26);
-  }
-  92%, 100% {
-    width: 34px;
-    height: 60px;
-    border-radius: 8px;
-    border-color: #cbd5e1;
-    transform: translateY(6px);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.48);
+      0 18px 38px rgba(0, 0, 0, 0.66),
+      0 0 28px rgba(249, 115, 22, 0.32);
   }
 }
 
-@keyframes morphSpeakerFade {
+@keyframes morphSpeakerHeroFade {
   0%, 16% {
     opacity: 0.9;
   }
-  28%, 80% {
+  42%, 100% {
     opacity: 0;
   }
-  92%, 100% {
-    opacity: 0.9;
-  }
 }
 
-@keyframes morphChartExpand {
-  0%, 18% {
+@keyframes morphChartHeroExpand {
+  0%, 20% {
     flex: 0 0 0px;
     width: 0;
     padding: 0;
     border-width: 0;
     opacity: 0;
   }
-  38%, 78% {
-    flex: 0 0 32px;
-    width: 32px;
-    padding: 2px 3px;
+  72%, 100% {
+    flex: 0 0 50px;
+    width: 50px;
+    padding: 3px 4px;
     border-width: 1px;
     opacity: 1;
   }
-  92%, 100% {
-    flex: 0 0 0px;
-    width: 0;
-    padding: 0;
-    border-width: 0;
-    opacity: 0;
-  }
 }
 
-@keyframes morphStandGrow {
-  0%, 24% {
+@keyframes morphStandHeroGrow {
+  0%, 34% {
     opacity: 0;
-    transform: translateY(-4px) scaleY(0.2);
+    transform: translateY(-6px) scaleY(0.2);
   }
-  42%, 78% {
+  76%, 100% {
     opacity: 1;
     transform: translateY(0) scaleY(1);
   }
-  90%, 100% {
-    opacity: 0;
-    transform: translateY(-4px) scaleY(0.2);
-  }
 }
 
-@keyframes morphGlowPulse {
-  0%, 18%, 92%, 100% {
-    opacity: 0.35;
-    transform: scale(0.75);
+@keyframes morphGlowHero {
+  0% {
+    opacity: 0.25;
+    transform: scale(0.65);
   }
-  42%, 76% {
+  75%, 100% {
     opacity: 1;
-    transform: scale(1.1);
+    transform: scale(1.12);
   }
 }
 

@@ -1407,6 +1407,7 @@ export function App() {
 
       <MobileDesktopNotice
         lang={lang}
+        appReady={!loading || Boolean(error)}
         onToggleLang={() => setLang((prev) => (prev === 'pt' ? 'en' : 'pt'))}
       />
     </div>
