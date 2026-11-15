@@ -4,7 +4,7 @@ import type { ColorRamp, TimelinePoint } from '../types';
 
 interface BurningHeatmapProps {
   series: TimelinePoint[];
-  colorRamp: ColorRamp;
+  colorRamp?: ColorRamp;
   lang: Language;
   selectedPeriod?: string | null;
   onSelectPeriod?: (period: string | null) => void;
@@ -27,7 +27,7 @@ function getHeatColor(ratio: number, ramp: ColorRamp): string {
 
 export function BurningHeatmap({
   series,
-  colorRamp,
+  colorRamp = 'alert',
   lang,
   selectedPeriod,
   onSelectPeriod,
@@ -39,7 +39,7 @@ export function BurningHeatmap({
 
   return (
     <div className="panel heatmap-strip-panel">
-      <div className="panel-header" style={{ marginBottom: '10px' }}>
+      <div className="panel-header" style={{ marginBottom: '6px' }}>
         <h2 className="panel-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <Flame size={18} color="#f97316" />
           {t.heatmapTitle}

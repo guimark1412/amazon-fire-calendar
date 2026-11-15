@@ -22,6 +22,7 @@ import { getFires, getGrid, getRegions, getTimeline } from './api';
 import { BurningHeatmap } from './components/BurningHeatmap';
 import { CalendarMatrix } from './components/CalendarMatrix';
 import { DateRangePickerPopover } from './components/DateRangePickerPopover';
+import { EarlyWarningPopover } from './components/EarlyWarningPopover';
 import { currentYear, dryPeak, last7Days, yearToDate } from './dateUtils';
 import { FireCalendarChart } from './components/FireCalendarChart';
 import { FireMap } from './components/FireMap';
@@ -30,7 +31,6 @@ import { PitchModeModal, type WorkspaceView } from './components/PitchModeModal'
 import { I18N, type Language } from './i18n';
 import type {
   ChartViewMode,
-  ColorRamp,
   ConfidenceFilter,
   FiresResponse,
   Granularity,
@@ -50,7 +50,6 @@ export function App() {
   const [granularity, setGranularity] = useState<Granularity>('month');
   const [minConfidence, setMinConfidence] = useState<ConfidenceFilter>('all');
   const [viirsOnlyWeight, setViirsOnlyWeight] = useState<number>(0.85);
-  const [colorRamp, setColorRamp] = useState<ColorRamp>('alert');
 
   const [subfiltersOpen, setSubfiltersOpen] = useState<boolean>(false);
   const [customBbox, setCustomBbox] = useState<[number, number, number, number] | null>(null);
@@ -981,7 +980,6 @@ export function App() {
                 gridCells={gridData?.cells ?? []}
                 viewMode={mapMode}
                 sensor={sensor}
-                colorRamp={colorRamp}
                 center={activeRegion.center}
                 zoom={activeRegion.zoom}
                 lang={lang}
@@ -998,24 +996,15 @@ export function App() {
                 {mapMode === 'grid' ? (
                   <>
                     <span>
-                      <span
-                        className="legend-dot"
-                        style={{ background: colorRamp === 'viridis' ? '#fde725' : '#ef4444' }}
-                      />
+                      <span className="legend-dot" style={{ background: '#ef4444' }} />
                       {t.legendCrit}
                     </span>
                     <span>
-                      <span
-                        className="legend-dot"
-                        style={{ background: colorRamp === 'viridis' ? '#21918c' : '#f59e0b' }}
-                      />
+                      <span className="legend-dot" style={{ background: '#f59e0b' }} />
                       {t.legendElev}
                     </span>
                     <span>
-                      <span
-                        className="legend-dot"
-                        style={{ background: colorRamp === 'viridis' ? '#440154' : '#10b981' }}
-                      />
+                      <span className="legend-dot" style={{ background: '#10b981' }} />
                       {t.legendNorm}
                     </span>
                   </>
@@ -1103,7 +1092,7 @@ export function App() {
 
       {activeView === 'matrix' && (
         <div className="matrix-view-stack">
-          <div className="map-period-inline-row" style={{ marginTop: 0 }}>
+          <div className="map-period-inline-row matrix-top-bar" style={{ marginTop: 0 }}>
             <DateRangePickerPopover
               variant="inline"
               startDate={dateRange.start}
@@ -1115,22 +1104,17 @@ export function App() {
               onSelectPeriod={handleSelectPeriodFromCalendar}
               onClearPeriod={() => setSelectedPeriod(null)}
             />
+            <EarlyWarningPopover summary={summary} regionName={activeRegion.name} lang={lang} />
           </div>
           <BurningHeatmap
             series={timelineData?.series ?? []}
-            colorRamp={colorRamp}
             lang={lang}
             selectedPeriod={selectedPeriod}
             onSelectPeriod={handleSelectPeriodFromViz}
           />
           <CalendarMatrix
             series={timelineData?.series ?? []}
-            summary={summary}
-            diagnostics={timelineData?.diagnostics}
-            regionName={activeRegion.name}
             lang={lang}
-            colorRamp={colorRamp}
-            onChangeColorRamp={setColorRamp}
             selectedPeriod={selectedPeriod}
             onSelectPeriod={handleSelectPeriodFromViz}
           />

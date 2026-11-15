@@ -5,7 +5,7 @@ export type DayNightFilter = 'all' | 'D' | 'N';
 export type ConfidenceFilter = 'all' | 'nominal' | 'high';
 export type MapViewMode = 'points' | 'footprints' | 'grid';
 export type ChartViewMode = 'harmonized' | 'raw' | 'coincidence' | 'frp';
-export type MatrixMetric = 'harmonized' | 'frp' | 'zscore';
+export type MatrixMetric = 'harmonized' | 'frp';
 export type ColorRamp = 'alert' | 'viridis';
 
 export interface RegionInfo {

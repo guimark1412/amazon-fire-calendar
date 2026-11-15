@@ -1,68 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
-import {
-  Activity,
-  AlertTriangle,
-  Calendar,
-  ChevronDown,
-  ChevronRight,
-  Eye,
-  Flame,
-  Scan,
-  ShieldAlert,
-} from 'lucide-react';
-import { formatRecommendation, I18N, type Language } from '../i18n';
-import type {
-  AlertLevel,
-  ColorRamp,
-  HarmonizationDiagnostics,
-  MatrixMetric,
-  TimelinePoint,
-  TimelineSummary,
-} from '../types';
+import { Calendar, ChevronDown, ChevronRight } from 'lucide-react';
+import { parsePeriodInfo } from '../dateUtils';
+import { I18N, type Language } from '../i18n';
+import type { AlertLevel, MatrixMetric, TimelinePoint } from '../types';
 
 interface CalendarMatrixProps {
   series: TimelinePoint[];
-  summary?: TimelineSummary;
-  diagnostics?: HarmonizationDiagnostics;
-  regionName: string;
   lang: Language;
-  colorRamp?: ColorRamp;
-  onChangeColorRamp?: (ramp: ColorRamp) => void;
   selectedPeriod?: string | null;
   onSelectPeriod?: (period: string | null) => void;
-}
-
-interface PeriodInfo {
-  label: string;
-  sublabel: string;
-  quarterIdx: number;
-}
-
-function parsePeriodInfo(period: string, months: readonly string[], weekPrefix: string): PeriodInfo {
-  const monthMatch = /^(\d{4})-(\d{2})$/.exec(period);
-  if (monthMatch) {
-    const [, year, month] = monthMatch;
-    const idx = Math.max(0, Math.min(11, parseInt(month, 10) - 1));
-    return {
-      label: `${months[idx] ?? month}/${year.slice(2)}`,
-      sublabel: '',
-      quarterIdx: Math.min(3, Math.floor(idx / 3)),
-    };
-  }
-
-  const weekMatch = /^(\d{4})-W(\d{2})$/.exec(period);
-  if (weekMatch) {
-    const [, year, weekStr] = weekMatch;
-    const weekNum = parseInt(weekStr, 10);
-    const monthIdx = Math.min(11, Math.max(0, Math.floor((weekNum - 1) / 4.345)));
-    return {
-      label: `${weekPrefix} ${String(weekNum).padStart(2, '0')}`,
-      sublabel: `${months[monthIdx]}/${year.slice(2)}`,
-      quarterIdx: Math.min(3, Math.floor(monthIdx / 3)),
-    };
-  }
-
-  return { label: period, sublabel: '', quarterIdx: 0 };
 }
 
 function formatMetric(value: number): string {
@@ -74,19 +20,13 @@ function formatMetric(value: number): string {
 
 export function CalendarMatrix({
   series,
-  summary,
-  diagnostics,
-  regionName,
   lang,
-  colorRamp = 'alert',
-  onChangeColorRamp,
   selectedPeriod,
   onSelectPeriod,
 }: CalendarMatrixProps) {
   const t = I18N[lang];
   const [statusFilter, setStatusFilter] = useState<'all' | AlertLevel>('all');
   const [metric, setMetric] = useState<MatrixMetric>('harmonized');
-  const [detailsOpen, setDetailsOpen] = useState<boolean>(false);
 
   const isWeekly = useMemo(() => series.some((item) => item.period.includes('-W')), [series]);
 
@@ -145,38 +85,19 @@ export function CalendarMatrix({
     }
   };
 
-  const peakInfo = summary
-    ? parsePeriodInfo(summary.peak_period, t.months, t.weekPrefix)
-    : null;
-  const peakText = peakInfo
-    ? peakInfo.sublabel
-      ? `${peakInfo.label} · ${peakInfo.sublabel}`
-      : peakInfo.label
-    : '—';
-
   const renderCard = (item: TimelinePoint) => {
     const info = parsePeriodInfo(item.period, t.months, t.weekPrefix);
     const fillPct = Math.min(
       100,
       item.historical_avg > 0 ? Math.round((item.harmonized_total / item.historical_avg) * 50) : 50,
     );
-
-    const zscore = item.anomaly_zscore ?? Number(((item.deviation_pct || 0) / 28).toFixed(2));
     const frpVal = item.harmonized_frp ?? 0;
-    const cardClass =
-      colorRamp === 'viridis'
-        ? `month-card month-viridis-${item.alert_level}`
-        : `month-card month-${item.alert_level}`;
-    const barClass =
-      colorRamp === 'viridis'
-        ? `month-bar-fill bar-viridis-${item.alert_level}`
-        : `month-bar-fill bar-${item.alert_level}`;
-
     const isSelected = selectedPeriod === item.period;
+
     return (
       <div
         key={item.period}
-        className={cardClass}
+        className={`month-card month-${item.alert_level}`}
         onClick={() => onSelectPeriod?.(isSelected ? null : item.period)}
         title={
           item.coincident_viirs !== undefined
@@ -200,7 +121,7 @@ export function CalendarMatrix({
         </div>
 
         <div className="month-values">
-          {metric === 'harmonized' && (
+          {metric === 'harmonized' ? (
             <>
               <div>
                 <span className="month-val-label">{t.harmLabel}</span>
@@ -211,9 +132,7 @@ export function CalendarMatrix({
                 <span className="month-val-base">{formatMetric(item.historical_avg)}</span>
               </div>
             </>
-          )}
-
-          {metric === 'frp' && (
+          ) : (
             <>
               <div>
                 <span className="month-val-label">{t.frpLabel}</span>
@@ -225,27 +144,11 @@ export function CalendarMatrix({
               </div>
             </>
           )}
-
-          {metric === 'zscore' && (
-            <>
-              <div>
-                <span className="month-val-label">{t.zscoreLabel}</span>
-                <strong className="month-val-num">
-                  {zscore >= 0 ? '+' : ''}
-                  {zscore.toFixed(2)}σ
-                </strong>
-              </div>
-              <div style={{ textAlign: 'right' }}>
-                <span className="month-val-label">{t.harmLabel}</span>
-                <span className="month-val-base">{formatMetric(item.harmonized_total)}</span>
-              </div>
-            </>
-          )}
         </div>
 
         <div className="month-bar-track">
           <div className="month-bar-baseline" title={t.modisAvgLabel} />
-          <div className={barClass} style={{ width: `${fillPct}%` }} />
+          <div className={`month-bar-fill bar-${item.alert_level}`} style={{ width: `${fillPct}%` }} />
         </div>
 
         <div className="month-deviation">
@@ -261,123 +164,6 @@ export function CalendarMatrix({
 
   return (
     <section className="calendar-matrix-section" data-tour="calendar-matrix">
-      {(summary || diagnostics) && (
-        <div className={`warning-banner warning-collapsible warning-${summary?.early_warning_status ?? 'normal'}`}>
-          <div className="warning-summary-row">
-            <div className="warning-title-row">
-              {summary && (
-                <>
-                  <ShieldAlert size={18} />
-                  <strong>{t.earlyWarningTitle}</strong>
-                  <span className={`badge badge-${summary.early_warning_status}`}>
-                    <AlertTriangle size={12} />
-                    {t.alertLabels[summary.early_warning_status]}
-                  </span>
-                </>
-              )}
-              {summary && (
-                <div className="warning-inline-stats">
-                  <span>
-                    {t.ytdLabel}: <strong>{summary.ytd_harmonized.toFixed(1)}</strong>{' '}
-                    <span className="warning-kpi-muted">/ {summary.ytd_historical.toFixed(1)}</span>{' '}
-                    <strong className={`dev-${summary.early_warning_status}`}>
-                      ({summary.ytd_deviation_pct >= 0 ? '+' : ''}
-                      {summary.ytd_deviation_pct.toFixed(1)}%)
-                    </strong>
-                  </span>
-                  <span>
-                    {t.peakLabel}: <strong>{peakText}</strong>
-                  </span>
-                  <span>
-                    {t.proj60dLabel}:{' '}
-                    <strong className={`dev-${summary.early_warning_status}`}>
-                      {summary.ytd_deviation_pct >= 15
-                        ? t.projHigh
-                        : summary.ytd_deviation_pct >= 5
-                          ? t.projMod
-                          : t.projStable}
-                    </strong>
-                  </span>
-                </div>
-              )}
-            </div>
-
-            <button
-              type="button"
-              className="control-select control-select-sm action-btn"
-              onClick={() => setDetailsOpen((prev) => !prev)}
-              aria-expanded={detailsOpen}
-            >
-              {t.physDiagToggle}
-              {detailsOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-            </button>
-          </div>
-
-          {detailsOpen && (
-            <div className="warning-expanded-body">
-              {summary && (
-                <p className="warning-recommendation">
-                  {formatRecommendation(
-                    lang,
-                    regionName,
-                    summary.early_warning_status,
-                    summary.ytd_deviation_pct,
-                  )}
-                </p>
-              )}
-
-              {diagnostics && (
-                <div className="diag-strip">
-                  <div className="diag-card">
-                    <div className="diag-icon">
-                      <Scan size={17} />
-                    </div>
-                    <div>
-                      <span className="diag-title">{t.diagFootprintTitle}</span>
-                      <p className="diag-sub">
-                        {t.diagFootprintSub(
-                          diagnostics.avg_modis_footprint_km2,
-                          diagnostics.avg_viirs_footprint_km2,
-                          diagnostics.effective_area_ratio,
-                        )}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="diag-card">
-                    <div className="diag-icon">
-                      <Activity size={17} />
-                    </div>
-                    <div>
-                      <span className="diag-title">{t.diagCoincTitle}</span>
-                      <p className="diag-sub">
-                        {t.diagCoincSub(
-                          diagnostics.coincident_viirs,
-                          diagnostics.viirs_only_small_fires,
-                          diagnostics.viirs_only_pct,
-                        )}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="diag-card">
-                    <div className="diag-icon">
-                      <Flame size={17} />
-                    </div>
-                    <div>
-                      <span className="diag-title">{t.diagFrpTitle}</span>
-                      <p className="diag-sub">
-                        {t.diagFrpSub(diagnostics.total_frp_mw, diagnostics.avg_frp_mw)}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      )}
-
       <div className="panel">
         <div className="panel-header">
           <div>
@@ -404,26 +190,7 @@ export function CalendarMatrix({
               >
                 {t.metricFrpBtn}
               </button>
-              <button
-                type="button"
-                className={`toggle-btn ${metric === 'zscore' ? 'active' : ''}`}
-                onClick={() => setMetric('zscore')}
-              >
-                {t.metricZscoreBtn}
-              </button>
             </div>
-
-            {onChangeColorRamp && (
-              <button
-                type="button"
-                className="control-select action-btn"
-                onClick={() => onChangeColorRamp(colorRamp === 'alert' ? 'viridis' : 'alert')}
-                title="Switch color ramp"
-              >
-                <Eye size={14} />
-                {colorRamp === 'viridis' ? t.rampViridisBtn : t.rampAlertBtn}
-              </button>
-            )}
 
             <div className="matrix-filter-bar" role="group" aria-label="Filter periods by status">
               {(['all', 'critical', 'elevated', 'normal'] as const).map((status) => {

@@ -170,6 +170,9 @@ export const I18N = {
     diagFrpSub: (totalMw: number, avgMw: number) =>
       `${totalMw.toLocaleString('pt-BR')} MW acumulados (média ${avgMw} MW/foco)`,
     earlyWarningTitle: 'Alerta Precoce',
+    alertPopoverDesc:
+      'Soma do Índice Harmonizado de todo o período carregado comparada à média MODIS esperada.',
+    alertThresholdHint: 'Normal < +10% · Elevado +10% a +34% · Crítico ≥ +35%',
     ytdLabel: 'Acumulado',
     vsBase: 'vs. Base',
     peakLabel: 'Pico',
@@ -436,6 +439,9 @@ export const I18N = {
     diagFrpSub: (totalMw: number, avgMw: number) =>
       `${totalMw.toLocaleString('en-US')} MW cumulative (avg ${avgMw} MW/hotspot)`,
     earlyWarningTitle: 'Early Warning',
+    alertPopoverDesc:
+      'Cumulative Harmonized Index across loaded periods compared against expected MODIS average.',
+    alertThresholdHint: 'Normal < +10% · Elevated +10% to +34% · Critical ≥ +35%',
     ytdLabel: 'Cumulative',
     vsBase: 'vs. Baseline',
     peakLabel: 'Peak',
