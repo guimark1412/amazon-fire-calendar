@@ -73,7 +73,10 @@ export function App() {
   const [pitchOpen, setPitchOpen] = useState<boolean>(false);
   const [exportMenuOpen, setExportMenuOpen] = useState<boolean>(false);
   const [scienceDetailsOpen, setScienceDetailsOpen] = useState<boolean>(false);
+  const [aoiError, setAoiError] = useState<boolean>(false);
+  const [retryNonce, setRetryNonce] = useState<number>(0);
   const exportMenuRef = useRef<HTMLDivElement | null>(null);
+  const aoiPopoverRef = useRef<HTMLDivElement | null>(null);
   const [selectedPeriod, setSelectedPeriod] = useState<string | null>(null);
   const [dateRange, setDateRange] = useState<{ start: string | null; end: string | null }>({
     start: null,
@@ -91,6 +94,24 @@ export function App() {
     return () => window.removeEventListener('mousedown', handleOutside);
   }, [exportMenuOpen]);
 
+  useEffect(() => {
+    if (!aoiPanelOpen) return;
+    const handleOutside = (e: MouseEvent) => {
+      if (aoiPopoverRef.current && !aoiPopoverRef.current.contains(e.target as Node)) {
+        setAoiPanelOpen(false);
+      }
+    };
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setAoiPanelOpen(false);
+    };
+    window.addEventListener('mousedown', handleOutside);
+    window.addEventListener('keydown', handleEsc);
+    return () => {
+      window.removeEventListener('mousedown', handleOutside);
+      window.removeEventListener('keydown', handleEsc);
+    };
+  }, [aoiPanelOpen]);
+
   const [firesData, setFiresData] = useState<FiresResponse | null>(null);
   const [gridData, setGridData] = useState<GridResponse | null>(null);
   const [timelineData, setTimelineData] = useState<TimelineResponse | null>(null);
@@ -104,10 +125,20 @@ export function App() {
   const bboxParam = customBbox ? customBbox.join(',') : null;
 
   useEffect(() => {
+    let cancelled = false;
     getRegions()
-      .then(setRegions)
-      .catch((err) => setError(err instanceof Error ? err.message : 'Error loading regions'));
-  }, []);
+      .then((res) => {
+        if (!cancelled) setRegions(res);
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : 'Error loading regions');
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [retryNonce]);
 
   useEffect(() => {
     let cancelled = false;
@@ -140,7 +171,7 @@ export function App() {
     return () => {
       cancelled = true;
     };
-  }, [selectedRegion, sensor, bboxParam, minConfidence, selectedPeriod, dateRange.start, dateRange.end]);
+  }, [selectedRegion, sensor, bboxParam, minConfidence, selectedPeriod, dateRange.start, dateRange.end, retryNonce]);
 
   useEffect(() => {
     let cancelled = false;
@@ -179,6 +210,7 @@ export function App() {
     minConfidence,
     viirsOnlyWeight,
     sensor,
+    retryNonce,
   ]);
 
   useEffect(() => {
@@ -228,6 +260,7 @@ export function App() {
     selectedPeriod,
     dateRange.start,
     dateRange.end,
+    retryNonce,
   ]);
 
   const activeRegion = useMemo(() => {
@@ -271,8 +304,7 @@ export function App() {
   const hasActiveSubfilters =
     subfiltersOpen ||
     minConfidence !== 'all' ||
-    viirsOnlyWeight !== 0.85 ||
-    customBbox !== null;
+    viirsOnlyWeight !== 0.85;
 
   const handleSelectPeriodFromViz = (period: string | null) => {
     setSelectedPeriod(period);
@@ -310,8 +342,12 @@ export function App() {
     const e = parseFloat(bboxInputs.east);
     const n = parseFloat(bboxInputs.north);
     if (!Number.isNaN(w) && !Number.isNaN(s) && !Number.isNaN(e) && !Number.isNaN(n) && w < e && s < n) {
+      setAoiError(false);
       setCustomBbox([w, s, e, n]);
       setIsDrawingAoi(false);
+      setAoiPanelOpen(false);
+    } else {
+      setAoiError(true);
     }
   };
 
@@ -580,14 +616,133 @@ export function App() {
               ))}
             </select>
 
-            <button
-              type="button"
-              className={`control-select action-btn ${customBbox || aoiPanelOpen ? 'aoi-active-btn' : ''}`}
-              onClick={() => setAoiPanelOpen((prev) => !prev)}
-            >
-              <Crosshair size={14} />
-              {t.customAoiBtn}
-            </button>
+            <div className="aoi-anchor" ref={aoiPopoverRef}>
+              <button
+                type="button"
+                className={`control-select action-btn ${customBbox || aoiPanelOpen || isDrawingAoi ? 'aoi-active-btn' : ''}`}
+                aria-expanded={aoiPanelOpen}
+                aria-haspopup="dialog"
+                onClick={() => {
+                  setAoiError(false);
+                  setAoiPanelOpen((prev) => !prev);
+                }}
+              >
+                <Crosshair size={14} />
+                {t.customAoiBtn}
+              </button>
+
+              {aoiPanelOpen && (
+                <div className="aoi-popover" role="dialog" aria-label={t.aoiPopoverTitle}>
+                  <div className="aoi-popover-header">
+                    <span className="aoi-popover-title">
+                      <Crosshair size={14} color="#38bdf8" />
+                      {t.aoiPopoverTitle}
+                    </span>
+                    <button
+                      type="button"
+                      className="aoi-popover-close"
+                      onClick={() => setAoiPanelOpen(false)}
+                      aria-label="Close AOI card"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+
+                  <p className="aoi-popover-desc">{t.aoiInstruction}</p>
+
+                  <div className="aoi-popover-actions">
+                    <button
+                      type="button"
+                      className={`control-select control-select-sm action-btn aoi-draw-btn ${isDrawingAoi ? 'pitch-btn' : ''}`}
+                      onClick={() => {
+                        setActiveView('overview');
+                        setIsDrawingAoi((prev) => !prev);
+                        setAoiPanelOpen(false);
+                      }}
+                    >
+                      <Crosshair size={14} />
+                      {isDrawingAoi ? t.cancelDrawBtn : t.drawAoiBtn}
+                    </button>
+                    {customBbox && (
+                      <button
+                        type="button"
+                        className="control-select control-select-sm action-btn"
+                        onClick={() => {
+                          setCustomBbox(null);
+                          setIsDrawingAoi(false);
+                          setAoiError(false);
+                          setAoiPanelOpen(false);
+                        }}
+                      >
+                        <X size={14} />
+                        {t.clearAoiBtn}
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="aoi-coords-grid">
+                    <label>
+                      <span>West (Lon)</span>
+                      <input
+                        type="number"
+                        step="0.5"
+                        value={bboxInputs.west}
+                        onChange={(e) => {
+                          setAoiError(false);
+                          setBboxInputs((s) => ({ ...s, west: e.target.value }));
+                        }}
+                      />
+                    </label>
+                    <label>
+                      <span>South (Lat)</span>
+                      <input
+                        type="number"
+                        step="0.5"
+                        value={bboxInputs.south}
+                        onChange={(e) => {
+                          setAoiError(false);
+                          setBboxInputs((s) => ({ ...s, south: e.target.value }));
+                        }}
+                      />
+                    </label>
+                    <label>
+                      <span>East (Lon)</span>
+                      <input
+                        type="number"
+                        step="0.5"
+                        value={bboxInputs.east}
+                        onChange={(e) => {
+                          setAoiError(false);
+                          setBboxInputs((s) => ({ ...s, east: e.target.value }));
+                        }}
+                      />
+                    </label>
+                    <label>
+                      <span>North (Lat)</span>
+                      <input
+                        type="number"
+                        step="0.5"
+                        value={bboxInputs.north}
+                        onChange={(e) => {
+                          setAoiError(false);
+                          setBboxInputs((s) => ({ ...s, north: e.target.value }));
+                        }}
+                      />
+                    </label>
+                  </div>
+
+                  {aoiError && <p className="aoi-error-hint">{t.aoiInvalidBounds}</p>}
+
+                  <button
+                    type="button"
+                    className="control-select action-btn pitch-btn aoi-apply-full"
+                    onClick={handleApplyCoords}
+                  >
+                    {t.applyCoordsBtn}
+                  </button>
+                </div>
+              )}
+            </div>
 
             <div className="toggle-group" role="group" aria-label="Sensor filter">
               {(['both', 'MODIS', 'VIIRS'] as SensorFilter[]).map((s) => (
@@ -703,8 +858,62 @@ export function App() {
                 </select>
               </label>
             </div>
+          </div>
+        )}
+      </header>
 
-            {customBbox && (
+      {error && (
+        <div className="error-banner" role="alert">
+          <div className="error-banner-text">
+            <strong>{error}</strong>
+            {(error.includes('Failed to fetch') ||
+              error.includes('502') ||
+              error.includes('503') ||
+              error.includes('504')) && (
+              <span className="error-banner-detail">{t.backendWakeHint}</span>
+            )}
+          </div>
+          <button
+            type="button"
+            className="control-select action-btn"
+            onClick={() => setRetryNonce((n) => n + 1)}
+          >
+            {t.retryBtn}
+          </button>
+        </div>
+      )}
+
+      {activeView === 'overview' && (
+        <>
+          <div className="map-period-inline-row overview-period-bar">
+            <DateRangePickerPopover
+              variant="inline"
+              startDate={dateRange.start}
+              endDate={dateRange.end}
+              granularity={granularity}
+              selectedPeriod={selectedPeriod}
+              lang={lang}
+              onApplyRange={handleApplyDateRange}
+              onSelectPeriod={handleSelectPeriodFromCalendar}
+              onClearPeriod={() => setSelectedPeriod(null)}
+            />
+
+            {isDrawingAoi && (
+              <div className="active-aoi-pill">
+                <Crosshair size={13} />
+                <span>{t.aoiDrawingBanner}</span>
+                <button
+                  type="button"
+                  className="aoi-clear-inline"
+                  onClick={() => setIsDrawingAoi(false)}
+                >
+                  <X size={13} />
+                  {t.cancelDrawBtn}
+                </button>
+              </div>
+            )}
+
+            {customBbox && !isDrawingAoi && (
               <div className="active-aoi-pill">
                 <Crosshair size={13} />
                 <span>{activeRegion.name}</span>
@@ -721,106 +930,6 @@ export function App() {
                 </button>
               </div>
             )}
-          </div>
-        )}
-
-        {aoiPanelOpen && (
-          <div className="aoi-drawer">
-            <div className="aoi-drawer-top">
-              <span>{t.aoiInstruction}</span>
-              <div className="aoi-actions">
-                <button
-                  type="button"
-                  className={`control-select action-btn ${isDrawingAoi ? 'pitch-btn' : ''}`}
-                  onClick={() => {
-                    setActiveView('overview');
-                    setIsDrawingAoi((prev) => !prev);
-                  }}
-                >
-                  <Crosshair size={14} />
-                  {isDrawingAoi ? t.cancelDrawBtn : t.drawAoiBtn}
-                </button>
-                {customBbox && (
-                  <button
-                    type="button"
-                    className="control-select action-btn"
-                    onClick={() => {
-                      setCustomBbox(null);
-                      setIsDrawingAoi(false);
-                    }}
-                  >
-                    <X size={14} />
-                    {t.clearAoiBtn}
-                  </button>
-                )}
-              </div>
-            </div>
-
-            <div className="aoi-coords-row">
-              <label>
-                <span>West (Lon)</span>
-                <input
-                  type="number"
-                  step="0.5"
-                  value={bboxInputs.west}
-                  onChange={(e) => setBboxInputs((s) => ({ ...s, west: e.target.value }))}
-                />
-              </label>
-              <label>
-                <span>South (Lat)</span>
-                <input
-                  type="number"
-                  step="0.5"
-                  value={bboxInputs.south}
-                  onChange={(e) => setBboxInputs((s) => ({ ...s, south: e.target.value }))}
-                />
-              </label>
-              <label>
-                <span>East (Lon)</span>
-                <input
-                  type="number"
-                  step="0.5"
-                  value={bboxInputs.east}
-                  onChange={(e) => setBboxInputs((s) => ({ ...s, east: e.target.value }))}
-                />
-              </label>
-              <label>
-                <span>North (Lat)</span>
-                <input
-                  type="number"
-                  step="0.5"
-                  value={bboxInputs.north}
-                  onChange={(e) => setBboxInputs((s) => ({ ...s, north: e.target.value }))}
-                />
-              </label>
-              <button
-                type="button"
-                className="control-select action-btn pitch-btn"
-                onClick={handleApplyCoords}
-              >
-                {t.applyCoordsBtn}
-              </button>
-            </div>
-          </div>
-        )}
-      </header>
-
-      {error && <div className="error-banner">{error}</div>}
-
-      {activeView === 'overview' && (
-        <>
-          <div className="map-period-inline-row overview-period-bar">
-            <DateRangePickerPopover
-              variant="inline"
-              startDate={dateRange.start}
-              endDate={dateRange.end}
-              granularity={granularity}
-              selectedPeriod={selectedPeriod}
-              lang={lang}
-              onApplyRange={handleApplyDateRange}
-              onSelectPeriod={handleSelectPeriodFromCalendar}
-              onClearPeriod={() => setSelectedPeriod(null)}
-            />
           </div>
 
           <main className="main-grid">

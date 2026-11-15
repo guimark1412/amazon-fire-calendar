@@ -381,3 +381,60 @@ def test_dynamic_historical_baseline_matches_prior_years():
     # Tiny sparse custom AOI safely falls back without zero/division issues
     tl_tiny = client.get("/api/timeline?bbox=-60.1,-3.2,-59.9,-3.0&granularity=month").json()
     assert all(pt["historical_avg"] >= 0.5 for pt in tl_tiny["series"])
+
+
+def test_concurrent_live_fetches_single_flight(monkeypatch):
+    """Concurrent cold requests for the same live source must share a single FIRMS download."""
+    import threading
+    import time
+    from concurrent.futures import ThreadPoolExecutor
+    from datetime import datetime, timezone
+    from app import firms_client
+
+    today_iso = datetime.now(timezone.utc).date().isoformat()
+    monkeypatch.setenv("FIRMS_MAP_KEY", "test_dummy_key")
+    monkeypatch.setattr(firms_client, "_LIVE_CACHE", {})
+    monkeypatch.setattr(firms_client, "_FETCH_LOCKS", {})
+
+    call_count = 0
+    count_lock = threading.Lock()
+
+    def fake_fetch_chunks(map_key, area_str, firms_source, label, chunks):
+        nonlocal call_count
+        time.sleep(0.05)
+        with count_lock:
+            call_count += 1
+        return ([
+            {
+                "latitude": -5.0,
+                "longitude": -60.0,
+                "brightness": 325.0,
+                "acq_date": today_iso,
+                "acq_time": "1430",
+                "satellite": "Terra",
+                "sensor": "MODIS",
+                "frp": 42.0,
+                "confidence": "85",
+                "confidence_level": "high",
+                "scan": 1.0,
+                "track": 1.0,
+                "pixel_area_km2": 1.0,
+                "daynight": "D",
+            }
+        ], 1)
+
+    monkeypatch.setattr(firms_client, "_fetch_source_chunks", fake_fetch_chunks)
+
+    with ThreadPoolExecutor(max_workers=3) as pool:
+        futures = [
+            pool.submit(firms_client.get_fire_records, "amazonia_legal", sensor="MODIS", days=7)
+            for _ in range(3)
+        ]
+        results = [fut.result() for fut in futures]
+
+    assert call_count == 1
+    assert len(results) == 3
+    for records, source in results:
+        assert "live_nasa_firms" in source
+        assert any(r["acq_date"] == today_iso for r in records)
+

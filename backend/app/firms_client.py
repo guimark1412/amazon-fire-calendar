@@ -4,6 +4,7 @@ from datetime import date, datetime, timedelta, timezone
 import io
 import logging
 import os
+import threading
 import time
 import urllib.request
 from pathlib import Path
@@ -28,8 +29,10 @@ DATA_FILE = Path(__file__).resolve().parent.parent / "data" / "amazon_sample_fir
 FIRMS_BASE_URL = "https://firms.modaps.eosdis.nasa.gov/api/area/csv"
 _LIVE_CACHE: Dict[Tuple[str, int, str], Tuple[float, List[Dict[str, Any]]]] = {}
 _BASELINE_CACHE: Dict[Tuple[str, Tuple[float, float, float, float]], Tuple[float, ...]] = {}
+_FETCH_LOCKS: Dict[Tuple[str, int, str], threading.Lock] = {}
+_FETCH_LOCKS_GUARD = threading.Lock()
 BASELINE_YEARS = ("2024", "2025")
-CACHE_TTL_SECONDS = 300.0
+CACHE_TTL_SECONDS = 600.0
 VIIRS_PRIMARY_SOURCE = "VIIRS_NOAA20_NRT"
 VIIRS_FALLBACK_SOURCES = ("VIIRS_NOAA21_NRT", "VIIRS_SNPP_NRT")
 
@@ -234,7 +237,7 @@ def _find_cached_enclosing_records(
 ) -> Optional[List[Dict[str, Any]]]:
     """Reuse fresh cached records from an enclosing bbox (e.g. Amazonia Legal -> Mato Grosso)."""
     west, south, east, north = bbox
-    for (c_area, c_days, c_src), (ts, cached_records) in _LIVE_CACHE.items():
+    for (c_area, c_days, c_src), (ts, cached_records) in list(_LIVE_CACHE.items()):
         if c_days != clamped_days or c_src != firms_source or now - ts >= CACHE_TTL_SECONDS:
             continue
         parts = [float(p) for p in c_area.split(",")]
@@ -330,20 +333,31 @@ def _fetch_live_firms(
             total_ok_sources += 1
             continue
 
-        source_records: List[Dict[str, Any]] = []
-        source_succeeded = False
-        for firms_source in candidate_sources:
-            rows, ok_chunks = _fetch_source_chunks(map_key, area_str, firms_source, label, chunks)
-            if ok_chunks > 0:
-                source_succeeded = True
-                source_records = _dedupe_and_trim_live(rows, clamped_days)
-                if source_records or firms_source == candidate_sources[-1]:
-                    _LIVE_CACHE[(area_str, clamped_days, primary_source)] = (time.time(), source_records)
-                    break
+        lock_key = (area_str, clamped_days, primary_source)
+        with _FETCH_LOCKS_GUARD:
+            source_lock = _FETCH_LOCKS.setdefault(lock_key, threading.Lock())
 
-        if source_succeeded:
-            total_ok_sources += 1
-            records.extend(source_records)
+        with source_lock:
+            enclosing = _find_cached_enclosing_records(region.bbox, clamped_days, primary_source, time.time())
+            if enclosing is not None:
+                records.extend(enclosing)
+                total_ok_sources += 1
+                continue
+
+            source_records: List[Dict[str, Any]] = []
+            source_succeeded = False
+            for firms_source in candidate_sources:
+                rows, ok_chunks = _fetch_source_chunks(map_key, area_str, firms_source, label, chunks)
+                if ok_chunks > 0:
+                    source_succeeded = True
+                    source_records = _dedupe_and_trim_live(rows, clamped_days)
+                    if source_records or firms_source == candidate_sources[-1]:
+                        _LIVE_CACHE[(area_str, clamped_days, primary_source)] = (time.time(), source_records)
+                        break
+
+            if source_succeeded:
+                total_ok_sources += 1
+                records.extend(source_records)
 
     if total_ok_sources == 0:
         raise RuntimeError("All NASA FIRMS NRT requests failed")

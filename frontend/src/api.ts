@@ -10,13 +10,36 @@ import type {
 } from './types';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const RETRY_DELAYS_MS = [1800, 3200, 5000];
+const TRANSIENT_STATUSES = new Set([502, 503, 504]);
 
 async function fetchJson<T>(path: string): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`);
-  if (!res.ok) {
-    throw new Error(`API error ${res.status}: ${await res.text()}`);
+  const url = `${API_BASE}${path}`;
+  let lastError: unknown;
+
+  for (let attempt = 0; attempt <= RETRY_DELAYS_MS.length; attempt += 1) {
+    try {
+      const res = await fetch(url);
+      if (res.ok) {
+        return (await res.json()) as Promise<T>;
+      }
+      const errText = await res.text();
+      if (TRANSIENT_STATUSES.has(res.status) && attempt < RETRY_DELAYS_MS.length) {
+        await new Promise((resolve) => setTimeout(resolve, RETRY_DELAYS_MS[attempt]));
+        continue;
+      }
+      throw new Error(`API error ${res.status}: ${errText}`);
+    } catch (err) {
+      lastError = err;
+      if (err instanceof TypeError && attempt < RETRY_DELAYS_MS.length) {
+        await new Promise((resolve) => setTimeout(resolve, RETRY_DELAYS_MS[attempt]));
+        continue;
+      }
+      throw err;
+    }
   }
-  return res.json() as Promise<T>;
+
+  throw lastError instanceof Error ? lastError : new Error('Network error');
 }
 
 export async function getRegions(): Promise<RegionInfo[]> {
