@@ -50,7 +50,7 @@ Painel web interativo, bilíngue (detecção automática de **Português `PT`** 
 1. **Correção de Geometria Orbital (`scan × track`):** combina a razão empírica MODIS/VIIRS nos períodos de sobreposição com a razão efetiva de área do pixel (`avg_viirs_area / avg_modis_area`), mantendo o mesmo fator ancorado em ambos os sensores inclusive em consultas de sensor único (`MODIS` ou `VIIRS`).
 2. **Clusterização Espaço-Temporal:** separa detecções VIIRS coincidentes com eventos MODIS (`coincident_viirs`) de pequenos focos isolados (`viirs_only_small`), ponderados por `viirs_only_weight` (`0.0–1.0`, padrão `0.85`).
 3. **Baseline Dinâmica, Alertas & Visão Semanal:** recalcula dinamicamente a **Média MODIS** de referência (`2024–2025`) para cada região ou `AOI`, aplica guarda de excesso absoluto em `_classify_alert` para evitar falsos alertas em meses com baseline baixa e divide a média mensal pela contagem real de semanas ativas no modo semanal (`YYYY-Www`).
-4. **Integração Ao Vivo + Histórico:** consulta os feeds `NRT` da **NASA FIRMS** (`MODIS_NRT` e `VIIRS_NOAA20_NRT`, com fallback para `VIIRS_NOAA21_NRT` e `VIIRS_SNPP_NRT`) em cache de **10 minutos** (`CACHE_TTL_SECONDS = 600`) com controle *single-flight* por região/sensor, integrando à série histórica calibrada em `backend/data/amazon_sample_fires.csv`.
+4. **Integração Ao Vivo + Histórico Contínuo:** consulta os feeds `NRT` da **NASA FIRMS** (`MODIS_NRT` e `VIIRS_NOAA20_NRT`, com fallback para `VIIRS_NOAA21_NRT` e `VIIRS_SNPP_NRT`) em cache de **10 minutos** (`CACHE_TTL_SECONDS = 600`) com controle *single-flight* por região/sensor, integrando à série histórica calibrada em `backend/data/amazon_sample_fires.csv` — que é atualizada diariamente de forma automática via **GitHub Actions** (`.github/workflows/update-fires-csv.yml` e `backend/scripts/update_historical_csv.py`).
 
 ---
 
@@ -61,6 +61,7 @@ Painel web interativo, bilíngue (detecção automática de **Português `PT`** 
   - Endpoints: `/api/health`, `/api/regions`, `/api/fires`, `/api/timeline`, `/api/grid`
 - **Frontend (`frontend/`):** React 19, TypeScript, Vite 8, Leaflet (`react-leaflet`), Recharts, Lucide Icons, CSS modular (`index.css`)
 - **Deploy (`render.yaml`):** Render blueprint com web service (`amazon-fire-api`) e static site (`amazon-fire-web`)
+- **Automação de Dados (`.github/workflows/update-fires-csv.yml`):** cron diário (`06:15 UTC`) que executa `backend/scripts/update_historical_csv.py` com `FIRMS_MAP_KEY` para anexar novos dias UTC completos e calibrados ao histórico (`backend/data/amazon_sample_fires.csv`)
 
 ---
 
@@ -73,7 +74,7 @@ python -m uvicorn app.main:app --reload --port 8000
 ```
 - Swagger local: `http://localhost:8000/docs`
 - Copie `backend/.env.example` para `backend/.env` e configure `FIRMS_MAP_KEY` (opcional — sem chave, o sistema utiliza automaticamente `backend/data/amazon_sample_fires.csv` como fallback).
-- Testes automatizados (**18 testes** de API, coerência sazonal e integração em `backend/tests/test_api.py`):
+- Testes automatizados (**19 testes** — `18` de API/coerência sazonal em `backend/tests/test_api.py` e `1` do atualizador histórico em `backend/tests/test_update_historical_csv.py`):
 ```powershell
 cd backend
 python -m pytest -v
