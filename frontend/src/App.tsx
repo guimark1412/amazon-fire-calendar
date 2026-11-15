@@ -23,6 +23,7 @@ import { currentYear } from './dateUtils';
 import { FireCalendarChart } from './components/FireCalendarChart';
 import { FireMap } from './components/FireMap';
 import { InfoTooltip } from './components/InfoTooltip';
+import { MobileDesktopNotice } from './components/MobileDesktopNotice';
 import { SlidingToggleGroup } from './components/SlidingToggleGroup';
 import type { WorkspaceView } from './components/PitchModeModal';
 import { I18N, type Language } from './i18n';
@@ -1403,6 +1404,11 @@ export function App() {
           <span>{t.navPitch}</span>
         </button>
       </nav>
+
+      <MobileDesktopNotice
+        lang={lang}
+        onToggleLang={() => setLang((prev) => (prev === 'pt' ? 'en' : 'pt'))}
+      />
     </div>
   );
 }
