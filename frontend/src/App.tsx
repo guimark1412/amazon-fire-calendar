@@ -620,14 +620,16 @@ export function App() {
 
   const utilityActionsNode = (
     <div className="controls utility-actions">
-      <button
-        type="button"
-        className="control-select action-btn pitch-btn"
-        onClick={() => setPitchOpen(true)}
-      >
-        <Presentation size={15} />
-        {t.pitchBtn}
-      </button>
+      {!isMobileViewport && (
+        <button
+          type="button"
+          className="control-select action-btn pitch-btn"
+          onClick={() => setPitchOpen(true)}
+        >
+          <Presentation size={15} />
+          {t.pitchBtn}
+        </button>
+      )}
 
       <div className="export-dropdown-wrap" ref={exportMenuRef}>
         <button

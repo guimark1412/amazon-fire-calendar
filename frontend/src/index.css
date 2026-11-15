@@ -14,6 +14,15 @@
 
 * {
   box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:focus:not(:focus-visible),
+a:focus:not(:focus-visible),
+select:focus:not(:focus-visible),
+input:focus:not(:focus-visible),
+[role='button']:focus:not(:focus-visible) {
+  outline: none;
 }
 
 body {
@@ -1261,10 +1270,6 @@ body {
 .mobile-controls-drawer .export-dropdown-wrap .action-btn {
   width: 100%;
   justify-content: center;
-}
-
-.mobile-controls-drawer .utility-actions .pitch-btn {
-  display: inline-flex;
 }
 
 .mobile-controls-drawer .export-dropdown-menu {
