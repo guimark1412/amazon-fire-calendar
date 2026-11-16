@@ -1197,10 +1197,6 @@ export function App() {
               onClearPeriod={handleClearPeriod}
               onToggleRawLive={(next) => {
                 setRawLive(next);
-                if (next) {
-                  setSelectedPeriod(null);
-                  setDateRange({ start: null, end: null });
-                }
               }}
             />
 
@@ -1446,10 +1442,6 @@ export function App() {
               onClearPeriod={handleClearPeriod}
               onToggleRawLive={(next) => {
                 setRawLive(next);
-                if (next) {
-                  setSelectedPeriod(null);
-                  setDateRange({ start: null, end: null });
-                }
               }}
             />
             <Suspense fallback={null}>
