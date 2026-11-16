@@ -76,7 +76,6 @@ export function PitchModeModal({
     fromView: null,
   });
   const [rect, setRect] = useState<SpotlightRect | null>(null);
-  const [warningPos, setWarningPos] = useState<{ left: number; top: number } | null>(null);
   const [tabHandoff, setTabHandoff] = useState<boolean>(false);
   const t = I18N[lang];
   const stepIndex = tourCursor.index;
@@ -100,25 +99,10 @@ export function PitchModeModal({
     (tourName: string) => {
       if (!tourName || tourName === 'pitch-summary') {
         setRect(null);
-        setWarningPos(null);
         return;
       }
       const el = document.querySelector(`[data-tour="${tourName}"]`) as HTMLElement | null;
       measureElement(el);
-      if (tourName === 'map-panel') {
-        const warnEl = document.querySelector('[data-tour="map-warning-tip"]') as HTMLElement | null;
-        if (warnEl && warnEl.offsetWidth > 0 && warnEl.offsetHeight > 0) {
-          const wr = warnEl.getBoundingClientRect();
-          setWarningPos({
-            left: Math.round(wr.right + 8),
-            top: Math.round(wr.top + wr.height / 2),
-          });
-        } else {
-          setWarningPos(null);
-        }
-      } else {
-        setWarningPos(null);
-      }
     },
     [measureElement],
   );
@@ -501,31 +485,6 @@ export function PitchModeModal({
             height: `${boxHeight}px`,
           }}
         />
-      )}
-
-      {!tabHandoff && stepIndex === 1 && warningPos && (
-        <div
-          className="tour-warning-pointer"
-          style={{ left: `${warningPos.left}px`, top: `${warningPos.top}px` }}
-          aria-hidden="true"
-        >
-          <svg
-            className="tour-warning-pointer-arrow"
-            width="18"
-            height="14"
-            viewBox="0 0 18 14"
-            fill="none"
-          >
-            <path
-              d="M17 7H2M2 7L7.5 1.5M2 7L7.5 12.5"
-              stroke="currentColor"
-              strokeWidth="2.2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-          <span>{lang === 'pt' ? 'Sem reescala (≤ 7d)' : 'Unscaled (≤ 7d)'}</span>
-        </div>
       )}
 
       {!tabHandoff && (
