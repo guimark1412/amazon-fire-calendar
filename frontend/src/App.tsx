@@ -1219,11 +1219,13 @@ export function App() {
                   <h2 className="panel-title panel-title-inline">
                     <span>{t.mapTitle(activeRegion.name)}</span>
                     {Boolean(mapMode === 'grid' ? gridData?.live_unscaled : firesData?.live_unscaled) && (
-                      <InfoTooltip
-                        variant="warning"
-                        title={t.tips.liveUnscaledTitle}
-                        text={t.tips.liveUnscaledTip}
-                      />
+                      <span className="map-warning-tip-wrap" data-tour="map-warning-tip">
+                        <InfoTooltip
+                          variant="warning"
+                          title={t.tips.liveUnscaledTitle}
+                          text={t.tips.liveUnscaledTip}
+                        />
+                      </span>
                     )}
                   </h2>
                   <p className="panel-subtitle">

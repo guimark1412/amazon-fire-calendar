@@ -244,7 +244,7 @@ export const I18N = {
         badge: 'Aba 1 · Passo 2 de 6 — Mapa Interativo & Período',
         title: 'Pontos, Pegada Scan×Track, Grid e Período Ativo',
         description:
-          'Alterne entre focos individuais, pegada orbital física (km²) ou grade espacial de anomalias e selecione datas no calendário "Período ativo".',
+          'Alterne entre focos individuais, pegada orbital física (km²) ou grade espacial e filtre datas em "Período ativo". Na janela ao vivo de até 7 dias (padrão ou semana atual), o mapa exibe os dados brutos sem reescala da NASA FIRMS (veja o triângulo ⚠️ ao lado do título); acima de 7 dias ou em meses fechados, aplica a escala histórica.',
       },
       {
         target: 'chart-panel',
@@ -513,7 +513,7 @@ export const I18N = {
         badge: 'Tab 1 · Step 2 of 6 — Interactive Map & Active Period',
         title: 'Points, Scan×Track Footprints, Grid & Active Period',
         description:
-          'Switch between individual hotspots, physical orbital pixel footprints (km²), or risk grid cells, and select presets or custom dates via "Active period".',
+          'Switch between individual hotspots, physical orbital pixel footprints (km²), or risk grid cells via "Active period". In live windows up to 7 days (default or current week), the map shows unscaled raw NASA FIRMS detections (see the ⚠️ triangle next to the title); ranges > 7 days or monthly views apply historical scaling.',
       },
       {
         target: 'chart-panel',

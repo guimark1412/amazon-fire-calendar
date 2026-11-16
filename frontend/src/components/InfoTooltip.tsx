@@ -200,7 +200,7 @@ export function InfoTooltip({
         className={`info-tip-badge ${variant === 'warning' ? 'info-tip-badge--warning' : ''}`}
         aria-hidden="true"
       >
-        {variant === 'warning' ? <AlertTriangle size={12} strokeWidth={2.4} /> : 'i'}
+        {variant === 'warning' ? <AlertTriangle size={15} strokeWidth={2.4} /> : 'i'}
       </span>
 
       {open &&
