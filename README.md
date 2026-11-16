@@ -1,83 +1,85 @@
-# Amazon Fire Calendar — NASA Space Apps 2026 (Harmonização MODIS ↔ VIIRS)
+# Amazon Fire Calendar — NASA Space Apps 2026 (MODIS ↔ VIIRS Harmonization)
 
-Painel web interativo, bilíngue (detecção automática de **Português `PT`** / **Inglês `EN`** pelo navegador, com alternância em 1 clique salva localmente) e responsivo desenvolvido pela equipe **`Printf("Nasarentos");`** para o desafio **"Harmonization of MODIS and VIIRS Hot Spots"** do **NASA Space Apps Challenge**. A plataforma **harmoniza os sensores MODIS (`1 km`) e VIIRS (`375 m`)** da **NASA FIRMS** em um **Calendário Unificado de Atividade de Queima** para a Amazônia e Áreas de Interesse Customizadas (`AOI`).
+> 🇧🇷 **[Leia esta documentação em Português (README.pt-BR.md)](README.pt-BR.md)**
 
-- **Aplicação Web Ao Vivo:** https://amazon-fire-web.onrender.com
-- **API & Documentação Swagger:** https://amazon-fire-api.onrender.com/docs
-- **Repositórios GitHub:** [guimark1412/amazon-fire-calendar](https://github.com/guimark1412/amazon-fire-calendar) · [Endrei7/amazon-fire-calendar](https://github.com/Endrei7/amazon-fire-calendar)
+Interactive, bilingual (automatic browser detection for **English `EN`** / **Portuguese `PT`**, with 1-click persisted switching) and responsive web dashboard built by team **`Printf("Nasarentos");`** for the **NASA Space Apps Challenge** **"Harmonization of MODIS and VIIRS Hot Spots"** challenge. The platform **harmonizes NASA FIRMS MODIS (`1 km`) and VIIRS (`375 m`) active fire sensors** into a **Unified Fire Activity Calendar** for the Amazon and Custom Areas of Interest (`AOI`).
+
+- **Live Web App:** https://amazon-fire-web.onrender.com
+- **API & Swagger Docs:** https://amazon-fire-api.onrender.com/docs
+- **GitHub Repositories:** [guimark1412/amazon-fire-calendar](https://github.com/guimark1412/amazon-fire-calendar) · [Endrei7/amazon-fire-calendar](https://github.com/Endrei7/amazon-fire-calendar)
 
 > [!TIP]
-> **Recomendação — Comece pelo Modo Pitch:** Ao abrir a aplicação ao vivo, recomendamos clicar no botão pulsante **Modo Pitch** (`Pitch Mode`, no canto superior direito no desktop ou na barra inferior no mobile) para iniciar o tour interativo guiado em 6 passos que apresenta na prática a harmonização MODIS (`1 km`) ↔ VIIRS (`375 m`), o calendário sazonal e o laboratório orbital.
+> **Recommended — Start with Pitch Mode:** When opening the live app, click the pulsing **Pitch Mode** button (top-right on desktop or bottom bar on mobile) to launch a 6-step guided tour demonstrating MODIS (`1 km`) ↔ VIIRS (`375 m`) harmonization, the seasonal calendar, and the orbital lab in action.
 
 ---
 
-## Alinhamento Ponto a Ponto com o Desafio da NASA
+## Point-by-Point Alignment with the NASA Challenge
 
-| O que o Desafio da NASA Pediu | O que Implementamos no Amazon Fire Calendar |
+| What the NASA Challenge Requested | What We Implemented in Amazon Fire Calendar |
 | --- | --- |
-| **1. Unificar registros de sensores diferentes (`MODIS 1 km` e `VIIRS 375 m`) que não são comparáveis diretamente** | **Motor de Harmonização Espaço-Temporal (`harmonization.py` e `firms_client.py`):** Integra dados em tempo quase real da **NASA FIRMS** (`MODIS_NRT` + `VIIRS_NOAA20_NRT` com fallback `NOAA21`/`SNPP`) com série histórica; compensa a distorção da pegada orbital (**`Scan × Track` em km²**) e separa focos coincidentes de pequenos focos exclusivos do VIIRS (`VIIRS-Only`) com peso ajustável (`0,50×`–`1,00×`) na aba **`3. MODIS×VIIRS Lab`**. |
-| **2. Criar uma aplicação web com um Calendário de Atividade de Queimadas baseado em focos ativos** | **Aplicação Web em 3 Abas Progressivas:** Na aba **`2. Calendar & Matrix`**, entrega o **Espectro Sazonal de Queima** e a **Matriz do Calendário** (mensal e semanal `YYYY-Www`) alternando entre **Índice Harmonizado** e **FRP (MW)**, com filtros por nível de alerta (`Todos`, `Crítico`, `Elevado`, `Normal`). Na aba **`1. Map & Series`**, oferece seletor de datas popover e *cross-filtering* bidirecional entre gráfico e mapa. |
-| **3. Apoiar alertas precoces e resposta a emergências para antecipar períodos críticos** | **Painel de Alerta Precoce & Exportação Aberta:** Calcula desvio percentual acumulado (YTD), identifica o pico sazonal frente à média histórica MODIS (2024–2025) e exibe recomendações operacionais; no mapa, entrega camadas de **Pontos**, **Pegada (`Scan×Track`)** e **Grid Harmonizado**, exporta em **`CSV` (14 colunas)** e **`GeoJSON`**, e inclui **Modo Pitch guiado em 6 passos**. |
-| **4. Permitir que cientistas e gestores analisem padrões históricos e condições incomuns** | **Filtros Globais & Simulador Orbital:** Alternância instantânea entre **Ambos \| MODIS \| VIIRS** (preservando o fator de calibração ancorado nos dois sensores), escala **Mensal \| Semanal**, filtros de confiança (`Todas`, `Nominal + Alta`, `Apenas Alta`), filtros dia/noite e **Simulador de Varredura (`0°–55°`)**. |
-| **5. Analisar dentro de uma Área de Interesse (`AOI`) selecionada** | **7 Regiões Pré-definidas + `AOI` Customizada:** Suporta Amazônia Legal (Brasil), Amazônia Continental (Norte da América do Sul) e 5 estados brasileiros (`Amazonas`, `Pará`, `Mato Grosso`, `Rondônia` e `Acre`) com recorte por polígonos geográficos reais, além de desenho interativo no mapa ou coordenadas `West / South / East / North`. |
+| **1. Unify records from different sensors (`MODIS 1 km` and `VIIRS 375 m`) that are not directly comparable** | **Spatiotemporal Harmonization Engine (`harmonization.py` and `firms_client.py`):** Integrates near-real-time **NASA FIRMS** feeds (`MODIS_NRT` + `VIIRS_NOAA20_NRT` with `NOAA21`/`SNPP` fallback) with a calibrated historical series; compensates for orbital footprint distortion (**`Scan × Track` in km²**) and separates coincident detections from small `VIIRS-Only` burns with adjustable weighting (`0.50×`–`1.00×`) in tab **`3. MODIS×VIIRS Lab`**. |
+| **2. Build a web app featuring a Fire Activity Calendar based on active fire detections** | **3-Tab Progressive Disclosure Web App:** Tab **`2. Calendar & Matrix`** delivers the **Seasonal Burning Spectrum** and **Calendar Matrix** (monthly and ISO-weekly `YYYY-Www`) toggling between **Harmonized Index** and **FRP (MW)**, with alert-level filters (`All`, `Critical`, `Elevated`, `Normal`). Tab **`1. Map & Series`** adds a popover date picker and bidirectional cross-filtering between chart and map. |
+| **3. Support early warnings and emergency response to anticipate critical periods** | **Early Warning Brief & Open Export:** Computes cumulative year-to-date (YTD) deviation, identifies the seasonal peak against the 2024–2025 MODIS baseline, and surfaces operational guidance; the map renders **Points**, **Scan×Track Footprints**, and **Harmonized Grid** layers, exports **`CSV` (14 columns)** and **`GeoJSON`**, and includes a **6-step guided Pitch Mode**. |
+| **4. Enable scientists and managers to analyze historical patterns and unusual conditions** | **Global Filters & Orbital Simulator:** Instant switching across **Both \| MODIS \| VIIRS** (preserving the two-sensor anchored calibration factor), **Monthly \| Weekly** resolution, confidence filters (`All`, `Nominal + High`, `High Only`), day/night filtering, and a **Swath Angle Simulator (`0°–55°`)**. |
+| **5. Analyze within a selected Area of Interest (`AOI`)** | **7 Preset Regions + Custom `AOI`:** Supports Legal Amazon (Brazil), Continental Amazon (Northern South America), and 5 Brazilian states (`Amazonas`, `Pará`, `Mato Grosso`, `Rondônia`, and `Acre`) clipped to geographic boundary polygons, plus interactive map drawing or `West / South / East / North` coordinates. |
 
 ---
 
-## Principais Funcionalidades
+## Key Features
 
-### 1. Arquitetura em 3 Abas de Revelação Progressiva
-1. **`1. Map & Series` (`Mapa & Série`)**
-   - **Mapa interativo (`Pontos`, `Pegada Scan×Track` e `Grid Harmonizado`):** camadas de base **Mapa Escuro**, **Satélite** e **NASA GIBS True Color** (`MODIS Terra` / `VIIRS NOAA-20`), com amostragem de até **2.000 focos** na visão pontual.
-   - **Consistência Ao Vivo vs. Escala do Calendário:** janelas de tempo real **≤ 7 dias** (*Últimos 7 dias* padrão ou semana atual `YYYY-Www`) exibem todas as detecções brutas ao vivo da NASA FIRMS (com ícone de alerta **`!`** explicativo ao lado do título do mapa), enquanto **seleções mensais (`YYYY-MM`) ou janelas > 7 dias** utilizam automaticamente a escala calibrada da série histórica para comparação justa entre meses.
-   - **Seletor de Período & Cross-Filtering:** atalhos relativos dinâmicos (*Últimos 30 dias*, *Pico da Seca Ago–Set*, *Ano completo Jan–hoje*), chips mensais, seleção livre de datas e clique direto nas barras do gráfico ou cards da matriz.
-   - **Série Temporal Multi-Métrica (`Recharts`):** alterna entre **Índice Harmonizado**, **Contagem Bruta**, **Coincidência vs. `VIIRS-Only`** e **Energia `FRP` (MW)**.
-2. **`2. Calendar & Matrix` (`Calendário & Matriz`)**
-   - **Espectro Sazonal de Queima (`BurningHeatmap`):** barras contínuas ao longo do ano coloridas pelo nível de alerta (`Normal`, `Elevado`, `Crítico`) com desvio percentual por período.
-   - **Popover de Alerta Precoce (`EarlyWarningPopover`):** resume o status geral da região, desvio acumulado YTD, período de pico e recomendação operacional.
-   - **Matriz do Calendário (`CalendarMatrix`):** alterna entre **Índice Harmonizado** e **FRP (MW)**, filtra por status (`Todos`, `Crítico`, `Elevado`, `Normal`) e agrupa semanas por trimestres recolhíveis na visão semanal (`YYYY-Www`).
-3. **`3. MODIS×VIIRS Lab` (`Lab MODIS×VIIRS`)**
-   - **Comparativo Antes vs. Depois:** evidencia o falso alarme da soma bruta contra a curva calibrada na régua histórica MODIS.
-   - **Controles Interativos & Pipeline ao Vivo:** ajuste do **Peso `VIIRS-Only`** (`0,50×`, `0,85×`, `1,00×`), **Simulador Orbital `Scan × Track`** (`0°` a `55°`) e faixa visual em **3 etapas** (`01 Ponderação VIIRS-Only` → `02 Conversão à Escala MODIS` → `03 Índice Harmonizado`).
-   - **Arquitetura Científica inline:** seção expansível detalhando os **4 Pilares de Harmonização** e as equações do pipeline.
+### 1. Progressive Disclosure 3-Tab Architecture
+1. **`1. Map & Series`**
+   - **Interactive Map (`Points`, `Scan×Track Footprints`, and `Harmonized Grid`):** **Dark Map**, **Satellite**, and **NASA GIBS True Color** (`MODIS Terra` / `VIIRS NOAA-20`) basemap layers, sampling up to **2,000 hotspots** in point view.
+   - **Unified Calibrated Scale + Optional Raw NASA Mode:** By default, all windows—including the trailing **7-day live view**, weekly (`YYYY-Www`), monthly (`YYYY-MM`), and custom ranges—use the same calibrated MODIS-equivalent baseline scale. Inside the **`Active period`** date picker popover, the **`Calibrated Scale (Default)`** toggle (active by default) can be switched off at any time (`raw_live=true`) to inspect all unscaled raw NASA FIRMS detections.
+   - **Period Selector & Cross-Filtering:** Dynamic relative presets (*Last 30 days*, *Dry Season Peak Aug–Sep*, *Full Year Jan–today*), free calendar range selection, and click-to-filter on chart bars or matrix cards.
+   - **Multi-Metric Time Series (`Recharts`):** Toggles between **Harmonized Index**, **Raw Counts**, **Coincident vs. `VIIRS-Only`**, and **Thermal Power `FRP` (MW)**.
+2. **`2. Calendar & Matrix`**
+   - **Seasonal Burning Spectrum (`BurningHeatmap`):** Continuous period bars colored by alert status (`Normal`, `Elevated`, `Critical`) with percentage deviation per period.
+   - **Early Warning Popover (`EarlyWarningPopover`):** Summarizes regional status, cumulative YTD deviation, peak period, and operational recommendations.
+   - **Calendar Matrix (`CalendarMatrix`):** Toggles between **Harmonized Index** and **FRP (MW)**, filters by alert status (`All`, `Critical`, `Elevated`, `Normal`), and groups weeks into collapsible quarters in Weekly (`YYYY-Www`) mode.
+3. **`3. MODIS×VIIRS Lab`**
+   - **Before vs. After Comparison:** Exposes the raw-sum false alarm against the calibrated MODIS historical scale.
+   - **Interactive Controls & Live Pipeline:** **`VIIRS-Only` Weight** (`0.50×`, `0.85×`, `1.00×`), **`Scan × Track` Orbital Simulator** (`0°` to `55°`), and a 3-stage pipeline strip (`01 VIIRS-Only Weighting` → `02 MODIS Scale Conversion` → `03 Harmonized Index`).
+   - **Inline Scientific Architecture:** Collapsible panel detailing the **4 Harmonization Pillars** and backend equations.
 
-### 2. Experiência de Uso, Exportação, Modo Pitch & Mobile
-- **Controles Polidos:** grupos de botões segmentados com pílula deslizante animada (`SlidingToggleGroup`) e tooltips informativos `(i)` / `!` com delay de `500 ms` no desktop e suporte dedicado ao toque no mobile (inclusive dentro de botões de seleção).
-- **Exportação:** **CSV** do calendário harmonizado (14 colunas: índice harmonizado, contagens brutas/coincidentes/`VIIRS-Only`, `anomaly_zscore`, `FRP` e alerta) e **GeoJSON** (`FeatureCollection` com focos e polígonos do grid espacial).
-- **Modo Pitch (Tour em 6 Passos):** apresentação guiada passo a passo (`topbar`, mapa, gráfico, matriz, laboratório e resumo executivo), com destaque prévio na barra de abas antes da transição de aba e ações interativas ao vivo.
-- **Interface Responsiva Mobile (`max-width: 768px`):** abertura em tela cheia que aguarda o carregamento inicial (`/api/fires`, `/api/timeline`, `/api/grid`), exibe animação minimalista de celular para monitor recomendando visualização no computador e dissolve revelando o painel; cabeçalho enxuto com faixa de KPIs em 1 linha, controles globais/exportação/idioma recolhidos em menu lateral (`☰`), controles de 4 opções em grade `2×2` e barra inferior fixa (**Painel**, **Matriz**, **Lab NASA** e **Pitch**).
-
----
-
-## Metodologia de Harmonização no Backend
-
-1. **Correção de Geometria Orbital (`scan × track`):** combina a razão empírica MODIS/VIIRS nos períodos de sobreposição com a razão efetiva de área do pixel (`avg_viirs_area / avg_modis_area`), mantendo o mesmo fator ancorado em ambos os sensores inclusive em consultas de sensor único (`MODIS` ou `VIIRS`).
-2. **Clusterização Espaço-Temporal:** separa detecções VIIRS coincidentes com eventos MODIS (`coincident_viirs`) de pequenos focos isolados (`viirs_only_small`), ponderados por `viirs_only_weight` (`0.0–1.0`, padrão `0.85`).
-3. **Baseline Dinâmica, Alertas & Visão Semanal:** recalcula dinamicamente a **Média MODIS** de referência (`2024–2025`) para cada região ou `AOI`, aplica guarda de excesso absoluto em `_classify_alert` para evitar falsos alertas em meses com baseline baixa e divide a média mensal pela contagem real de semanas ativas no modo semanal (`YYYY-Www`).
-4. **Integração Ao Vivo + Histórico Contínuo:** consulta os feeds `NRT` da **NASA FIRMS** (`MODIS_NRT` e `VIIRS_NOAA20_NRT`, com fallback para `VIIRS_NOAA21_NRT` e `VIIRS_SNPP_NRT`) em cache de **10 minutos** (`CACHE_TTL_SECONDS = 600`) com controle *single-flight* por região/sensor, integrando à série histórica calibrada em `backend/data/amazon_sample_fires.csv` — que é atualizada diariamente de forma automática via **GitHub Actions** (`.github/workflows/update-fires-csv.yml` e `backend/scripts/update_historical_csv.py`).
+### 2. UX Polish, Export, Pitch Mode & Mobile
+- **Refined Controls:** Animated sliding pill groups (`SlidingToggleGroup`) and `(i)` info tooltips with a `500 ms` hover delay on desktop and touch support on mobile (including inside toggle buttons).
+- **Open Export:** **CSV** export of the harmonized calendar (14 columns: harmonized index, raw/coincident/`VIIRS-Only` counts, `anomaly_zscore`, `FRP`, and alert level) and **GeoJSON** (`FeatureCollection` with hotspots and spatial grid polygons).
+- **Pitch Mode (6-Step Guided Tour):** Step-by-step walkthrough (`topbar`, map, chart, matrix, lab, and executive wrap-up) with tab-handoff spotlight cues and live map actions.
+- **Mobile Responsive UI (`max-width: 768px`):** Full-screen splash waiting for initial data (`/api/fires`, `/api/timeline`, `/api/grid`) with a minimal phone-to-monitor animation recommending desktop viewing, single-line KPI strip, collapsible side drawer (`☰`) for global filters/export/language, `2×2` segmented controls, and fixed bottom navigation (**Panel**, **Matrix**, **Lab NASA**, **Pitch**).
 
 ---
 
-## Dados da NASA, Stack & Estrutura do Projeto
+## Backend Harmonization Methodology
 
-- **Dados da NASA:** NASA FIRMS active fire hotspots (`MODIS C6.1` 1 km e `VIIRS NOAA-20 / NRT` 375 m — `FRP`, confiança, `scan`, `track`).
+1. **Orbital Geometry Correction (`scan × track`):** Combines the empirical MODIS/VIIRS ratio across overlapping periods with the effective pixel footprint ratio (`avg_viirs_area / avg_modis_area`), keeping the same calibration factor anchored across both sensors even for single-sensor queries (`MODIS` or `VIIRS`).
+2. **Spatiotemporal Clustering:** Separates VIIRS detections coincident with MODIS fire events (`coincident_viirs`) from isolated small burns (`viirs_only_small`), weighted by `viirs_only_weight` (`0.0–1.0`, default `0.85`).
+3. **Dynamic Baseline, Alerts & Weekly View:** Dynamically recomputes the reference **MODIS Average** (`2024–2025`) for each region or `AOI`, applies an absolute-excess guard in `_classify_alert` to prevent false alerts in low-baseline months, and divides monthly averages by active week count in weekly (`YYYY-Www`) mode.
+4. **Live + Continuous Historical Integration:** Queries **NASA FIRMS** `NRT` feeds (`MODIS_NRT` and `VIIRS_NOAA20_NRT`, with fallback to `VIIRS_NOAA21_NRT` and `VIIRS_SNPP_NRT`) with a **10-minute cache** (`CACHE_TTL_SECONDS = 600`) and per-region/sensor single-flight locking, merging with the calibrated historical dataset in `backend/data/amazon_sample_fires.csv`—automatically updated daily via **GitHub Actions** (`.github/workflows/update-fires-csv.yml` and `backend/scripts/update_historical_csv.py`).
+
+---
+
+## NASA Data, Tech Stack & Project Structure
+
+- **NASA Data:** NASA FIRMS active fire hotspots (`MODIS C6.1` 1 km and `VIIRS NOAA-20 / NRT` 375 m — `FRP`, confidence, `scan`, `track`) + NASA GIBS True Color WMTS imagery.
 - **Backend (`backend/`):** Python 3.9+, FastAPI, `httpx`, `uvicorn`, `pytest`
   - Endpoints: `/api/health`, `/api/regions`, `/api/fires`, `/api/timeline`, `/api/grid`
-- **Frontend (`frontend/`):** React 19, TypeScript, Vite 8, Leaflet (`react-leaflet`), Recharts, Lucide Icons, CSS modular (`index.css`)
-- **Deploy (`render.yaml`):** Render blueprint com web service (`amazon-fire-api`) e static site (`amazon-fire-web`)
-- **Automação de Dados (`.github/workflows/update-fires-csv.yml`):** cron diário (`06:15 UTC`) que executa `backend/scripts/update_historical_csv.py` com `FIRMS_MAP_KEY` para anexar novos dias UTC completos e calibrados ao histórico (`backend/data/amazon_sample_fires.csv`)
+- **Frontend (`frontend/`):** React 19, TypeScript, Vite 8, Leaflet (`react-leaflet`), Recharts, Lucide Icons, modular CSS (`index.css`)
+- **Deployment (`render.yaml`):** Render blueprint with web service (`amazon-fire-api`) and static site (`amazon-fire-web`)
+- **Automated Data Pipeline (`.github/workflows/update-fires-csv.yml`):** Daily cron (`06:15 UTC`) running `backend/scripts/update_historical_csv.py` with `FIRMS_MAP_KEY` to append newly completed, calibrated UTC days to `backend/data/amazon_sample_fires.csv`
 
 ---
 
-## Como Rodar Localmente
+## Running Locally
 
 ### 1. Backend (FastAPI + NASA FIRMS)
 ```powershell
 cd backend
 python -m uvicorn app.main:app --reload --port 8000
 ```
-- Swagger local: `http://localhost:8000/docs`
-- Copie `backend/.env.example` para `backend/.env` e configure `FIRMS_MAP_KEY` (opcional — sem chave, o sistema utiliza automaticamente `backend/data/amazon_sample_fires.csv` como fallback).
-- Testes automatizados (**19 testes** — `18` de API/coerência sazonal em `backend/tests/test_api.py` e `1` do atualizador histórico em `backend/tests/test_update_historical_csv.py`):
+- Local Swagger docs: `http://localhost:8000/docs`
+- Copy `backend/.env.example` to `backend/.env` and set `FIRMS_MAP_KEY` (optional — without a key, the backend automatically falls back to `backend/data/amazon_sample_fires.csv`).
+- Automated tests (**19 tests** — `18` API & seasonal coherence tests in `backend/tests/test_api.py` and `1` historical updater test in `backend/tests/test_update_historical_csv.py`):
 ```powershell
 cd backend
 python -m pytest -v
@@ -89,5 +91,5 @@ cd frontend
 npm install
 npm run dev
 ```
-- Acesse `http://localhost:5173` (a variável `VITE_API_URL` conecta ao backend).
-- Build de produção: `npm run build` (`tsc && vite build`).
+- Open `http://localhost:5173` (`VITE_API_URL` connects to the backend).
+- Production build: `npm run build` (`tsc && vite build`).

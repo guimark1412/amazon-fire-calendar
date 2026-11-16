@@ -282,20 +282,25 @@ export function DateRangePickerPopover({
             <span className="cal-popover-title">{t.datePickerTitle}</span>
           </div>
 
-          {onToggleRawLive && (
-            <button
-              type="button"
-              className={`cal-raw-live-btn ${rawLive ? 'active' : ''}`}
-              aria-pressed={rawLive}
-              onClick={() => onToggleRawLive(!rawLive)}
-            >
-              <span className="cal-raw-live-main">
-                <span className={`cal-raw-live-dot ${rawLive ? 'on' : ''}`} aria-hidden="true" />
-                <strong>{t.rawLiveToggleBtn}</strong>
-              </span>
-              <span className="cal-raw-live-hint">{t.rawLiveToggleHint}</span>
-            </button>
-          )}
+          {onToggleRawLive && (() => {
+            const isCalibrated = !rawLive;
+            return (
+              <button
+                type="button"
+                className={`cal-raw-live-btn ${isCalibrated ? 'active' : ''}`}
+                aria-pressed={isCalibrated}
+                onClick={() => onToggleRawLive(!rawLive)}
+              >
+                <span className="cal-raw-live-main">
+                  <span className={`cal-raw-live-dot ${isCalibrated ? 'on' : ''}`} aria-hidden="true" />
+                  <strong>{t.calibratedScaleBtn}</strong>
+                </span>
+                <span className="cal-raw-live-hint">
+                  {isCalibrated ? t.calibratedScaleHint : t.rawScaleActiveHint}
+                </span>
+              </button>
+            );
+          })()}
 
           <div className="cal-presets-grid">
             <button
