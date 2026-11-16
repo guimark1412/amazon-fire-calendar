@@ -1240,7 +1240,7 @@ export function App() {
                 <div>
                   <h2 className="panel-title panel-title-inline">
                     <span>{t.mapTitle(activeRegion.name)}</span>
-                    {rawLive && isRangeOver7Days && (
+                    {!rawLive && isRangeOver7Days && (
                       <span className="map-warning-tip-wrap">
                         <InfoTooltip
                           variant="warning"

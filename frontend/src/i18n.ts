@@ -187,9 +187,9 @@ export const I18N = {
         'Área real aproximada de cada pixel (Scan × Track em km²), mostrando o alongamento nas bordas de varredura.',
       mapGrid:
         'Células agregadas coloridas pelo nível de alerta comparado à média histórica MODIS local.',
-      liveUnscaledTitle: 'Modo bruto limitado a 7 dias',
+      liveUnscaledTitle: 'Escala Calibrada (> 7 dias)',
       liveUnscaledTip:
-        'A API em tempo real da NASA FIRMS fornece apenas os últimos dias sem reescala. Acima de 7 dias (ou em meses fechados), os dados históricos seguem na régua calibrada do MODIS para evitar distorção entre meses.',
+        'Acima de 7 dias (ou em meses fechados), os focos são reescalados proporcionalmente para a régua histórica do MODIS, evitando distorção entre meses pela maior densidade do VIIRS. O modo bruto da NASA FIRMS fica disponível apenas nos últimos dias.',
       chartHarm:
         'Unifica MODIS (1 km) e VIIRS normalizado na mesma régua de 20 anos para comparação justa com a média.',
       chartRaw:
@@ -459,9 +459,9 @@ export const I18N = {
         'Approximate ground pixel footprint (Scan × Track in km²), illustrating off-nadir stretching.',
       mapGrid:
         'Spatial grid cells colored by alert severity compared against the local MODIS historical mean.',
-      liveUnscaledTitle: 'Raw mode limited to 7 days',
+      liveUnscaledTitle: 'Calibrated Scale (> 7 days)',
       liveUnscaledTip:
-        'NASA FIRMS real-time feeds only provide unscaled detections for recent days. Beyond 7 days (or in closed months), historical data remains on the calibrated MODIS baseline to prevent month-to-month distortion.',
+        'Beyond 7 days (or in closed months), hotspots are proportionally scaled to the MODIS historical baseline to prevent month-to-month distortion from VIIRS’s higher density. Raw unscaled NASA FIRMS mode is only available for recent days.',
       chartHarm:
         'Unifies MODIS (1 km) and normalized VIIRS onto the 20-year baseline for apples-to-apples comparison.',
       chartRaw:
