@@ -1230,6 +1230,13 @@ export function App() {
                 <div>
                   <h2 className="panel-title panel-title-inline">
                     <span>{t.mapTitle(activeRegion.name)}</span>
+                    <span className="map-warning-tip-wrap">
+                      <InfoTooltip
+                        variant="warning"
+                        title={t.tips.liveUnscaledTitle}
+                        text={t.tips.liveUnscaledTip}
+                      />
+                    </span>
                   </h2>
                   <p className="panel-subtitle">
                     {mapMode === 'grid'

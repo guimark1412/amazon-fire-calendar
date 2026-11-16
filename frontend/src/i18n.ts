@@ -187,9 +187,9 @@ export const I18N = {
         'Área real aproximada de cada pixel (Scan × Track em km²), mostrando o alongamento nas bordas de varredura.',
       mapGrid:
         'Células agregadas coloridas pelo nível de alerta comparado à média histórica MODIS local.',
-      liveUnscaledTitle: 'Modo ao vivo (sem reescala)',
+      liveUnscaledTitle: 'Escala Calibrada & Janela > 7 dias',
       liveUnscaledTip:
-        'Nos modos ao vivo de até 7 dias (Últimos 7 dias ou Semana atual), o mapa exibe todas as detecções brutas recebidas da NASA FIRMS (milhares de focos). Em janelas maiores que 7 dias ou na seleção mensal, novembro é reescalado proporcionalmente para comparação justa com os demais meses.',
+        'Tanto janelas acima de 7 dias (meses fechados e ano completo) quanto os últimos 7 dias por padrão são reescalados proporcionalmente para a régua histórica MODIS. Isso garante comparação justa entre meses sem picos artificiais pelo volume maior de pixels do VIIRS. Para ver todos os focos brutos da NASA FIRMS sem reescala, desative "Escala Calibrada (Padrão)" em Período ativo.',
       chartHarm:
         'Unifica MODIS (1 km) e VIIRS normalizado na mesma régua de 20 anos para comparação justa com a média.',
       chartRaw:
@@ -459,9 +459,9 @@ export const I18N = {
         'Approximate ground pixel footprint (Scan × Track in km²), illustrating off-nadir stretching.',
       mapGrid:
         'Spatial grid cells colored by alert severity compared against the local MODIS historical mean.',
-      liveUnscaledTitle: 'Live mode (unscaled FIRMS)',
+      liveUnscaledTitle: 'Calibrated Scale & > 7-Day Window',
       liveUnscaledTip:
-        'In live views up to 7 days (Last 7 days or current live week), the map displays all raw NASA FIRMS detections (thousands of hotspots). For ranges longer than 7 days or monthly selections, November is proportionally scaled to match earlier months’ baseline.',
+        'Both ranges longer than 7 days (closed months and full year) and the default 7-day live window are proportionally scaled to the MODIS historical baseline. This ensures fair month-to-month comparisons without artificial spikes from VIIRS’s higher pixel density. To inspect all unscaled raw NASA FIRMS detections, turn off "Calibrated Scale (Default)" in Active period.',
       chartHarm:
         'Unifies MODIS (1 km) and normalized VIIRS onto the 20-year baseline for apples-to-apples comparison.',
       chartRaw:
