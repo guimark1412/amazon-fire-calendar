@@ -6,6 +6,9 @@ Painel web interativo, bilíngue (detecção automática de **Português `PT`** 
 - **API & Documentação Swagger:** https://amazon-fire-api.onrender.com/docs
 - **Repositórios GitHub:** [guimark1412/amazon-fire-calendar](https://github.com/guimark1412/amazon-fire-calendar) · [Endrei7/amazon-fire-calendar](https://github.com/Endrei7/amazon-fire-calendar)
 
+> [!TIP]
+> **Recomendação — Comece pelo Modo Pitch:** Ao abrir a aplicação ao vivo, recomendamos clicar no botão pulsante **Modo Pitch** (`Pitch Mode`, no canto superior direito no desktop ou na barra inferior no mobile) para iniciar o tour interativo guiado em 6 passos que apresenta na prática a harmonização MODIS (`1 km`) ↔ VIIRS (`375 m`), o calendário sazonal e o laboratório orbital.
+
 ---
 
 ## Alinhamento Ponto a Ponto com o Desafio da NASA
