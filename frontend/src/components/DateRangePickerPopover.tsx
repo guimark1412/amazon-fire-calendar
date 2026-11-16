@@ -17,11 +17,13 @@ interface DateRangePickerPopoverProps {
   endDate: string | null;
   granularity: Granularity;
   selectedPeriod?: string | null;
+  rawLive?: boolean;
   lang: Language;
   variant?: 'inline' | 'floating';
   onApplyRange: (start: string | null, end: string | null, nextGranularity?: Granularity) => void;
   onSelectPeriod?: (period: string | null, nextGranularity?: Granularity) => void;
   onClearPeriod?: () => void;
+  onToggleRawLive?: (next: boolean) => void;
 }
 
 const DEFAULT_YEAR = currentYear();
@@ -80,11 +82,12 @@ export function DateRangePickerPopover({
   startDate,
   endDate,
   selectedPeriod,
+  rawLive = false,
   lang,
   variant = 'floating',
   onApplyRange,
-  onSelectPeriod,
   onClearPeriod,
+  onToggleRawLive,
 }: DateRangePickerPopoverProps) {
   const t = I18N[lang];
   const anchorRef = useRef<HTMLDivElement | null>(null);
@@ -189,22 +192,6 @@ export function DateRangePickerPopover({
     setOpen(false);
   };
 
-  const handleSelectMonthChip = (monthIdx: number) => {
-    const periodStr = `${viewYear}-${padTwoDigits(monthIdx + 1)}`;
-    setViewMonth(monthIdx);
-    if (onSelectPeriod) {
-      onSelectPeriod(selectedPeriod === periodStr ? null : periodStr, 'month');
-    } else {
-      const mStart = toIsoDate(viewYear, monthIdx, 1);
-      const rawEnd = toIsoDate(viewYear, monthIdx, daysInMonth(viewYear, monthIdx));
-      const today = todayIso();
-      if (mStart > today) return;
-      const mEnd = rawEnd > today ? today : rawEnd;
-      onApplyRange(mStart, mEnd);
-    }
-    setOpen(false);
-  };
-
   const handleSelectFullMonth = () => {
     const mStart = toIsoDate(viewYear, viewMonth, 1);
     const rawEnd = toIsoDate(viewYear, viewMonth, daysInMonth(viewYear, viewMonth));
@@ -238,7 +225,6 @@ export function DateRangePickerPopover({
   };
 
   const pillValue = formatPillDateRange(startDate, endDate, selectedPeriod, lang);
-  const chipMonths = viewYear === DEFAULT_YEAR ? t.months.slice(0, DEFAULT_MONTH + 1) : t.months;
   const r30 = last30Days();
   const rPeak = dryPeak();
   const rYear = yearToDate();
@@ -296,23 +282,20 @@ export function DateRangePickerPopover({
             <span className="cal-popover-title">{t.datePickerTitle}</span>
           </div>
 
-          <div className="cal-month-chips" role="group" aria-label="Quick month periods">
-            {chipMonths.map((label, idx) => {
-              const ym = `${viewYear}-${padTwoDigits(idx + 1)}`;
-              const isChipActive = selectedPeriod === ym;
-              return (
-                <button
-                  key={ym}
-                  type="button"
-                  className={`cal-month-chip ${isChipActive ? 'active' : ''}`}
-                  onClick={() => handleSelectMonthChip(idx)}
-                  title={ym}
-                >
-                  {label}
-                </button>
-              );
-            })}
-          </div>
+          {onToggleRawLive && (
+            <button
+              type="button"
+              className={`cal-raw-live-btn ${rawLive ? 'active' : ''}`}
+              aria-pressed={rawLive}
+              onClick={() => onToggleRawLive(!rawLive)}
+            >
+              <span className="cal-raw-live-main">
+                <span className={`cal-raw-live-dot ${rawLive ? 'on' : ''}`} aria-hidden="true" />
+                <strong>{t.rawLiveToggleBtn}</strong>
+              </span>
+              <span className="cal-raw-live-hint">{t.rawLiveToggleHint}</span>
+            </button>
+          )}
 
           <div className="cal-presets-grid">
             <button
@@ -326,6 +309,7 @@ export function DateRangePickerPopover({
               type="button"
               className={`cal-preset-btn ${isSameRange(startDate, endDate, r30) ? 'active' : ''}`}
               onClick={() => {
+                onToggleRawLive?.(false);
                 onApplyRange(r30.start, r30.end);
                 setOpen(false);
               }}
@@ -336,6 +320,7 @@ export function DateRangePickerPopover({
               type="button"
               className={`cal-preset-btn ${isSameRange(startDate, endDate, rPeak) ? 'active' : ''}`}
               onClick={() => {
+                onToggleRawLive?.(false);
                 onApplyRange(rPeak.start, rPeak.end);
                 setOpen(false);
               }}
@@ -346,6 +331,7 @@ export function DateRangePickerPopover({
               type="button"
               className={`cal-preset-btn ${isSameRange(startDate, endDate, rYear) ? 'active' : ''}`}
               onClick={() => {
+                onToggleRawLive?.(false);
                 onApplyRange(rYear.start, rYear.end);
                 setOpen(false);
               }}

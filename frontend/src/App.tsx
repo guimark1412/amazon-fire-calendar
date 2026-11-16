@@ -114,6 +114,7 @@ function detectInitialLanguage(): Language {
 
 export function App() {
   const [lang, setLang] = useState<Language>(detectInitialLanguage);
+  const [rawLive, setRawLive] = useState<boolean>(false);
   const toggleLang = useCallback(() => {
     setLang((prev) => {
       const next: Language = prev === 'pt' ? 'en' : 'pt';
@@ -259,6 +260,7 @@ export function App() {
       period: selectedPeriod,
       startDate: dateRange.start,
       endDate: dateRange.end,
+      rawLive,
     })
       .then((firesRes) => {
         if (!cancelled) setFiresData(firesRes);
@@ -279,7 +281,7 @@ export function App() {
     return () => {
       cancelled = true;
     };
-  }, [selectedRegion, sensor, bboxParam, minConfidence, selectedPeriod, dateRange.start, dateRange.end, retryNonce]);
+  }, [selectedRegion, sensor, bboxParam, minConfidence, selectedPeriod, dateRange.start, dateRange.end, rawLive, retryNonce]);
 
   useEffect(() => {
     let cancelled = false;
@@ -338,6 +340,7 @@ export function App() {
       period: selectedPeriod,
       startDate: dateRange.start,
       endDate: dateRange.end,
+      rawLive,
     })
       .then((gridRes) => {
         if (!cancelled) setGridData(gridRes);
@@ -368,6 +371,7 @@ export function App() {
     selectedPeriod,
     dateRange.start,
     dateRange.end,
+    rawLive,
     retryNonce,
   ]);
 
@@ -1172,10 +1176,18 @@ export function App() {
               endDate={dateRange.end}
               granularity={granularity}
               selectedPeriod={selectedPeriod}
+              rawLive={rawLive}
               lang={lang}
               onApplyRange={handleApplyDateRange}
               onSelectPeriod={handleSelectPeriodFromCalendar}
               onClearPeriod={handleClearPeriod}
+              onToggleRawLive={(next) => {
+                setRawLive(next);
+                if (next) {
+                  setSelectedPeriod(null);
+                  setDateRange({ start: null, end: null });
+                }
+              }}
             />
 
             {isDrawingAoi && (
@@ -1404,10 +1416,18 @@ export function App() {
               endDate={dateRange.end}
               granularity={granularity}
               selectedPeriod={selectedPeriod}
+              rawLive={rawLive}
               lang={lang}
               onApplyRange={handleApplyDateRange}
               onSelectPeriod={handleSelectPeriodFromCalendar}
               onClearPeriod={handleClearPeriod}
+              onToggleRawLive={(next) => {
+                setRawLive(next);
+                if (next) {
+                  setSelectedPeriod(null);
+                  setDateRange({ start: null, end: null });
+                }
+              }}
             />
             <Suspense fallback={null}>
               <EarlyWarningPopover summary={summary} regionName={activeRegion.name} lang={lang} />

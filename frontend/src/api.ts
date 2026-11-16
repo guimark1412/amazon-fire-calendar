@@ -56,6 +56,7 @@ export interface QueryFilters {
   sensor?: SensorFilter;
   startDate?: string | null;
   endDate?: string | null;
+  rawLive?: boolean;
 }
 
 export function getFires(
@@ -79,6 +80,7 @@ export function getFires(
   if (filters?.period) params.set('period', filters.period);
   if (filters?.startDate) params.set('start_date', filters.startDate);
   if (filters?.endDate) params.set('end_date', filters.endDate);
+  if (filters?.rawLive) params.set('raw_live', 'true');
   return fetchJson<FiresResponse>(`/api/fires?${params.toString()}`);
 }
 
@@ -126,5 +128,6 @@ export function getGrid(
   if (filters?.period) params.set('period', filters.period);
   if (filters?.startDate) params.set('start_date', filters.startDate);
   if (filters?.endDate) params.set('end_date', filters.endDate);
+  if (filters?.rawLive) params.set('raw_live', 'true');
   return fetchJson<GridResponse>(`/api/grid?${params.toString()}`);
 }

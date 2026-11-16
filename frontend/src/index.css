@@ -2841,11 +2841,62 @@ body {
   left: 0;
 }
 
-.cal-month-chips {
-  display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 5px;
+.cal-raw-live-btn {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  padding: 8px 10px;
   margin-bottom: 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  background: rgba(30, 41, 59, 0.72);
+  color: #e2e8f0;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.16s ease, border-color 0.16s ease, color 0.16s ease;
+}
+
+.cal-raw-live-btn:hover {
+  border-color: rgba(249, 115, 22, 0.5);
+  color: #fff;
+}
+
+.cal-raw-live-btn.active {
+  background: rgba(249, 115, 22, 0.2);
+  border-color: rgba(249, 115, 22, 0.65);
+  color: #fdba74;
+}
+
+.cal-raw-live-main {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.78rem;
+}
+
+.cal-raw-live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #64748b;
+  flex-shrink: 0;
+}
+
+.cal-raw-live-dot.on {
+  background: #22c55e;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.25);
+}
+
+.cal-raw-live-hint {
+  font-size: 0.69rem;
+  color: #94a3b8;
+  line-height: 1.25;
+}
+
+.cal-raw-live-btn.active .cal-raw-live-hint {
+  color: #fed7aa;
 }
 
 .cal-month-chip {

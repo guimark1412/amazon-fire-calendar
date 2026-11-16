@@ -5,7 +5,7 @@ from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 
 from .config import REGIONS, parse_custom_bbox, resolve_region_config
-from .firms_client import get_timeline_records, with_dynamic_historical_baseline
+from .firms_client import get_fire_records, get_timeline_records, with_dynamic_historical_baseline
 from .harmonization import build_spatial_grid, build_timeline
 
 app = FastAPI(
@@ -131,24 +131,38 @@ def get_fires(
     period: Optional[str] = Query(None, description="Optional period filter (YYYY-MM or YYYY-Www)"),
     start_date: Optional[str] = Query(None, description="Start date YYYY-MM-DD"),
     end_date: Optional[str] = Query(None, description="End date YYYY-MM-DD"),
+    raw_live: bool = Query(False, description="When true, return unscaled raw NASA FIRMS detections"),
 ) -> dict:
     custom_bbox = _resolve_bbox_or_400(bbox)
     if custom_bbox is None and region not in REGIONS:
         raise HTTPException(status_code=404, detail=f"Unknown region '{region}'")
 
-    records, data_source = get_timeline_records(
-        region_id=region,
-        days=days,
-        custom_bbox=custom_bbox,
-        daynight=daynight,
-        min_confidence=min_confidence,
-        sensor=sensor,
-        period=period,
-        start_date=start_date,
-        end_date=end_date,
-    )
-    if not period and not start_date and not end_date:
-        records = _filter_trailing_days(records, days)
+    if raw_live:
+        records, data_source = get_fire_records(
+            region_id=region,
+            sensor=sensor,
+            days=days,
+            custom_bbox=custom_bbox,
+            daynight=daynight,
+            min_confidence=min_confidence,
+            period=period,
+            start_date=start_date,
+            end_date=end_date,
+        )
+    else:
+        records, data_source = get_timeline_records(
+            region_id=region,
+            days=days,
+            custom_bbox=custom_bbox,
+            daynight=daynight,
+            min_confidence=min_confidence,
+            sensor=sensor,
+            period=period,
+            start_date=start_date,
+            end_date=end_date,
+        )
+        if not period and not start_date and not end_date:
+            records = _filter_trailing_days(records, days)
     if sensor.lower() == "both" and len(records) > limit:
         half = limit // 2
         all_modis = [r for r in records if r["sensor"] == "MODIS"]
@@ -165,7 +179,7 @@ def get_fires(
         "start_date": start_date,
         "end_date": end_date,
         "data_source": data_source,
-        "live_unscaled": False,
+        "live_unscaled": raw_live and ("live_nasa_firms" in data_source),
         "total_count": len(records),
         "returned_count": len(sliced),
         "fires": sliced,
@@ -240,25 +254,39 @@ def get_grid(
     period: Optional[str] = Query(None, description="Optional period filter (YYYY-MM or YYYY-Www)"),
     start_date: Optional[str] = Query(None, description="Start date YYYY-MM-DD"),
     end_date: Optional[str] = Query(None, description="End date YYYY-MM-DD"),
+    raw_live: bool = Query(False, description="When true, return unscaled raw NASA FIRMS detections"),
 ) -> dict:
     custom_bbox = _resolve_bbox_or_400(bbox)
     if custom_bbox is None and region not in REGIONS:
         raise HTTPException(status_code=404, detail=f"Unknown region '{region}'")
 
     region_cfg = with_dynamic_historical_baseline(resolve_region_config(region, custom_bbox))
-    all_records, data_source = get_timeline_records(
-        region_id=region,
-        days=days,
-        custom_bbox=custom_bbox,
-        daynight=daynight,
-        min_confidence=min_confidence,
-        sensor="both",
-        period=period,
-        start_date=start_date,
-        end_date=end_date,
-    )
-    if not period and not start_date and not end_date:
-        all_records = _filter_trailing_days(all_records, days)
+    if raw_live:
+        all_records, data_source = get_fire_records(
+            region_id=region,
+            sensor="both",
+            days=days,
+            custom_bbox=custom_bbox,
+            daynight=daynight,
+            min_confidence=min_confidence,
+            period=period,
+            start_date=start_date,
+            end_date=end_date,
+        )
+    else:
+        all_records, data_source = get_timeline_records(
+            region_id=region,
+            days=days,
+            custom_bbox=custom_bbox,
+            daynight=daynight,
+            min_confidence=min_confidence,
+            sensor="both",
+            period=period,
+            start_date=start_date,
+            end_date=end_date,
+        )
+        if not period and not start_date and not end_date:
+            all_records = _filter_trailing_days(all_records, days)
     if sensor.lower() in ("modis", "viirs"):
         target_sensor = sensor.upper()
         records = [r for r in all_records if r["sensor"] == target_sensor]
@@ -277,5 +305,5 @@ def get_grid(
     grid["start_date"] = start_date
     grid["end_date"] = end_date
     grid["data_source"] = data_source
-    grid["live_unscaled"] = False
+    grid["live_unscaled"] = raw_live and ("live_nasa_firms" in data_source)
     return grid

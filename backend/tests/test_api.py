@@ -532,5 +532,9 @@ def test_all_map_views_use_calibrated_calendar_scale():
     assert grid_ytd["live_unscaled"] is False
     assert fires_7d["live_unscaled"] is False
 
+    fires_raw = client.get("/api/fires?region=amazonia_legal&raw_live=true").json()
+    assert fires_raw["live_unscaled"] is ("live_nasa_firms" in fires_raw["data_source"])
+    assert fires_raw["total_count"] >= fires_live["total_count"]
+
 
 
