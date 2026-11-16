@@ -1,15 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { CSSProperties } from 'react';
 import {
-  Calendar,
   ChevronLeft,
   ChevronRight,
   Download,
-  Grid3X3,
-  Layers,
-  MapPin,
   Presentation,
-  Scan,
   X,
 } from 'lucide-react';
 import { I18N, type Language } from '../i18n';
@@ -66,8 +61,6 @@ export function PitchModeModal({
   totalFires,
   calibrationFactor,
   summary,
-  mapMode,
-  chartMode,
   lang,
   onSelectView,
   onTriggerDemoAction,
@@ -77,7 +70,6 @@ export function PitchModeModal({
     fromView: null,
   });
   const [rect, setRect] = useState<SpotlightRect | null>(null);
-  const [warningPos, setWarningPos] = useState<{ left: number; top: number } | null>(null);
   const [tabHandoff, setTabHandoff] = useState<boolean>(false);
   const t = I18N[lang];
   const stepIndex = tourCursor.index;
@@ -101,25 +93,10 @@ export function PitchModeModal({
     (tourName: string) => {
       if (!tourName || tourName === 'pitch-summary') {
         setRect(null);
-        setWarningPos(null);
         return;
       }
       const el = document.querySelector(`[data-tour="${tourName}"]`) as HTMLElement | null;
       measureElement(el);
-      if (tourName === 'map-panel') {
-        const warnEl = document.querySelector('[data-tour="map-warning-tip"]') as HTMLElement | null;
-        if (warnEl && warnEl.offsetWidth > 0 && warnEl.offsetHeight > 0) {
-          const wr = warnEl.getBoundingClientRect();
-          setWarningPos({
-            left: Math.round(wr.right + 8),
-            top: Math.round(wr.top + wr.height / 2),
-          });
-        } else {
-          setWarningPos(null);
-        }
-      } else {
-        setWarningPos(null);
-      }
     },
     [measureElement],
   );
@@ -504,31 +481,6 @@ export function PitchModeModal({
         />
       )}
 
-      {!tabHandoff && stepIndex === 1 && warningPos && (
-        <div
-          className="tour-warning-pointer"
-          style={{ left: `${warningPos.left}px`, top: `${warningPos.top}px` }}
-          aria-hidden="true"
-        >
-          <svg
-            className="tour-warning-pointer-arrow"
-            width="18"
-            height="14"
-            viewBox="0 0 18 14"
-            fill="none"
-          >
-            <path
-              d="M17 7H2M2 7L7.5 1.5M2 7L7.5 12.5"
-              stroke="currentColor"
-              strokeWidth="2.2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-          <span>{lang === 'pt' ? 'Sem reescala (≤ 7d)' : 'Unscaled (≤ 7d)'}</span>
-        </div>
-      )}
-
       {!tabHandoff && (
         <div
           key="step"
@@ -558,80 +510,6 @@ export function PitchModeModal({
             <div className="tour-live-note" style={{ marginTop: '10px' }}>
               <strong>{regionName}:</strong> {totalFires.toLocaleString(lang === 'pt' ? 'pt-BR' : 'en-US')}{' '}
               {t.tourRecentHotspots} • {t.tourCalibFactor} <code>× {calibrationFactor}</code>
-            </div>
-          )}
-
-          {stepIndex === 1 && (
-            <div className="pitch-action-row">
-              <button
-                type="button"
-                className={`control-select action-btn ${mapMode === 'points' ? 'pitch-btn' : ''}`}
-                onClick={() => onTriggerDemoAction('points')}
-              >
-                <MapPin size={14} />
-                {t.tourViewPoints}
-              </button>
-              <button
-                type="button"
-                className={`control-select action-btn ${mapMode === 'footprints' ? 'pitch-btn' : ''}`}
-                onClick={() => onTriggerDemoAction('footprints')}
-              >
-                <Scan size={14} />
-                {t.footprintsBtn}
-              </button>
-              <button
-                type="button"
-                className={`control-select action-btn ${mapMode === 'grid' ? 'pitch-btn' : ''}`}
-                onClick={() => onTriggerDemoAction('grid')}
-              >
-                <Grid3X3 size={14} />
-                {t.tourViewGrid}
-              </button>
-              <button
-                type="button"
-                className="control-select action-btn"
-                onClick={() => onTriggerDemoAction('focus_peak_month')}
-              >
-                <Calendar size={14} />
-                {t.tourDemoHighlightPeak}
-              </button>
-            </div>
-          )}
-
-          {stepIndex === 2 && (
-            <div className="pitch-action-row">
-              <button
-                type="button"
-                className={`control-select action-btn ${chartMode === 'harmonized' ? 'pitch-btn' : ''}`}
-                onClick={() => onTriggerDemoAction('harmonized')}
-              >
-                <Layers size={14} />
-                {t.chartModeHarm}
-              </button>
-              <button
-                type="button"
-                className={`control-select action-btn ${chartMode === 'raw' ? 'pitch-btn' : ''}`}
-                onClick={() => onTriggerDemoAction('raw')}
-              >
-                <Layers size={14} />
-                {t.chartModeRaw}
-              </button>
-              <button
-                type="button"
-                className={`control-select action-btn ${chartMode === 'coincidence' ? 'pitch-btn' : ''}`}
-                onClick={() => onTriggerDemoAction('coincidence')}
-              >
-                <Layers size={14} />
-                {t.chartModeCoinc}
-              </button>
-              <button
-                type="button"
-                className={`control-select action-btn ${chartMode === 'frp' ? 'pitch-btn' : ''}`}
-                onClick={() => onTriggerDemoAction('frp')}
-              >
-                <Layers size={14} />
-                {t.chartModeFrp}
-              </button>
             </div>
           )}
 
