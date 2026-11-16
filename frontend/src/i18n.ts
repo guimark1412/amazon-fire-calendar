@@ -187,9 +187,9 @@ export const I18N = {
         'Área real aproximada de cada pixel (Scan × Track em km²), mostrando o alongamento nas bordas de varredura.',
       mapGrid:
         'Células agregadas coloridas pelo nível de alerta comparado à média histórica MODIS local.',
-      liveUnscaledTitle: 'Escala Calibrada & Janela > 7 dias',
+      liveUnscaledTitle: 'Modo bruto limitado a 7 dias',
       liveUnscaledTip:
-        'Tanto janelas acima de 7 dias (meses fechados e ano completo) quanto os últimos 7 dias por padrão são reescalados proporcionalmente para a régua histórica MODIS. Isso garante comparação justa entre meses sem picos artificiais pelo volume maior de pixels do VIIRS. Para ver todos os focos brutos da NASA FIRMS sem reescala, desative "Escala Calibrada (Padrão)" em Período ativo.',
+        'A API em tempo real da NASA FIRMS fornece apenas os últimos dias sem reescala. Acima de 7 dias (ou em meses fechados), os dados históricos seguem na régua calibrada do MODIS para evitar distorção entre meses.',
       chartHarm:
         'Unifica MODIS (1 km) e VIIRS normalizado na mesma régua de 20 anos para comparação justa com a média.',
       chartRaw:
@@ -459,9 +459,9 @@ export const I18N = {
         'Approximate ground pixel footprint (Scan × Track in km²), illustrating off-nadir stretching.',
       mapGrid:
         'Spatial grid cells colored by alert severity compared against the local MODIS historical mean.',
-      liveUnscaledTitle: 'Calibrated Scale & > 7-Day Window',
+      liveUnscaledTitle: 'Raw mode limited to 7 days',
       liveUnscaledTip:
-        'Both ranges longer than 7 days (closed months and full year) and the default 7-day live window are proportionally scaled to the MODIS historical baseline. This ensures fair month-to-month comparisons without artificial spikes from VIIRS’s higher pixel density. To inspect all unscaled raw NASA FIRMS detections, turn off "Calibrated Scale (Default)" in Active period.',
+        'NASA FIRMS real-time feeds only provide unscaled detections for recent days. Beyond 7 days (or in closed months), historical data remains on the calibrated MODIS baseline to prevent month-to-month distortion.',
       chartHarm:
         'Unifies MODIS (1 km) and normalized VIIRS onto the 20-year baseline for apples-to-apples comparison.',
       chartRaw:

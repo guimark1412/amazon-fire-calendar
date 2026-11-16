@@ -375,6 +375,20 @@ export function App() {
     retryNonce,
   ]);
 
+  const isRangeOver7Days = useMemo(() => {
+    if (selectedPeriod) {
+      return !/-W\d+/i.test(selectedPeriod);
+    }
+    if (dateRange.start && dateRange.end) {
+      const startMs = Date.parse(`${dateRange.start}T00:00:00Z`);
+      const endMs = Date.parse(`${dateRange.end}T00:00:00Z`);
+      if (!Number.isNaN(startMs) && !Number.isNaN(endMs)) {
+        return Math.abs(endMs - startMs) / 86_400_000 >= 7;
+      }
+    }
+    return false;
+  }, [selectedPeriod, dateRange.start, dateRange.end]);
+
   const activeRegion = useMemo(() => {
     if (customBbox) {
       const [w, s, e, n] = customBbox;
@@ -1230,13 +1244,15 @@ export function App() {
                 <div>
                   <h2 className="panel-title panel-title-inline">
                     <span>{t.mapTitle(activeRegion.name)}</span>
-                    <span className="map-warning-tip-wrap">
-                      <InfoTooltip
-                        variant="warning"
-                        title={t.tips.liveUnscaledTitle}
-                        text={t.tips.liveUnscaledTip}
-                      />
-                    </span>
+                    {rawLive && isRangeOver7Days && (
+                      <span className="map-warning-tip-wrap">
+                        <InfoTooltip
+                          variant="warning"
+                          title={t.tips.liveUnscaledTitle}
+                          text={t.tips.liveUnscaledTip}
+                        />
+                      </span>
+                    )}
                   </h2>
                   <p className="panel-subtitle">
                     {mapMode === 'grid'
