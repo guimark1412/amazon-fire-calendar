@@ -236,7 +236,7 @@ export const I18N = {
         badge: 'Aba 1 · Passo 1 de 6 — Filtros, AOI & Exportação',
         title: 'Controles Globais e Calibração em Tempo Real',
         description:
-          'Reúne filtros por região ou AOI customizada no mapa, alternância de sensores (MODIS/VIIRS), janela Mensal/Semanal e exportação em CSV ou GeoJSON.',
+          'Filtre por região ou desenhe uma AOI no mapa, alterne sensores (MODIS/VIIRS), janela Mensal/Semanal e exporte os resultados em CSV ou GeoJSON.',
       },
       {
         target: 'map-panel',
@@ -244,7 +244,7 @@ export const I18N = {
         badge: 'Aba 1 · Passo 2 de 6 — Mapa Interativo & Período',
         title: 'Pontos, Pegada Scan×Track, Grid e Período Ativo',
         description:
-          'Exibe focos individuais, pegada orbital física (km²) ou grade espacial de anomalias na mesma escala calibrada para qualquer período selecionado.',
+          'Alterne entre focos individuais, pegada orbital física (km²) ou grade espacial e filtre datas em "Período ativo". Na janela ao vivo de até 7 dias (padrão ou semana atual), o mapa exibe os dados brutos sem reescala da NASA FIRMS; acima de 7 dias ou em meses fechados, aplica a escala histórica.',
       },
       {
         target: 'chart-panel',
@@ -252,7 +252,7 @@ export const I18N = {
         badge: 'Aba 1 · Passo 3 de 6 — Série Temporal & Cross-Filtering',
         title: 'Série Multi-Métrica e Filtro por Clique',
         description:
-          'Compara o índice harmonizado contra dados brutos (~4×), coincidência entre sensores e energia FRP (MW) ao longo do ano.',
+          'Compare o índice harmonizado contra dados brutos (~4×), coincidência entre sensores e energia FRP (MW). Clique em qualquer barra para filtrar o mapa.',
       },
       {
         target: 'calendar-matrix',
@@ -260,7 +260,7 @@ export const I18N = {
         badge: 'Aba 2 · Passo 4 de 6 — Calendário & Matriz',
         title: 'Espectro Sazonal, Matriz do Calendário e Alerta Precoce',
         description:
-          'Apresenta o espectro contínuo de queima, a matriz mensal/semanal em Índice Harmonizado ou FRP (MW) e o resumo de Alerta Precoce.',
+          'Inspecione o espectro contínuo de queima, alterne a matriz entre Índice Harmonizado e energia FRP (MW), filtre períodos por alerta e abra o painel de Alerta Precoce.',
       },
       {
         target: 'harm-lab',
@@ -268,7 +268,7 @@ export const I18N = {
         badge: 'Aba 3 · Passo 5 de 6 — Laboratório MODIS×VIIRS',
         title: 'Antes vs. Depois, Peso VIIRS-Only e Simulador Orbital',
         description:
-          'Mostra o falso alarme bruto convertido para a escala MODIS calibrada, o ajuste de peso para focos VIIRS-Only e o simulador de estiramento orbital de 0° a 55°.',
+          'Compare o falso alarme bruto contra a escala MODIS calibrada, ajuste o peso de focos VIIRS-Only e simule o estiramento do pixel de 0° a 55°.',
       },
       {
         target: 'pitch-summary',
@@ -505,7 +505,7 @@ export const I18N = {
         badge: 'Tab 1 · Step 1 of 6 — Filters, AOI & Open Export',
         title: 'Global Controls & Real-Time Calibration',
         description:
-          'Combines region and custom AOI filtering, sensor selection (MODIS/VIIRS), Monthly/Weekly windows, and open CSV or GeoJSON export.',
+          'Filter by region or draw a custom AOI, switch sensors (MODIS/VIIRS), Monthly/Weekly windows, and export results as CSV or GeoJSON.',
       },
       {
         target: 'map-panel',
@@ -513,7 +513,7 @@ export const I18N = {
         badge: 'Tab 1 · Step 2 of 6 — Interactive Map & Active Period',
         title: 'Points, Scan×Track Footprints, Grid & Active Period',
         description:
-          'Displays individual hotspots, physical orbital pixel footprints (km²), or risk grid cells on the same calibrated scale across any selected period.',
+          'Switch between individual hotspots, physical orbital pixel footprints (km²), or risk grid cells via "Active period". In live windows up to 7 days (default or current week), the map shows unscaled raw NASA FIRMS detections; ranges > 7 days or monthly views apply historical scaling.',
       },
       {
         target: 'chart-panel',
@@ -521,7 +521,7 @@ export const I18N = {
         badge: 'Tab 1 · Step 3 of 6 — Time Series & Cross-Filtering',
         title: 'Multi-Metric Series & Click-to-Filter',
         description:
-          'Contrasts the MODIS-scaled index against raw counts (~4×), sensor coincidence decomposition, and FRP energy (MW) across the year.',
+          'Contrast the MODIS-scaled index against raw counts (~4×), sensor coincidence decomposition, and FRP energy (MW). Click any bar to filter the map.',
       },
       {
         target: 'calendar-matrix',
@@ -529,7 +529,7 @@ export const I18N = {
         badge: 'Tab 2 · Step 4 of 6 — Calendar & Matrix',
         title: 'Seasonal Spectrum, Calendar Matrix & Early Warning',
         description:
-          'Presents the continuous burning spectrum, monthly/weekly matrix in Harmonized Index or thermal FRP (MW), and the Early Warning brief.',
+          'Inspect the continuous burning spectrum, toggle the matrix between Harmonized Index and thermal FRP (MW), filter periods by alert status, and open the Early Warning brief.',
       },
       {
         target: 'harm-lab',
@@ -537,7 +537,7 @@ export const I18N = {
         badge: 'Tab 3 · Step 5 of 6 — MODIS×VIIRS Lab',
         title: 'Before vs. After, VIIRS-Only Weight & Swath Simulator',
         description:
-          'Shows how raw false alarms vanish on the calibrated MODIS scale, VIIRS-Only weighting for small burns, and the 0° to 55° orbital swath simulator.',
+          'Verify how raw false alarms vanish on the MODIS scale, adjust VIIRS-Only weighting for small burns, and simulate pixel stretching from 0° to 55°.',
       },
       {
         target: 'pitch-summary',
