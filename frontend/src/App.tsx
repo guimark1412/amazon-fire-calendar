@@ -156,6 +156,7 @@ export function App() {
   const [chartMode, setChartMode] = useState<ChartViewMode>('harmonized');
   const [mapMode, setMapMode] = useState<MapViewMode>('points');
   const [pitchOpen, setPitchOpen] = useState<boolean>(false);
+  const [pitchVisited, setPitchVisited] = useState<boolean>(false);
   const [exportMenuOpen, setExportMenuOpen] = useState<boolean>(false);
   const [scienceDetailsOpen, setScienceDetailsOpen] = useState<boolean>(false);
   const [aoiError, setAoiError] = useState<boolean>(false);
@@ -623,8 +624,11 @@ export function App() {
       {!isMobileViewport && (
         <button
           type="button"
-          className="control-select action-btn pitch-btn"
-          onClick={() => setPitchOpen(true)}
+          className={`control-select action-btn pitch-btn ${!pitchVisited && !pitchOpen ? 'pitch-btn--pulse' : ''}`}
+          onClick={() => {
+            setPitchVisited(true);
+            setPitchOpen(true);
+          }}
         >
           <Presentation size={15} />
           {t.pitchBtn}
@@ -1536,8 +1540,9 @@ export function App() {
         </button>
         <button
           type="button"
-          className={`mobile-nav-item ${pitchOpen ? 'active' : ''}`}
+          className={`mobile-nav-item ${pitchOpen ? 'active' : ''} ${!pitchVisited && !pitchOpen ? 'mobile-nav-item--pulse' : ''}`}
           onClick={() => {
+            setPitchVisited(true);
             setActiveView('overview');
             setPitchOpen(true);
           }}
