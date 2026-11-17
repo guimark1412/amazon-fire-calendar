@@ -1427,7 +1427,7 @@ export function App() {
       )}
 
       {activeView === 'matrix' && (
-        <div className="matrix-view-stack">
+        <main className="matrix-view-stack">
           <div className="map-period-inline-row matrix-top-bar" style={{ marginTop: 0 }}>
             <DateRangePickerPopover
               variant="inline"
@@ -1462,11 +1462,11 @@ export function App() {
               onSelectPeriod={handleSelectPeriodFromViz}
             />
           </Suspense>
-        </div>
+        </main>
       )}
 
       {activeView === 'science' && (
-        <div className="science-view-stack">
+        <main className="science-view-stack">
           <Suspense fallback={null}>
             <HarmonizationLab
               diagnostics={timelineData?.diagnostics}
@@ -1504,7 +1504,7 @@ export function App() {
               </div>
             )}
           </section>
-        </div>
+        </main>
       )}
 
       {pitchOpen && (
@@ -1545,7 +1545,10 @@ export function App() {
         <button
           type="button"
           className={`mobile-nav-item ${activeView === 'overview' && !pitchOpen ? 'active' : ''}`}
-          onClick={() => setActiveView('overview')}
+          onClick={() => {
+            setActiveView('overview');
+            window.scrollTo({ top: 0, behavior: 'auto' });
+          }}
         >
           <LayoutGrid size={18} />
           <span>{t.navPanel}</span>
@@ -1553,7 +1556,10 @@ export function App() {
         <button
           type="button"
           className={`mobile-nav-item ${activeView === 'matrix' && !pitchOpen ? 'active' : ''}`}
-          onClick={() => setActiveView('matrix')}
+          onClick={() => {
+            setActiveView('matrix');
+            window.scrollTo({ top: 0, behavior: 'auto' });
+          }}
         >
           <Calendar size={18} />
           <span>{t.navCalendar}</span>
@@ -1561,7 +1567,10 @@ export function App() {
         <button
           type="button"
           className={`mobile-nav-item ${activeView === 'science' && !pitchOpen ? 'active' : ''}`}
-          onClick={() => setActiveView('science')}
+          onClick={() => {
+            setActiveView('science');
+            window.scrollTo({ top: 0, behavior: 'auto' });
+          }}
         >
           <FlaskConical size={18} />
           <span>{t.navScience}</span>

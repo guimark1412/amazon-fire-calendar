@@ -1386,7 +1386,8 @@ button,
 }
 
 .mobile-controls-drawer .aoi-anchor .action-btn,
-.mobile-controls-drawer .export-dropdown-wrap .action-btn {
+.mobile-controls-drawer .export-dropdown-wrap .action-btn,
+.mobile-controls-drawer .utility-actions > .action-btn {
   width: 100%;
   justify-content: center;
 }
@@ -1514,12 +1515,23 @@ button,
     gap: 8px;
   }
 
+  .month-values {
+    gap: 6px;
+  }
+
+  .month-val-label {
+    font-size: 0.63rem;
+    white-space: nowrap;
+  }
+
   .tour-tooltip-card {
     left: 12px !important;
     right: 12px;
     width: auto !important;
     max-width: none;
     max-height: calc(100dvh - 96px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
     padding: 13px 15px;
   }
 
@@ -1782,7 +1794,7 @@ button,
 .alert-anchor {
   position: relative;
   display: inline-flex;
-  z-index: 1200;
+  z-index: 1850;
 }
 
 .alert-trigger-btn {
@@ -1911,8 +1923,9 @@ button,
     right: 12px;
     width: auto;
     max-width: none;
-    max-height: calc(100vh - 96px);
+    max-height: calc(100dvh - 156px);
     overflow-y: auto;
+    z-index: 1850;
   }
 }
 
@@ -3286,7 +3299,7 @@ button,
   .map-basemap-bar {
     top: 8px;
     right: 8px;
-    max-width: calc(100% - 56px);
+    max-width: calc(100% - 58px);
     overflow-x: auto;
     scrollbar-width: none;
     padding: 3px 4px;
@@ -3298,6 +3311,18 @@ button,
   .map-basemap-btn {
     padding: 3px 6px;
     font-size: 0.64rem;
+  }
+}
+
+@media (max-width: 420px) {
+  .map-basemap-bar {
+    max-width: calc(100% - 62px);
+    padding: 2px 3px;
+    gap: 1px;
+  }
+  .map-basemap-btn {
+    padding: 2px 5px;
+    font-size: 0.61rem;
   }
 }
 
@@ -3432,7 +3457,8 @@ button,
     flex: 1 1 0;
     justify-content: center;
     padding: 6px 6px;
-    font-size: 0.78rem;
+    font-size: 0.74rem;
+    white-space: nowrap;
   }
 
   .main-grid .toggle-group[data-count='4'] {
@@ -3509,12 +3535,6 @@ button,
 
 @media (max-width: 640px) {
   .heatmap-cells-row--monthly {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 480px) {
-  .cal-month-chips {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }

@@ -54,6 +54,11 @@ export function HarmonizationLab({
   const isPt = lang === 'pt';
   const t = I18N[lang];
   const locale = isPt ? 'pt-BR' : 'en-US';
+  const fmt = (val: number, digits = 2) =>
+    val.toLocaleString(locale, {
+      minimumFractionDigits: digits,
+      maximumFractionDigits: digits,
+    });
 
   return (
     <section className="harm-lab-section" data-tour="harm-lab">
@@ -107,15 +112,27 @@ export function HarmonizationLab({
                 <InfoTooltip text={t.tips.labHarm} />
               </div>
               <div className="lab-big-metric">
-                {harmTotal.toFixed(1)} <span>eq. MODIS</span>
+                {harmTotal.toLocaleString(locale, {
+                  minimumFractionDigits: 1,
+                  maximumFractionDigits: 1,
+                })}{' '}
+                <span>eq. MODIS</span>
               </div>
               <div className="lab-sub-formula">
-                ×{calibrationFactor} · {coincidentViirs} {isPt ? 'coinc.' : 'coinc.'} + {viirsOnlySmall}{' '}
-                VIIRS-only
+                ×{calibrationFactor.toLocaleString(locale, {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 4,
+                })}{' '}
+                · {coincidentViirs.toLocaleString(locale)} {isPt ? 'coinc.' : 'coinc.'} +{' '}
+                {viirsOnlySmall.toLocaleString(locale)} VIIRS-only
               </div>
               <span className="lab-delta-pill lab-delta-pill--ok">
                 {harmDevPct >= 0 ? '+' : ''}
-                {harmDevPct.toFixed(1)}% vs. MODIS · {isPt ? 'Anomalia Real' : 'True Anomaly'}
+                {harmDevPct.toLocaleString(locale, {
+                  minimumFractionDigits: 1,
+                  maximumFractionDigits: 1,
+                })}
+                % vs. MODIS · {isPt ? 'Anomalia Real' : 'True Anomaly'}
               </span>
             </div>
           </div>
@@ -161,7 +178,8 @@ export function HarmonizationLab({
 
           <div className="swath-stage">
             <span className="swath-modis-label">
-              MODIS {modisScanKm} × {modisTrackKm} km vs. VIIRS {viirsScanKm} × {viirsTrackKm} km
+              MODIS {fmt(modisScanKm, 2)} × {fmt(modisTrackKm, 2)} km vs. VIIRS {fmt(viirsScanKm, 2)} ×{' '}
+              {fmt(viirsTrackKm, 2)} km
             </span>
             <div
               className="swath-modis-box"
@@ -181,15 +199,15 @@ export function HarmonizationLab({
           <div className="swath-telemetry">
             <div className="swath-tele-item">
               <span>{isPt ? 'Área MODIS' : 'MODIS Area'}</span>
-              <strong style={{ color: '#fbbf24' }}>{modisAreaKm2} km²</strong>
+              <strong style={{ color: '#fbbf24' }}>{fmt(modisAreaKm2, 2)} km²</strong>
             </div>
             <div className="swath-tele-item">
               <span>{isPt ? 'Área VIIRS' : 'VIIRS Area'}</span>
-              <strong style={{ color: '#f87171' }}>{viirsAreaKm2} km²</strong>
+              <strong style={{ color: '#f87171' }}>{fmt(viirsAreaKm2, 3)} km²</strong>
             </div>
             <div className="swath-tele-item">
               <span>{isPt ? 'Razão de Área' : 'Area Ratio'}</span>
-              <strong style={{ color: '#38bdf8' }}>{ratio}×</strong>
+              <strong style={{ color: '#38bdf8' }}>{fmt(ratio, 1)}×</strong>
             </div>
           </div>
 
@@ -214,9 +232,11 @@ export function HarmonizationLab({
               aria-label={isPt ? 'Ângulo de Visada' : 'Scan Angle'}
             />
             <div className="lab-slider-ticks">
-              <span>0° Nadir (1.0 km²)</span>
-              <span>30° Mid (~1.6 km²)</span>
-              <span>{isPt ? '55° Borda (~8.2 km²)' : '55° Edge (~8.2 km²)'}</span>
+              <span>0° Nadir ({fmt(1.0, 1)} km²)</span>
+              <span>30° Mid (~{fmt(1.6, 1)} km²)</span>
+              <span>
+                {isPt ? `55° Borda (~${fmt(8.2, 1)} km²)` : `55° Edge (~${fmt(8.2, 1)} km²)`}
+              </span>
             </div>
           </div>
         </div>
@@ -234,7 +254,11 @@ export function HarmonizationLab({
           <div className="pipeline-step-body">
             <code className="pipeline-step-eq">
               {coincidentViirs.toLocaleString(locale)} + ({viirsOnlySmall.toLocaleString(locale)} ×{' '}
-              {viirsOnlyWeight.toFixed(2)})
+              {viirsOnlyWeight.toLocaleString(locale, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
+              )
             </code>
             <div className="pipeline-step-result">
               <strong className="pipeline-step-out">
@@ -261,7 +285,15 @@ export function HarmonizationLab({
           </div>
           <div className="pipeline-step-body">
             <code className="pipeline-step-eq">
-              {effectiveViirs.toFixed(1)} × {calibrationFactor}
+              {effectiveViirs.toLocaleString(locale, {
+                minimumFractionDigits: 1,
+                maximumFractionDigits: 1,
+              })}{' '}
+              ×{' '}
+              {calibrationFactor.toLocaleString(locale, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 4,
+              })}
             </code>
             <div className="pipeline-step-result">
               <strong className="pipeline-step-out">
@@ -288,7 +320,12 @@ export function HarmonizationLab({
           </div>
           <div className="pipeline-step-body">
             <code className="pipeline-step-eq">
-              ({rawModis.toLocaleString(locale)} + {normalizedViirs.toFixed(1)}) ÷ 2
+              ({rawModis.toLocaleString(locale)} +{' '}
+              {normalizedViirs.toLocaleString(locale, {
+                minimumFractionDigits: 1,
+                maximumFractionDigits: 1,
+              })}
+              ) ÷ 2
             </code>
             <div className="pipeline-step-result">
               <strong className="pipeline-step-out pipeline-step-out--final">

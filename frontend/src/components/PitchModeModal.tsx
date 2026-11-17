@@ -291,16 +291,27 @@ export function PitchModeModal({
     if (vw <= 768) {
       if (tabHandoff) {
         return {
-          top: `${Math.min(vh - 64, Math.max(12, Math.round(boxBottom + 12)))}px`,
+          top: `${Math.min(vh - 76, Math.max(12, Math.round(boxBottom + 12)))}px`,
           left: '12px',
+          width: 'fit-content',
         };
       }
       const spotlightInUpperHalf = boxTop + boxHeight / 2 < vh * 0.52;
-      return {
-        top: spotlightInUpperHalf ? `${Math.max(16, vh - estHeight - 76)}px` : '12px',
-        left: '12px',
-        width: `${Math.max(260, vw - 24)}px`,
-      };
+      return spotlightInUpperHalf
+        ? {
+            top: 'auto',
+            bottom: '76px',
+            left: '12px',
+            right: '12px',
+            width: 'auto',
+          }
+        : {
+            top: '12px',
+            bottom: 'auto',
+            left: '12px',
+            right: '12px',
+            width: 'auto',
+          };
     }
 
     if (tabHandoff) {
