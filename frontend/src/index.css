@@ -45,6 +45,16 @@ body {
   max-width: 1440px;
   margin: 0 auto;
   padding: 20px 24px 36px;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+input,
+textarea,
+pre,
+code {
+  user-select: text;
+  -webkit-user-select: text;
 }
 
 button,
@@ -52,6 +62,7 @@ button,
 .panel-header,
 .kpi-mini-pill,
 .map-box,
+.leaflet-container,
 .recharts-wrapper,
 .recharts-wrapper text,
 .cal-matrix-card,
