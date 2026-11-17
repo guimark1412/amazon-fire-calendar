@@ -25,6 +25,14 @@ input:focus:not(:focus-visible),
   outline: none;
 }
 
+.recharts-wrapper:focus,
+.recharts-wrapper *:focus,
+.recharts-surface:focus,
+.leaflet-container:focus,
+.leaflet-container *:focus {
+  outline: none;
+}
+
 html,
 body {
   margin: 0;
