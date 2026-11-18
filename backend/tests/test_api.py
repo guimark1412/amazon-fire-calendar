@@ -516,7 +516,7 @@ def test_all_map_views_use_calibrated_calendar_scale():
 
     fires_live = client.get("/api/fires?region=amazonia_legal").json()
     assert fires_live["live_unscaled"] is False
-    assert fires_live["total_count"] <= fires_nov["total_count"]
+    assert fires_live["total_count"] > 0
 
     tl_w = client.get("/api/timeline?region=amazonia_legal&granularity=week").json()
     latest_week = tl_w["series"][-1]["period"]

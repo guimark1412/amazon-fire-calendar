@@ -535,6 +535,67 @@ def with_dynamic_historical_baseline(region: RegionConfig) -> RegionConfig:
     return replace(region, historical_monthly_avg=dynamic_avg)
 
 
+def get_live_harmonized_records(
+    region_id: str = "amazonia_legal",
+    days: int = 7,
+    custom_bbox: Optional[Tuple[float, float, float, float]] = None,
+    daynight: str = "all",
+    min_confidence: str = "all",
+    sensor: str = "both",
+    period: Optional[str] = None,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+) -> Tuple[List[Dict[str, Any]], str]:
+    """
+    Harmonize live <=7d NASA FIRMS detections to the MODIS 1km density without shrinking
+    them down to the compact monthly CSV index budget (keeping ~hundreds/thousands of fires visible).
+    """
+    from .harmonization import compute_calibration_factor
+
+    live_all, source = get_fire_records(
+        region_id=region_id,
+        sensor="both",
+        days=days,
+        custom_bbox=custom_bbox,
+        daynight=daynight,
+        min_confidence=min_confidence,
+        period=period,
+        start_date=start_date,
+        end_date=end_date,
+    )
+    if source != "live_nasa_firms" or not live_all:
+        return get_timeline_records(
+            region_id=region_id,
+            days=days,
+            custom_bbox=custom_bbox,
+            daynight=daynight,
+            min_confidence=min_confidence,
+            sensor=sensor,
+            period=period,
+            start_date=start_date,
+            end_date=end_date,
+        )
+
+    factor, _ = compute_calibration_factor(live_all)
+    live_modis = [r for r in live_all if r["sensor"] == "MODIS"]
+    live_viirs = [r for r in live_all if r["sensor"] == "VIIRS"]
+
+    target_viirs = max(1 if live_viirs else 0, int(round(len(live_viirs) * factor)))
+    scaled_viirs = _resample_evenly(live_viirs, target_viirs) if live_viirs else []
+
+    combined = _apply_filters(
+        live_modis + scaled_viirs,
+        sensor=sensor,
+        daynight=daynight,
+        min_confidence=min_confidence,
+        period=period,
+        start_date=start_date,
+        end_date=end_date,
+    )
+    combined.sort(key=lambda r: (r["acq_date"], r["acq_time"], r["sensor"]))
+    return combined, source
+
+
 def get_timeline_records(
     region_id: str = "amazonia_legal",
     days: int = 7,

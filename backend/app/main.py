@@ -5,7 +5,12 @@ from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 
 from .config import REGIONS, parse_custom_bbox, resolve_region_config
-from .firms_client import get_fire_records, get_timeline_records, with_dynamic_historical_baseline
+from .firms_client import (
+    get_fire_records,
+    get_live_harmonized_records,
+    get_timeline_records,
+    with_dynamic_historical_baseline,
+)
 from .harmonization import build_spatial_grid, build_timeline
 
 app = FastAPI(
@@ -119,6 +124,34 @@ def _filter_trailing_days(records: List[Dict], days: int) -> List[Dict]:
     return [r for r in records if str(r.get("acq_date", "")) >= cutoff_iso]
 
 
+def _is_monthly_or_long_range(
+    period: Optional[str],
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+) -> bool:
+    """Return True when the query spans >7 days or selects a monthly/annual period."""
+    if period:
+        p = period.strip()
+        if len(p) == 7 and p[4] == "-" and not p[5:].upper().startswith("W"):
+            return True
+        if len(p) == 4 and p.isdigit():
+            return True
+    if start_date and end_date:
+        try:
+            d_start = date.fromisoformat(start_date.strip())
+            d_end = date.fromisoformat(end_date.strip())
+            return abs((d_end - d_start).days) >= 7
+        except ValueError:
+            return False
+    if start_date and not end_date:
+        try:
+            d_start = date.fromisoformat(start_date.strip())
+            return (date.today() - d_start).days >= 7
+        except ValueError:
+            return False
+    return False
+
+
 @app.get("/api/fires")
 def get_fires(
     region: str = Query("amazonia_legal", description="Region ID from /api/regions or 'custom_aoi'"),
@@ -149,7 +182,7 @@ def get_fires(
             start_date=start_date,
             end_date=end_date,
         )
-    else:
+    elif _is_monthly_or_long_range(period, start_date, end_date):
         records, data_source = get_timeline_records(
             region_id=region,
             days=days,
@@ -161,7 +194,19 @@ def get_fires(
             start_date=start_date,
             end_date=end_date,
         )
-        if not period and not start_date and not end_date:
+    else:
+        records, data_source = get_live_harmonized_records(
+            region_id=region,
+            days=days,
+            custom_bbox=custom_bbox,
+            daynight=daynight,
+            min_confidence=min_confidence,
+            sensor=sensor,
+            period=period,
+            start_date=start_date,
+            end_date=end_date,
+        )
+        if data_source != "live_nasa_firms" and not period and not start_date and not end_date:
             records = _filter_trailing_days(records, days)
     if sensor.lower() == "both" and len(records) > limit:
         half = limit // 2
@@ -273,7 +318,7 @@ def get_grid(
             start_date=start_date,
             end_date=end_date,
         )
-    else:
+    elif _is_monthly_or_long_range(period, start_date, end_date):
         all_records, data_source = get_timeline_records(
             region_id=region,
             days=days,
@@ -285,7 +330,19 @@ def get_grid(
             start_date=start_date,
             end_date=end_date,
         )
-        if not period and not start_date and not end_date:
+    else:
+        all_records, data_source = get_live_harmonized_records(
+            region_id=region,
+            days=days,
+            custom_bbox=custom_bbox,
+            daynight=daynight,
+            min_confidence=min_confidence,
+            sensor="both",
+            period=period,
+            start_date=start_date,
+            end_date=end_date,
+        )
+        if data_source != "live_nasa_firms" and not period and not start_date and not end_date:
             all_records = _filter_trailing_days(all_records, days)
     if sensor.lower() in ("modis", "viirs"):
         target_sensor = sensor.upper()
