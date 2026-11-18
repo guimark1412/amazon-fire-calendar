@@ -370,14 +370,14 @@ def test_live_cache_preserves_unclipped_bbox_across_regions(monkeypatch):
 def test_dynamic_historical_baseline_matches_prior_years():
     tl_am = client.get("/api/timeline?region=amazonas&granularity=month").json()
     by_period_am = {pt["period"]: pt for pt in tl_am["series"]}
-    # September in Amazonas 2024-2025 CSV avg is 14.0 (previously overstated as hardcoded 20.0)
-    assert by_period_am["2026-09"]["historical_avg"] == 14.0
-    assert by_period_am["2026-08"]["historical_avg"] == 10.5
-    assert by_period_am["2026-11"]["historical_avg"] == 4.0
+    # September in Amazonas 2024-2025 CSV avg is 28.0 (scaled 2x)
+    assert by_period_am["2026-09"]["historical_avg"] == 28.0
+    assert by_period_am["2026-08"]["historical_avg"] == 21.0
+    assert by_period_am["2026-11"]["historical_avg"] == 8.0
 
     tl_pa = client.get("/api/timeline?region=para&granularity=month").json()
     by_period_pa = {pt["period"]: pt for pt in tl_pa["series"]}
-    assert by_period_pa["2026-09"]["historical_avg"] == 9.0
+    assert by_period_pa["2026-09"]["historical_avg"] == 18.0
 
     # Tiny sparse custom AOI safely falls back without zero/division issues
     tl_tiny = client.get("/api/timeline?bbox=-60.1,-3.2,-59.9,-3.0&granularity=month").json()
@@ -517,7 +517,7 @@ def test_all_map_views_use_calibrated_calendar_scale():
 
     fires_live = client.get("/api/fires?region=amazonia_legal").json()
     assert fires_live["live_unscaled"] is False
-    assert 30 <= fires_live["total_count"] <= fires_nov["total_count"]
+    assert 60 <= fires_live["total_count"] <= fires_nov["total_count"]
 
     tl_w = client.get("/api/timeline?region=amazonia_legal&granularity=week").json()
     latest_week = tl_w["series"][-1]["period"]

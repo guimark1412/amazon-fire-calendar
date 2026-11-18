@@ -607,7 +607,7 @@ def get_timeline_records(
             if r["acq_date"][:7] == ym and r["acq_date"] not in live_dates and r["sensor"] == "VIIRS"
         )
         n_live_days = max(1, len({r["acq_date"] for r in month_recs}))
-        expected_live_modis = max(12.0, hist_month_avg * 45.0 * n_live_days)
+        expected_live_modis = max(12.0, hist_month_avg * 22.5 * n_live_days)
 
         if live_m > 0:
             raw_intensity = live_m / expected_live_modis
@@ -633,8 +633,8 @@ def get_timeline_records(
         )
 
         window_share = max(0.28, min(0.45, n_live_days / 20.0))
-        min_live_modis = max(1, int(round(hist_month_avg * max(0.85, intensity) * window_share)))
-        min_live_viirs = max(4, int(round(min_live_modis * max(3.2, min(ratio_v_to_m, 4.0)))))
+        min_live_modis = max(2, int(round(hist_month_avg * max(0.85, intensity) * window_share)))
+        min_live_viirs = max(8, int(round(min_live_modis * max(3.2, min(ratio_v_to_m, 4.0)))))
 
         target_modis = max(
             min_live_modis if live_m > 0 else 0,

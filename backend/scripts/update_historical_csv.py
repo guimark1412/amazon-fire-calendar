@@ -124,7 +124,7 @@ def _calibrate_day_rows(
 
     live_m = len(modis_rows)
     live_v = len(viirs_rows)
-    expected_live_modis = max(12.0, hist_month_avg * 45.0)
+    expected_live_modis = max(12.0, hist_month_avg * 22.5)
     if live_m > 0:
         raw_intensity = live_m / expected_live_modis
     else:

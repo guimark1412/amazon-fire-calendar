@@ -80,7 +80,7 @@ REGIONS: Dict[str, RegionConfig] = {
         bbox=(-74.0, -18.0, -44.0, 5.5),
         center=(-5.5, -59.5),
         zoom=5,
-        historical_monthly_avg=(4, 3, 4, 5, 7, 14, 26, 48, 58, 36, 22, 12),
+        historical_monthly_avg=(8, 6, 8, 10, 14, 28, 52, 96, 116, 72, 44, 24),
         polygon=AMAZONIA_LEGAL_BR_POLYGON,
     ),
     "norte_america_sul": RegionConfig(
@@ -89,7 +89,7 @@ REGIONS: Dict[str, RegionConfig] = {
         bbox=(-74.0, -18.0, -44.0, 5.5),
         center=(-4.5, -59.5),
         zoom=5,
-        historical_monthly_avg=(5, 4, 5, 6, 8, 16, 29, 52, 64, 40, 26, 15),
+        historical_monthly_avg=(10, 8, 10, 12, 16, 32, 58, 104, 128, 80, 52, 30),
     ),
     "amazonas": RegionConfig(
         id="amazonas",
@@ -97,7 +97,7 @@ REGIONS: Dict[str, RegionConfig] = {
         bbox=(-73.8, -9.8, -56.1, 2.2),
         center=(-4.2, -63.0),
         zoom=6,
-        historical_monthly_avg=(2, 1, 2, 2, 3, 5, 9, 16, 20, 12, 8, 4),
+        historical_monthly_avg=(4, 2, 4, 4, 6, 10, 18, 32, 40, 24, 16, 8),
         polygon=AMAZONAS_POLYGON,
     ),
     "para": RegionConfig(
@@ -106,7 +106,7 @@ REGIONS: Dict[str, RegionConfig] = {
         bbox=(-58.9, -9.8, -46.1, 2.6),
         center=(-4.5, -52.5),
         zoom=6,
-        historical_monthly_avg=(2, 1, 2, 2, 3, 5, 9, 16, 20, 12, 8, 4),
+        historical_monthly_avg=(4, 2, 4, 4, 6, 10, 18, 32, 40, 24, 16, 8),
         polygon=PARA_POLYGON,
     ),
     "mato_grosso": RegionConfig(
@@ -115,7 +115,7 @@ REGIONS: Dict[str, RegionConfig] = {
         bbox=(-61.6, -18.0, -50.2, -7.3),
         center=(-12.6, -55.9),
         zoom=6,
-        historical_monthly_avg=(2, 2, 2, 3, 4, 8, 15, 28, 34, 20, 12, 6),
+        historical_monthly_avg=(4, 4, 4, 6, 8, 16, 30, 56, 68, 40, 24, 12),
     ),
     "rondonia": RegionConfig(
         id="rondonia",
@@ -123,7 +123,7 @@ REGIONS: Dict[str, RegionConfig] = {
         bbox=(-66.8, -13.7, -59.8, -7.9),
         center=(-10.8, -63.0),
         zoom=7,
-        historical_monthly_avg=(1, 1, 1, 1, 2, 3, 5, 8, 10, 6, 4, 2),
+        historical_monthly_avg=(2, 2, 2, 2, 4, 6, 10, 16, 20, 12, 8, 4),
     ),
     "acre": RegionConfig(
         id="acre",
@@ -131,7 +131,7 @@ REGIONS: Dict[str, RegionConfig] = {
         bbox=(-74.0, -11.1, -66.6, -7.1),
         center=(-9.1, -70.4),
         zoom=7,
-        historical_monthly_avg=(1, 1, 1, 1, 2, 3, 5, 8, 10, 6, 4, 2),
+        historical_monthly_avg=(2, 2, 2, 2, 4, 6, 10, 16, 20, 12, 8, 4),
     ),
 }
 
