@@ -632,9 +632,9 @@ def get_timeline_records(
             if prev_ym and r["acq_date"][:7] == prev_ym and r["sensor"] == "VIIRS"
         )
 
-        window_share = max(0.60, min(1.0, n_live_days / 8.0))
-        min_live_modis = max(2, int(round(hist_month_avg * max(0.90, intensity) * window_share)))
-        min_live_viirs = max(6, int(round(min_live_modis * max(3.2, min(ratio_v_to_m, 4.2)))))
+        window_share = max(0.28, min(0.45, n_live_days / 20.0))
+        min_live_modis = max(1, int(round(hist_month_avg * max(0.85, intensity) * window_share)))
+        min_live_viirs = max(4, int(round(min_live_modis * max(3.2, min(ratio_v_to_m, 4.0)))))
 
         target_modis = max(
             min_live_modis if live_m > 0 else 0,
