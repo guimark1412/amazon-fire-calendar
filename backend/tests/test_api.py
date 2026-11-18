@@ -54,7 +54,7 @@ def test_fires_filter_by_sensor_and_footprint():
     res_modis = client.get("/api/fires?region=amazonas&sensor=MODIS&limit=50")
     assert res_modis.status_code == 200
     data = res_modis.json()
-    assert data["data_source"] in ("live_nasa_firms", "local_csv_fallback")
+    assert data["data_source"] in ("live_nasa_firms", "live_nasa_firms+history", "local_csv_fallback")
     assert data["returned_count"] > 0
     assert all(f["sensor"] == "MODIS" for f in data["fires"])
     assert "pixel_area_km2" in data["fires"][0]
@@ -516,7 +516,7 @@ def test_all_map_views_use_calibrated_calendar_scale():
 
     fires_live = client.get("/api/fires?region=amazonia_legal").json()
     assert fires_live["live_unscaled"] is False
-    assert fires_live["total_count"] > 0
+    assert 30 <= fires_live["total_count"] <= fires_nov["total_count"]
 
     tl_w = client.get("/api/timeline?region=amazonia_legal&granularity=week").json()
     latest_week = tl_w["series"][-1]["period"]

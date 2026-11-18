@@ -535,67 +535,6 @@ def with_dynamic_historical_baseline(region: RegionConfig) -> RegionConfig:
     return replace(region, historical_monthly_avg=dynamic_avg)
 
 
-def get_live_harmonized_records(
-    region_id: str = "amazonia_legal",
-    days: int = 7,
-    custom_bbox: Optional[Tuple[float, float, float, float]] = None,
-    daynight: str = "all",
-    min_confidence: str = "all",
-    sensor: str = "both",
-    period: Optional[str] = None,
-    start_date: Optional[str] = None,
-    end_date: Optional[str] = None,
-) -> Tuple[List[Dict[str, Any]], str]:
-    """
-    Harmonize live <=7d NASA FIRMS detections to the MODIS 1km density without shrinking
-    them down to the compact monthly CSV index budget (keeping ~hundreds/thousands of fires visible).
-    """
-    from .harmonization import compute_calibration_factor
-
-    live_all, source = get_fire_records(
-        region_id=region_id,
-        sensor="both",
-        days=days,
-        custom_bbox=custom_bbox,
-        daynight=daynight,
-        min_confidence=min_confidence,
-        period=period,
-        start_date=start_date,
-        end_date=end_date,
-    )
-    if source != "live_nasa_firms" or not live_all:
-        return get_timeline_records(
-            region_id=region_id,
-            days=days,
-            custom_bbox=custom_bbox,
-            daynight=daynight,
-            min_confidence=min_confidence,
-            sensor=sensor,
-            period=period,
-            start_date=start_date,
-            end_date=end_date,
-        )
-
-    factor, _ = compute_calibration_factor(live_all)
-    live_modis = [r for r in live_all if r["sensor"] == "MODIS"]
-    live_viirs = [r for r in live_all if r["sensor"] == "VIIRS"]
-
-    target_viirs = max(1 if live_viirs else 0, int(round(len(live_viirs) * factor)))
-    scaled_viirs = _resample_evenly(live_viirs, target_viirs) if live_viirs else []
-
-    combined = _apply_filters(
-        live_modis + scaled_viirs,
-        sensor=sensor,
-        daynight=daynight,
-        min_confidence=min_confidence,
-        period=period,
-        start_date=start_date,
-        end_date=end_date,
-    )
-    combined.sort(key=lambda r: (r["acq_date"], r["acq_time"], r["sensor"]))
-    return combined, source
-
-
 def get_timeline_records(
     region_id: str = "amazonia_legal",
     days: int = 7,
@@ -681,14 +620,38 @@ def get_timeline_records(
         ratio_v_to_m = max(2.2, min(raw_ratio, 6.5))
         goal_viirs = goal_modis * ratio_v_to_m
 
+        prev_ym = f"{ym[:4]}-{month_idx:02d}" if month_idx >= 1 else ""
+        prev_month_modis = sum(
+            1
+            for r in base_historical
+            if prev_ym and r["acq_date"][:7] == prev_ym and r["sensor"] == "MODIS"
+        )
+        prev_month_viirs = sum(
+            1
+            for r in base_historical
+            if prev_ym and r["acq_date"][:7] == prev_ym and r["sensor"] == "VIIRS"
+        )
+
+        window_share = max(0.60, min(1.0, n_live_days / 8.0))
+        min_live_modis = max(2, int(round(hist_month_avg * max(0.90, intensity) * window_share)))
+        min_live_viirs = max(6, int(round(min_live_modis * max(3.2, min(ratio_v_to_m, 4.2)))))
+
         target_modis = max(
-            1 if (live_m > 0 and kept_csv_modis == 0) else 0,
+            min_live_modis if live_m > 0 else 0,
             int(round(goal_modis - kept_csv_modis)),
         )
         target_viirs = max(
-            1 if live_v > 0 else 0,
+            min_live_viirs if live_v > 0 else 0,
             int(round(goal_viirs - kept_csv_viirs)),
         )
+
+        if month_idx >= 9 and prev_month_modis > kept_csv_modis:
+            target_modis = min(target_modis, max(2, prev_month_modis - kept_csv_modis - 1))
+        if month_idx >= 9 and prev_month_viirs > kept_csv_viirs:
+            target_viirs = min(target_viirs, max(6, prev_month_viirs - kept_csv_viirs - 2))
+
+        target_modis = min(live_m, target_modis)
+        target_viirs = min(live_v, target_viirs)
 
         if live_m > 0:
             scaled_live.extend(_resample_evenly(live_modis, target_modis))
